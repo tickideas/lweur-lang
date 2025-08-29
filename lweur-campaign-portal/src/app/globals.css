@@ -1,0 +1,129 @@
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: #FAFAFA;
+  --foreground: #333333;
+}
+
+body {
+  color: var(--foreground);
+  background: var(--background);
+  font-family: 'Inter', sans-serif;
+  line-height: 1.6;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: 'Playfair Display', serif;
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+@layer components {
+  /* Language Cards */
+  .language-card {
+    @apply bg-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-300;
+    @apply border border-gray-100 hover:border-primary-200;
+    @apply p-6 cursor-pointer transform hover:-translate-y-1;
+  }
+
+  .language-flag {
+    @apply w-12 h-8 rounded-md object-cover shadow-sm;
+  }
+
+  .adoption-badge {
+    @apply px-3 py-1 rounded-full text-sm font-medium;
+  }
+
+  .adoption-badge.available {
+    @apply bg-success-100 text-success-800;
+  }
+
+  .adoption-badge.adopted {
+    @apply bg-primary-100 text-primary-800;
+  }
+
+  .adoption-badge.pending {
+    @apply bg-yellow-100 text-yellow-800;
+  }
+
+  /* Campaign Cards */
+  .campaign-card {
+    @apply bg-gradient-to-br from-primary-50 to-primary-100;
+    @apply rounded-2xl p-8 shadow-lg hover:shadow-xl;
+    @apply border border-primary-200 transition-all duration-300;
+  }
+
+  /* CTA Buttons */
+  .cta-button {
+    @apply bg-accent-900 text-white px-8 py-3 rounded-lg;
+    @apply font-semibold text-lg hover:bg-accent-800;
+    @apply transform hover:scale-105 transition-all duration-200;
+    @apply shadow-lg hover:shadow-xl;
+  }
+
+  .cta-button-secondary {
+    @apply bg-primary-900 text-white px-8 py-3 rounded-lg;
+    @apply font-semibold text-lg hover:bg-primary-800;
+    @apply transform hover:scale-105 transition-all duration-200;
+    @apply shadow-lg hover:shadow-xl;
+  }
+
+  /* Form Styles */
+  .form-input {
+    @apply w-full px-4 py-3 border border-gray-300 rounded-lg;
+    @apply focus:ring-2 focus:ring-primary-500 focus:border-primary-500;
+    @apply transition-colors duration-200;
+  }
+
+  .form-label {
+    @apply block text-sm font-medium text-gray-700 mb-2;
+  }
+
+  /* Hero Section */
+  .hero-overlay {
+    @apply absolute inset-0 bg-gradient-to-r from-primary-900/80 to-primary-800/60;
+  }
+
+  /* Impact Metrics */
+  .metric-card {
+    @apply bg-white rounded-lg p-6 shadow-md text-center;
+    @apply border-t-4 border-primary-500;
+  }
+
+  .metric-number {
+    @apply text-4xl font-bold text-primary-900 font-display;
+  }
+
+  .metric-label {
+    @apply text-gray-600 text-sm uppercase tracking-wide;
+  }
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+
+  /* Custom scrollbar */
+  .scrollbar-thin {
+    scrollbar-width: thin;
+    scrollbar-color: rgb(156 163 175) rgb(243 244 246);
+  }
+
+  .scrollbar-thin::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar-track {
+    background: rgb(243 244 246);
+  }
+
+  .scrollbar-thin::-webkit-scrollbar-thumb {
+    background: rgb(156 163 175);
+    border-radius: 3px;
+  }
+}
