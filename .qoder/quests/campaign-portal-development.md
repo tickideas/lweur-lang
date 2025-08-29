@@ -2,7 +2,7 @@
 
 ## Overview
 
-The Loveworld Europe Campaign Portal is a modern web application designed to facilitate two primary fundraising campaigns: "Adopt a Language" and "Sponsor Translation". This platform enables global partners to financially support Loveworld Europe's mission to broadcast Christian content across 60 languages in Europe, with a current reach of 30 language channels and a goal to reach 750 million souls.
+The Loveworld Europe Campaign Portal is a modern web application designed to facilitate two primary fundraising campaigns: "Adopt a Language" and "Sponsor Translation". Hosted at **give.loveworldeurope.org**, this platform enables global partners to financially support Loveworld Europe's mission to broadcast Christian content across 60 languages in Europe, with a current reach of 30 language channels and a goal to reach 750 million souls.
 
 ### Key Objectives
 - Enable partners to adopt languages at £150/month recurring payments
@@ -581,7 +581,7 @@ interface AdminState {
 ```typescript
 // Base API client with interceptors
 const apiClient = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_URL,
+  baseURL: 'https://give.loveworldeurope.org/api',
   timeout: 10000,
 });
 
@@ -768,7 +768,7 @@ describe('Admin Dashboard', () => {
 ```yaml
 # artillery-config.yml
 config:
-  target: 'https://campaigns.loveworld.com'
+  target: 'https://give.loveworldeurope.org'
   phases:
     - duration: 60
       arrivalRate: 10
