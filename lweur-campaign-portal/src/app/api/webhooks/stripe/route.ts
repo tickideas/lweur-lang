@@ -243,4 +243,4 @@ async function handleSubscriptionDeleted(subscription: Stripe.Subscription) {
   });
 
   console.log(`Subscription deleted: ${subscription.id}`);
-}"
+}

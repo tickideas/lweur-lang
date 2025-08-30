@@ -52,4 +52,4 @@ export const config = {
     '/admin/:path*',
     '/api/admin/:path*',
   ],
-};"
+};

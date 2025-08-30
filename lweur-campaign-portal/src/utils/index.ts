@@ -210,4 +210,4 @@ export function handleAPIError(error: any): APIError {
   }
   
   return new APIError('Network error occurred', 500);
-}"
+}
