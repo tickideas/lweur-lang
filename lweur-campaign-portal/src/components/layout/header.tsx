@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { Menu, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -9,8 +10,7 @@ import { cn } from '@/lib/utils';
 const navigation = [
   { name: 'Adopt a Language', href: '/adopt-language' },
   { name: 'Sponsor Translation', href: '/sponsor-translation' },
-  { name: 'About', href: '/about' },
-  { name: 'Contact', href: '/contact' },
+  { name: 'Impact Stories', href: '/impact' },
 ];
 
 export function Header() {
@@ -18,19 +18,20 @@ export function Header() {
 
   return (
     <header className="bg-white shadow-sm sticky top-0 z-50">
-      <nav className="mx-auto flex max-w-7xl items-center justify-between p-6 lg:px-8" aria-label="Global">
+      <nav className="mx-auto flex max-w-7xl items-center justify-between p-4 lg:px-8" aria-label="Global">
         <div className="flex lg:flex-1">
           <Link href="/" className="-m-1.5 p-1.5">
             <span className="sr-only">Loveworld Europe</span>
             <div className="flex items-center space-x-3">
-              {/* Placeholder for logo */}
-              <div className="h-8 w-8 bg-primary-900 rounded-lg flex items-center justify-center">
-                <span className="text-white font-bold text-sm">LWE</span>
-              </div>
-              <div className="hidden sm:block">
-                <span className="font-display text-xl font-semibold text-primary-900">Loveworld Europe</span>
-                <div className="text-xs text-gray-500">Campaign Portal</div>
-              </div>
+              <Image
+                src="/lw_europe_long.png"
+                alt="Loveworld Europe"
+                width={200}
+                height={40}
+                className="h-14 w-auto"
+                priority
+              />
+           
             </div>
           </Link>
         </div>
@@ -75,11 +76,14 @@ export function Header() {
             <Link href="/" className="-m-1.5 p-1.5">
               <span className="sr-only">Loveworld Europe</span>
               <div className="flex items-center space-x-3">
-                <div className="h-8 w-8 bg-primary-900 rounded-lg flex items-center justify-center">
-                  <span className="text-white font-bold text-sm">LWE</span>
-                </div>
+                <Image
+                  src="/lw_europe_long.png"
+                  alt="Loveworld Europe"
+                  width={200}
+                  height={40}
+                  className="h-8 w-auto"
+                />
                 <div>
-                  <span className="font-display text-xl font-semibold text-primary-900">Loveworld Europe</span>
                   <div className="text-xs text-gray-500">Campaign Portal</div>
                 </div>
               </div>

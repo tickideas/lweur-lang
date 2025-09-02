@@ -76,38 +76,38 @@ export default function SponsorTranslationPage() {
       <Header />
       
       {/* Hero Section */}
-      <section className="bg-gradient-to-br from-accent-900 via-accent-800 to-accent-900 text-white py-20">
+      <section className="bg-gradient-to-br from-[#FFBF06] via-[#f59e0b] to-[#FFBF06] text-neutral-900 py-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
             <h1 className="font-display text-4xl font-bold mb-4">
               Sponsor Live Translation
             </h1>
-            <p className="text-xl text-accent-100 mb-8 max-w-3xl mx-auto">
+            <p className="text-xl text-neutral-800 mb-8 max-w-3xl mx-auto">
               Enable real-time translation of our flagship program &ldquo;Passacris&rdquo; into European languages. 
               Your £150 monthly sponsorship brings live Gospel content to diverse communities across the continent.
             </p>
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6 max-w-4xl mx-auto">
-            <div className="bg-white/10 rounded-lg p-4 text-center">
+            <div className="bg-white/30 rounded-lg p-4 text-center">
               <Tv className="h-8 w-8 mx-auto mb-2" />
               <div className="text-2xl font-bold">Live</div>
-              <div className="text-accent-200 text-sm">Broadcasting</div>
+              <div className="text-neutral-700 text-sm">Broadcasting</div>
             </div>
-            <div className="bg-white/10 rounded-lg p-4 text-center">
+            <div className="bg-white/30 rounded-lg p-4 text-center">
               <Languages className="h-8 w-8 mx-auto mb-2" />
               <div className="text-2xl font-bold">{languages.length}</div>
-              <div className="text-accent-200 text-sm">Languages Available</div>
+              <div className="text-neutral-700 text-sm">Languages Available</div>
             </div>
-            <div className="bg-white/10 rounded-lg p-4 text-center">
+            <div className="bg-white/30 rounded-lg p-4 text-center">
               <Users className="h-8 w-8 mx-auto mb-2" />
               <div className="text-2xl font-bold">{totalSponsors}</div>
-              <div className="text-accent-200 text-sm">Active Sponsors</div>
+              <div className="text-neutral-700 text-sm">Active Sponsors</div>
             </div>
-            <div className="bg-white/10 rounded-lg p-4 text-center">
+            <div className="bg-white/30 rounded-lg p-4 text-center">
               <Globe className="h-8 w-8 mx-auto mb-2" />
               <div className="text-2xl font-bold">Real-time</div>
-              <div className="text-accent-200 text-sm">Impact</div>
+              <div className="text-neutral-700 text-sm">Impact</div>
             </div>
           </div>
         </div>

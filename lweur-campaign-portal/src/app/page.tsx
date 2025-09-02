@@ -21,7 +21,7 @@ export default function HomePage() {
               in Every Language
             </h1>
             <p className="mt-6 text-lg leading-8 text-primary-100">
-              Join Loveworld Europe&apos;s mission to broadcast Christian content across 60 languages in Europe, 
+              Join Loveworld Europe&apos;s mission to broadcast inspiring and faith-filled content across 60 languages in Europe, 
               reaching 750 million souls with life-transforming programming. Adopt a language or sponsor 
               translation for just £150 per month.
             </p>

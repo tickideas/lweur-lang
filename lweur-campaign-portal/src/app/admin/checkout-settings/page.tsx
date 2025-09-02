@@ -22,7 +22,10 @@ import {
   CreditCard,
   Globe,
   MessageCircle,
-  RefreshCw
+  RefreshCw,
+  Image,
+  Eye,
+  EyeOff
 } from 'lucide-react';
 import { formatCurrency } from '@/utils';
 
@@ -43,6 +46,12 @@ const checkoutSettingsSchema = z.object({
   hearFromUsOptions: z.array(z.string()),
   checkoutTitle: z.string().min(1, 'Title is required'),
   checkoutSubtitle: z.string().min(1, 'Subtitle is required'),
+  // Hero section settings
+  heroEnabled: z.boolean(),
+  heroTitle: z.string().min(1, 'Hero title is required'),
+  heroSubtitle: z.string().min(1, 'Hero subtitle is required'),
+  heroBackgroundColor: z.string().min(1, 'Background color is required'),
+  heroTextColor: z.string().min(1, 'Text color is required'),
 });
 
 type CheckoutSettingsForm = z.infer<typeof checkoutSettingsSchema>;
@@ -89,6 +98,12 @@ export default function CheckoutSettingsPage() {
       hearFromUsOptions: ['Search Engine', 'Social Media', 'Friend/Family', 'Church', 'Advertisement', 'Email', 'Other'],
       checkoutTitle: 'Your generosity is transforming lives!',
       checkoutSubtitle: 'Support Loveworld Europe\'s mission to reach every European language with the Gospel',
+      // Hero section defaults
+      heroEnabled: true,
+      heroTitle: "YOU'RE A\nWORLD\nCHANGER",
+      heroSubtitle: "Your generosity is transforming lives across Europe",
+      heroBackgroundColor: "from-[#1226AA] to-blue-800",
+      heroTextColor: "text-white"
     },
   });
 
@@ -576,6 +591,117 @@ export default function CheckoutSettingsPage() {
                   ))}
                 </div>
               </div>
+            </CardContent>
+          </Card>
+
+          {/* Hero Section Configuration */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center">
+                <Image className="mr-2 h-5 w-5" />
+                Checkout Hero Section
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="flex items-center space-x-4">
+                <label className="flex items-center space-x-2">
+                  <input
+                    type="checkbox"
+                    {...register('heroEnabled')}
+                    className="rounded border-neutral-300"
+                  />
+                  <span className="flex items-center">
+                    {watch('heroEnabled') ? (
+                      <>
+                        <Eye className="mr-1 h-4 w-4 text-green-600" />
+                        Enable Hero Section
+                      </>
+                    ) : (
+                      <>
+                        <EyeOff className="mr-1 h-4 w-4 text-neutral-400" />
+                        Hero Section Disabled
+                      </>
+                    )}
+                  </span>
+                </label>
+              </div>
+
+              {watch('heroEnabled') && (
+                <div className="space-y-6">
+                  <div>
+                    <Label htmlFor="heroTitle">Hero Title</Label>
+                    <textarea
+                      {...register('heroTitle')}
+                      className="w-full p-3 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-[#1226AA] focus:border-transparent mt-1"
+                      rows={3}
+                      placeholder="YOU'RE A\nWORLD\nCHANGER"
+                    />
+                    <p className="text-xs text-neutral-500 mt-1">
+                      Use line breaks (\n) to create multi-line text
+                    </p>
+                    {errors.heroTitle && (
+                      <p className="text-red-600 text-sm mt-1">{errors.heroTitle.message}</p>
+                    )}
+                  </div>
+
+                  <div>
+                    <Label htmlFor="heroSubtitle">Hero Subtitle</Label>
+                    <Input
+                      {...register('heroSubtitle')}
+                      className="mt-1"
+                      placeholder="Your generosity is transforming lives across Europe"
+                    />
+                    {errors.heroSubtitle && (
+                      <p className="text-red-600 text-sm mt-1">{errors.heroSubtitle.message}</p>
+                    )}
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                      <Label htmlFor="heroBackgroundColor">Background Color (Tailwind CSS)</Label>
+                      <Input
+                        {...register('heroBackgroundColor')}
+                        className="mt-1"
+                        placeholder="from-[#1226AA] to-blue-800"
+                      />
+                      <p className="text-xs text-neutral-500 mt-1">
+                        Use Tailwind gradient classes (e.g., "from-blue-600 to-purple-700")
+                      </p>
+                      {errors.heroBackgroundColor && (
+                        <p className="text-red-600 text-sm mt-1">{errors.heroBackgroundColor.message}</p>
+                      )}
+                    </div>
+
+                    <div>
+                      <Label htmlFor="heroTextColor">Text Color (Tailwind CSS)</Label>
+                      <Input
+                        {...register('heroTextColor')}
+                        className="mt-1"
+                        placeholder="text-white"
+                      />
+                      <p className="text-xs text-neutral-500 mt-1">
+                        Use Tailwind text color classes (e.g., "text-white", "text-neutral-900")
+                      </p>
+                      {errors.heroTextColor && (
+                        <p className="text-red-600 text-sm mt-1">{errors.heroTextColor.message}</p>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Hero Preview */}
+                  <div className="border-t pt-6">
+                    <Label className="text-sm font-medium mb-2 block">Preview</Label>
+                    <div className={`bg-gradient-to-br ${watch('heroBackgroundColor')} rounded-2xl p-8 ${watch('heroTextColor')} text-center`}>
+                      <h1 className="text-4xl font-bold mb-4 leading-tight whitespace-pre-line">
+                        {watch('heroTitle') || "YOU'RE A\nWORLD\nCHANGER"}
+                      </h1>
+                      <p className="text-lg opacity-90">
+                        {watch('heroSubtitle') || "Your generosity is transforming lives across Europe"}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
             </CardContent>
           </Card>
 

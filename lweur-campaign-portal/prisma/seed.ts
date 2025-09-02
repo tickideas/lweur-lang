@@ -396,7 +396,7 @@ async function main() {
       firstName: 'Admin',
       lastName: 'User',
       role: 'SUPER_ADMIN',
-      passwordHash: '$2b$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewYhBK7nbVFszzqi', // 'password123'
+      passwordHash: '$2b$12$rPkBwuL/a4N84.Fci7L8XeLnbYQwJ7ibwK37tmzYHSCp9Eu4TXfbe', // 'password123'
       isActive: true,
     },
   });
@@ -432,6 +432,12 @@ async function main() {
       ],
       checkoutTitle: 'Your generosity is transforming lives!',
       checkoutSubtitle: 'Support Loveworld Europe\'s mission to reach every European language with the Gospel',
+      // Hero section settings
+      heroEnabled: true,
+      heroTitle: "YOU'RE A\nWORLD\nCHANGER",
+      heroSubtitle: "Your generosity is transforming lives across Europe",
+      heroBackgroundColor: "from-[#1226AA] to-blue-800",
+      heroTextColor: "text-white"
     },
   });
 

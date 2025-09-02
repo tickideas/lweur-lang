@@ -1,0 +1,54 @@
+# /Users/0xanyi/Developer/lweur-lang/lweur-campaign-portal/.dockerignore
+# Docker ignore file to exclude unnecessary files from Docker context
+# Reduces build time and image size for Coolify deployment
+# RELEVANT FILES: Dockerfile, .gitignore, package.json, next.config.mjs
+
+# Dependencies
+node_modules
+npm-debug.log*
+
+# Next.js
+.next/
+out/
+
+# Development files
+.env*.local
+.env.development
+
+# Testing
+coverage/
+.nyc_output
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Git
+.git/
+.gitignore
+
+# Documentation
+README.md
+*.md
+
+# Logs
+logs
+*.log
+
+# Runtime data
+pids
+*.pid
+*.seed
+*.pid.lock
+
+# Build artifacts
+dist/
+build/
+
+# Temporary files
+.tmp/
+temp/
