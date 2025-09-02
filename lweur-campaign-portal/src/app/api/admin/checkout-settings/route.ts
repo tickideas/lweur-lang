@@ -6,6 +6,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { verifyAdminAuth } from '@/lib/auth';
+import { sanitizeCheckoutSettings } from '@/lib/sanitization';
 import { z } from 'zod';
 
 const checkoutSettingsSchema = z.object({
@@ -23,8 +24,14 @@ const checkoutSettingsSchema = z.object({
   requirePhone: z.boolean(),
   requireOrganization: z.boolean(),
   hearFromUsOptions: z.array(z.string()),
-  checkoutTitle: z.string().min(1),
-  checkoutSubtitle: z.string().min(1),
+  checkoutTitle: z.string().min(1).max(200),
+  checkoutSubtitle: z.string().min(1).max(500),
+  // Hero section settings
+  heroEnabled: z.boolean(),
+  heroTitle: z.string().min(1).max(100),
+  heroSubtitle: z.string().min(1).max(200),
+  heroBackgroundColor: z.string().min(1).max(100),
+  heroTextColor: z.string().min(1).max(50),
 });
 
 // GET - Retrieve checkout settings
@@ -71,6 +78,12 @@ export async function GET(request: NextRequest) {
         hearFromUsOptions: ['Search Engine', 'Social Media', 'Friend/Family', 'Church', 'Advertisement', 'Email', 'Other'],
         checkoutTitle: 'Your generosity is transforming lives!',
         checkoutSubtitle: 'Support Loveworld Europe\'s mission to reach every European language with the Gospel',
+        // Hero section defaults
+        heroEnabled: true,
+        heroTitle: "YOU'RE A\nWORLD\nCHANGER",
+        heroSubtitle: "Your generosity is transforming lives across Europe",
+        heroBackgroundColor: "from-[#1226AA] to-blue-800",
+        heroTextColor: "text-white"
       };
 
       return NextResponse.json({
@@ -99,6 +112,12 @@ export async function GET(request: NextRequest) {
         hearFromUsOptions: settings.hearFromUsOptions,
         checkoutTitle: settings.checkoutTitle,
         checkoutSubtitle: settings.checkoutSubtitle,
+        // Hero section settings
+        heroEnabled: settings.heroEnabled,
+        heroTitle: settings.heroTitle,
+        heroSubtitle: settings.heroSubtitle,
+        heroBackgroundColor: settings.heroBackgroundColor,
+        heroTextColor: settings.heroTextColor,
       },
       isDefault: false
     });
@@ -134,8 +153,11 @@ export async function POST(request: NextRequest) {
 
     const body = await request.json();
 
-    // Validate the request body
-    const validationResult = checkoutSettingsSchema.safeParse(body);
+    // Sanitize input data first
+    const sanitizedInput = sanitizeCheckoutSettings(body);
+
+    // Validate the sanitized data
+    const validationResult = checkoutSettingsSchema.safeParse(sanitizedInput);
     if (!validationResult.success) {
       return NextResponse.json(
         { 
@@ -173,6 +195,12 @@ export async function POST(request: NextRequest) {
           hearFromUsOptions: data.hearFromUsOptions,
           checkoutTitle: data.checkoutTitle,
           checkoutSubtitle: data.checkoutSubtitle,
+          // Hero section settings
+          heroEnabled: data.heroEnabled,
+          heroTitle: data.heroTitle,
+          heroSubtitle: data.heroSubtitle,
+          heroBackgroundColor: data.heroBackgroundColor,
+          heroTextColor: data.heroTextColor,
         },
       });
     } else {
@@ -195,6 +223,12 @@ export async function POST(request: NextRequest) {
           hearFromUsOptions: data.hearFromUsOptions,
           checkoutTitle: data.checkoutTitle,
           checkoutSubtitle: data.checkoutSubtitle,
+          // Hero section settings
+          heroEnabled: data.heroEnabled,
+          heroTitle: data.heroTitle,
+          heroSubtitle: data.heroSubtitle,
+          heroBackgroundColor: data.heroBackgroundColor,
+          heroTextColor: data.heroTextColor,
         },
       });
     }
@@ -220,6 +254,12 @@ export async function POST(request: NextRequest) {
         hearFromUsOptions: settings.hearFromUsOptions,
         checkoutTitle: settings.checkoutTitle,
         checkoutSubtitle: settings.checkoutSubtitle,
+        // Hero section settings
+        heroEnabled: settings.heroEnabled,
+        heroTitle: settings.heroTitle,
+        heroSubtitle: settings.heroSubtitle,
+        heroBackgroundColor: settings.heroBackgroundColor,
+        heroTextColor: settings.heroTextColor,
         updatedAt: settings.updatedAt,
       }
     });

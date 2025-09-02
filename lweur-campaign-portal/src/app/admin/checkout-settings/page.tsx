@@ -5,8 +5,8 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
-import { useForm, useFieldArray } from 'react-hook-form';
+import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useForm, useFieldArray, Control, FieldPath } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { AdminLayout } from '@/components/admin/admin-layout';
@@ -28,6 +28,9 @@ import {
   EyeOff
 } from 'lucide-react';
 import { formatCurrency } from '@/utils';
+import { sanitizeCheckoutSettings } from '@/lib/sanitization';
+import { useDebounceObject } from '@/hooks/useDebounce';
+import { useCheckoutSettingsFieldArray, CheckoutSettingsFormType } from '@/hooks/useTypedFieldArray';
 
 const checkoutSettingsSchema = z.object({
   availableCurrencies: z.array(z.string()).min(1, 'At least one currency is required'),
@@ -54,7 +57,7 @@ const checkoutSettingsSchema = z.object({
   heroTextColor: z.string().min(1, 'Text color is required'),
 });
 
-type CheckoutSettingsForm = z.infer<typeof checkoutSettingsSchema>;
+type CheckoutSettingsForm = CheckoutSettingsFormType;
 
 const CURRENCY_OPTIONS = [
   { value: 'GBP', label: 'British Pound (£)' },
@@ -111,31 +114,37 @@ export default function CheckoutSettingsPage() {
     fields: adoptPresetFields,
     append: appendAdoptPreset,
     remove: removeAdoptPreset
-  } = useFieldArray<CheckoutSettingsForm>({
-    control,
-    name: 'adoptLanguagePresetAmounts'
-  });
+  } = useCheckoutSettingsFieldArray(control, 'adoptLanguagePresetAmounts');
 
   const {
     fields: sponsorPresetFields,
     append: appendSponsorPreset,
     remove: removeSponsorPreset
-  } = useFieldArray<CheckoutSettingsForm>({
-    control,
-    name: 'sponsorTranslationPresetAmounts'
-  });
+  } = useCheckoutSettingsFieldArray(control, 'sponsorTranslationPresetAmounts');
 
   const {
     fields: hearFromUsFields,
     append: appendHearFromUs,
     remove: removeHearFromUs
-  } = useFieldArray<CheckoutSettingsForm>({
-    control,
-    name: 'hearFromUsOptions'
-  });
+  } = useCheckoutSettingsFieldArray(control, 'hearFromUsOptions');
 
   const selectedCurrencies = watch('availableCurrencies');
   const defaultCurrency = watch('defaultCurrency');
+
+  // Watch hero section fields for preview
+  const heroPreviewFields = watch(['heroTitle', 'heroSubtitle', 'heroBackgroundColor', 'heroTextColor', 'heroEnabled']);
+  
+  // Debounce hero preview updates to improve performance
+  const debouncedHeroFields = useDebounceObject(
+    {
+      heroTitle: heroPreviewFields[0],
+      heroSubtitle: heroPreviewFields[1],
+      heroBackgroundColor: heroPreviewFields[2],
+      heroTextColor: heroPreviewFields[3],
+      heroEnabled: heroPreviewFields[4]
+    },
+    300 // 300ms debounce
+  );
 
   useEffect(() => {
     loadSettings();
@@ -164,12 +173,15 @@ export default function CheckoutSettingsPage() {
     setMessage(null);
 
     try {
+      // Sanitize data before sending to API
+      const sanitizedData = sanitizeCheckoutSettings(data);
+
       const response = await fetch('/api/admin/checkout-settings', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(data),
+        body: JSON.stringify(sanitizedData),
       });
 
       if (!response.ok) {
@@ -177,8 +189,11 @@ export default function CheckoutSettingsPage() {
       }
 
       setMessage({ type: 'success', text: 'Settings saved successfully!' });
-    } catch (error: any) {
-      setMessage({ type: 'error', text: error.message });
+    } catch (error: unknown) {
+      setMessage({ 
+        type: 'error', 
+        text: error instanceof Error ? error.message : 'An error occurred' 
+      });
     } finally {
       setSaving(false);
     }
@@ -364,7 +379,7 @@ export default function CheckoutSettingsPage() {
                     type="button"
                     variant="outline"
                     size="sm"
-                    onClick={() => appendAdoptPreset(5000)}
+                    onClick={() => appendAdoptPreset(5000 as number)}
                   >
                     <Plus className="h-4 w-4 mr-1" />
                     Add Amount
@@ -457,7 +472,7 @@ export default function CheckoutSettingsPage() {
                     type="button"
                     variant="outline"
                     size="sm"
-                    onClick={() => appendSponsorPreset(5000)}
+                    onClick={() => appendSponsorPreset(5000 as number)}
                   >
                     <Plus className="h-4 w-4 mr-1" />
                     Add Amount
@@ -565,7 +580,7 @@ export default function CheckoutSettingsPage() {
                     type="button"
                     variant="outline"
                     size="sm"
-                    onClick={() => appendHearFromUs('New Option')}
+                    onClick={() => appendHearFromUs('New Option' as string)}
                   >
                     <Plus className="h-4 w-4 mr-1" />
                     Add Option
@@ -598,7 +613,7 @@ export default function CheckoutSettingsPage() {
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center">
-                <Image className="mr-2 h-5 w-5" />
+                <Image className="mr-2 h-5 w-5" aria-label="Hero section settings" />
                 Checkout Hero Section
               </CardTitle>
             </CardHeader>
@@ -665,7 +680,7 @@ export default function CheckoutSettingsPage() {
                         placeholder="from-[#1226AA] to-blue-800"
                       />
                       <p className="text-xs text-neutral-500 mt-1">
-                        Use Tailwind gradient classes (e.g., "from-blue-600 to-purple-700")
+                        Use Tailwind gradient classes (e.g., &quot;from-blue-600 to-purple-700&quot;)
                       </p>
                       {errors.heroBackgroundColor && (
                         <p className="text-red-600 text-sm mt-1">{errors.heroBackgroundColor.message}</p>
@@ -680,7 +695,7 @@ export default function CheckoutSettingsPage() {
                         placeholder="text-white"
                       />
                       <p className="text-xs text-neutral-500 mt-1">
-                        Use Tailwind text color classes (e.g., "text-white", "text-neutral-900")
+                        Use Tailwind text color classes (e.g., &quot;text-white&quot;, &quot;text-neutral-900&quot;)
                       </p>
                       {errors.heroTextColor && (
                         <p className="text-red-600 text-sm mt-1">{errors.heroTextColor.message}</p>
@@ -691,12 +706,12 @@ export default function CheckoutSettingsPage() {
                   {/* Hero Preview */}
                   <div className="border-t pt-6">
                     <Label className="text-sm font-medium mb-2 block">Preview</Label>
-                    <div className={`bg-gradient-to-br ${watch('heroBackgroundColor')} rounded-2xl p-8 ${watch('heroTextColor')} text-center`}>
+                    <div className={`bg-gradient-to-br ${debouncedHeroFields.heroBackgroundColor || 'from-[#1226AA] to-blue-800'} rounded-2xl p-8 ${debouncedHeroFields.heroTextColor || 'text-white'} text-center`}>
                       <h1 className="text-4xl font-bold mb-4 leading-tight whitespace-pre-line">
-                        {watch('heroTitle') || "YOU'RE A\nWORLD\nCHANGER"}
+                        {debouncedHeroFields.heroTitle || "YOU'RE A\nWORLD\nCHANGER"}
                       </h1>
                       <p className="text-lg opacity-90">
-                        {watch('heroSubtitle') || "Your generosity is transforming lives across Europe"}
+                        {debouncedHeroFields.heroSubtitle || "Your generosity is transforming lives across Europe"}
                       </p>
                     </div>
                   </div>

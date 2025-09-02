@@ -43,6 +43,12 @@ const validCheckoutSettings = {
   hearFromUsOptions: ['Search Engine', 'Social Media', 'Friend/Family'],
   checkoutTitle: 'Your generosity is transforming lives!',
   checkoutSubtitle: 'Support our mission',
+  // Hero section settings
+  heroEnabled: true,
+  heroTitle: "YOU'RE A\nWORLD\nCHANGER",
+  heroSubtitle: "Your generosity is transforming lives across Europe",
+  heroBackgroundColor: "from-[#1226AA] to-blue-800",
+  heroTextColor: "text-white"
 };
 
 const mockSuperAdmin = {
@@ -417,6 +423,93 @@ describe('/api/admin/checkout-settings', () => {
       const response = await POST(request);
 
       expect(response.status).toBe(200);
+    });
+
+    test('validates hero section fields', async () => {
+      mockVerifyAdminAuth.mockResolvedValue({
+        isValid: true,
+        admin: mockSuperAdmin,
+        error: null
+      });
+
+      const invalidData = {
+        ...validCheckoutSettings,
+        heroTitle: '', // Required field empty
+      };
+
+      const request = new NextRequest('http://localhost:3000/api/admin/checkout-settings', {
+        method: 'POST',
+        body: JSON.stringify(invalidData),
+      });
+      const response = await POST(request);
+      const data = await response.json();
+
+      expect(response.status).toBe(400);
+      expect(data.error).toBe('Invalid data');
+    });
+
+    test('validates hero field length limits', async () => {
+      mockVerifyAdminAuth.mockResolvedValue({
+        isValid: true,
+        admin: mockSuperAdmin,
+        error: null
+      });
+
+      const invalidData = {
+        ...validCheckoutSettings,
+        heroTitle: 'A'.repeat(101), // Exceeds max length of 100
+      };
+
+      const request = new NextRequest('http://localhost:3000/api/admin/checkout-settings', {
+        method: 'POST',
+        body: JSON.stringify(invalidData),
+      });
+      const response = await POST(request);
+      const data = await response.json();
+
+      expect(response.status).toBe(400);
+      expect(data.error).toBe('Invalid data');
+    });
+
+    test('saves and retrieves hero section settings correctly', async () => {
+      mockVerifyAdminAuth.mockResolvedValue({
+        isValid: true,
+        admin: mockSuperAdmin,
+        error: null
+      });
+
+      const heroSettings = {
+        heroEnabled: false,
+        heroTitle: "Custom Title",
+        heroSubtitle: "Custom Subtitle",
+        heroBackgroundColor: "from-red-500 to-blue-500",
+        heroTextColor: "text-black"
+      };
+
+      const settingsWithHero = {
+        ...validCheckoutSettings,
+        ...heroSettings
+      };
+
+      mockPrisma.checkoutSettings.findFirst.mockResolvedValue(null);
+      mockPrisma.checkoutSettings.create.mockResolvedValue({
+        id: 'new-settings-1',
+        ...settingsWithHero,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      });
+
+      const request = new NextRequest('http://localhost:3000/api/admin/checkout-settings', {
+        method: 'POST',
+        body: JSON.stringify(settingsWithHero),
+      });
+      const response = await POST(request);
+      const data = await response.json();
+
+      expect(response.status).toBe(200);
+      expect(data.settings.heroEnabled).toBe(false);
+      expect(data.settings.heroTitle).toBe("Custom Title");
+      expect(data.settings.heroBackgroundColor).toBe("from-red-500 to-blue-500");
     });
   });
 });
