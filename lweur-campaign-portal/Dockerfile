@@ -11,9 +11,10 @@ FROM base AS deps
 RUN apk add --no-cache libc6-compat
 WORKDIR /app
 
-# Copy package files
+# Copy package files (including lockfile if present)
 COPY package.json package-lock.json* ./
-RUN npm ci --only=production
+# Install all dependencies (including dev) so that Next.js can run lint/type checks during build.
+RUN npm ci
 
 # Rebuild the source code only when needed
 FROM base AS builder
@@ -47,6 +48,9 @@ COPY --from=builder /app/package.json ./package.json
 # Copy built application
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
+
+# Optionally prune dev dependencies to reduce image size (keep only prod deps referenced in standalone output)
+RUN npm prune --production
 
 USER nextjs
 

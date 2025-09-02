@@ -231,9 +231,10 @@ export default function AdoptLanguagePage() {
                         alt={`${language.name} flag`}
                         className="language-flag"
                         onError={(e) => {
-                          // Fallback to emoji flag if image fails
-                          e.currentTarget.style.display = 'none';
-                          e.currentTarget.nextElementSibling!.style.display = 'block';
+                          const img = e.currentTarget as HTMLImageElement;
+                          img.style.display = 'none';
+                          const fallback = img.nextElementSibling as HTMLElement | null;
+                          if (fallback) fallback.style.display = 'block';
                         }}
                       />
                       <div className="text-2xl" style={{ display: 'none' }}>

@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { format as formatDate } from 'date-fns';
 import { AdminLayout } from '@/components/admin/admin-layout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -52,7 +53,8 @@ const reportTypes = [
 
 export default function ReportsPage() {
   const [selectedReport, setSelectedReport] = useState<string>('');
-  const [format, setFormat] = useState<'json' | 'csv'>('csv');
+  // exportFormat represents the requested output format (csv | json)
+  const [exportFormat, setExportFormat] = useState<'json' | 'csv'>('csv');
   const [startDate, setStartDate] = useState<string>('');
   const [endDate, setEndDate] = useState<string>('');
   const [isGenerating, setIsGenerating] = useState<boolean>(false);
@@ -64,7 +66,7 @@ export default function ReportsPage() {
     try {
       const params = new URLSearchParams({
         type: selectedReport,
-        format: format,
+  format: exportFormat,
       });
 
       if (startDate) params.append('startDate', startDate);
@@ -76,13 +78,13 @@ export default function ReportsPage() {
         throw new Error('Failed to generate report');
       }
 
-      if (format === 'csv') {
+  if (exportFormat === 'csv') {
         const blob = await response.blob();
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.style.display = 'none';
         a.href = url;
-        a.download = `${selectedReport}-report-${format(new Date(), 'yyyy-MM-dd')}.csv`;
+  a.download = `${selectedReport}-report-${formatDate(new Date(), 'yyyy-MM-dd')}.csv`;
         document.body.appendChild(a);
         a.click();
         window.URL.revokeObjectURL(url);
@@ -96,7 +98,7 @@ export default function ReportsPage() {
         const a = document.createElement('a');
         a.style.display = 'none';
         a.href = url;
-        a.download = `${selectedReport}-report-${format(new Date(), 'yyyy-MM-dd')}.json`;
+  a.download = `${selectedReport}-report-${formatDate(new Date(), 'yyyy-MM-dd')}.json`;
         document.body.appendChild(a);
         a.click();
         window.URL.revokeObjectURL(url);
@@ -193,7 +195,7 @@ export default function ReportsPage() {
 
               <div className="space-y-2">
                 <Label htmlFor="format">Format</Label>
-                <Select value={format} onValueChange={(value: 'json' | 'csv') => setFormat(value)}>
+                <Select value={exportFormat} onValueChange={(value: 'json' | 'csv') => setExportFormat(value)}>
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>

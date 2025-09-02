@@ -55,7 +55,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Get the first (and should be only) checkout settings record
-    const settings = await prisma.checkoutSettings.findFirst({
+  const settings = await prisma.checkoutSettings.findFirst({
       orderBy: { createdAt: 'desc' }
     });
 
@@ -162,7 +162,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         { 
           error: 'Invalid data',
-          details: validationResult.error.errors 
+          details: validationResult.error.issues
         },
         { status: 400 }
       );
@@ -171,12 +171,12 @@ export async function POST(request: NextRequest) {
     const data = validationResult.data;
 
     // Check if settings already exist
-    const existingSettings = await prisma.checkoutSettings.findFirst();
+  const existingSettings = await prisma.checkoutSettings.findFirst();
 
     let settings;
     if (existingSettings) {
       // Update existing settings
-      settings = await prisma.checkoutSettings.update({
+  settings = await prisma.checkoutSettings.update({
         where: { id: existingSettings.id },
         data: {
           availableCurrencies: data.availableCurrencies,
@@ -205,7 +205,7 @@ export async function POST(request: NextRequest) {
       });
     } else {
       // Create new settings
-      settings = await prisma.checkoutSettings.create({
+  settings = await prisma.checkoutSettings.create({
         data: {
           availableCurrencies: data.availableCurrencies,
           defaultCurrency: data.defaultCurrency,

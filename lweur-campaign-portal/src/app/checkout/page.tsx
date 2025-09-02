@@ -1,6 +1,9 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+// This page relies on runtime search params; disable static prerendering.
+export const dynamic = 'force-dynamic';
+
+import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { Header } from '@/components/layout/header';
 import { Footer } from '@/components/layout/footer';
@@ -10,7 +13,7 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Language, CampaignType } from '@/types';
 
-export default function CheckoutPage() {
+function CheckoutPageInner() {
   const searchParams = useSearchParams();
   const [selectedLanguage, setSelectedLanguage] = useState<Language | null>(null);
   const [campaignType, setCampaignType] = useState<CampaignType | null>(null);
@@ -106,5 +109,13 @@ export default function CheckoutPage() {
 
       <Footer />
     </>
+  );
+}
+
+export default function CheckoutPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center"><div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600" /></div>}>
+      <CheckoutPageInner />
+    </Suspense>
   );
 }
