@@ -5,8 +5,9 @@ import { useSearchParams } from 'next/navigation';
 import { Header } from '@/components/layout/header';
 import { Footer } from '@/components/layout/footer';
 import { CheckoutWizard } from '@/components/checkout/checkout-wizard';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, Languages, Zap } from 'lucide-react';
 import Link from 'next/link';
+import { Button } from '@/components/ui/button';
 import { Language, CampaignType } from '@/types';
 
 export default function CheckoutPage() {

@@ -111,27 +111,27 @@ export default function CheckoutSettingsPage() {
     fields: adoptPresetFields,
     append: appendAdoptPreset,
     remove: removeAdoptPreset
-  } = useFieldArray({
+  } = useFieldArray<CheckoutSettingsForm>({
     control,
-    name: 'adoptLanguagePresetAmounts' as const
+    name: 'adoptLanguagePresetAmounts'
   });
 
   const {
     fields: sponsorPresetFields,
     append: appendSponsorPreset,
     remove: removeSponsorPreset
-  } = useFieldArray({
+  } = useFieldArray<CheckoutSettingsForm>({
     control,
-    name: 'sponsorTranslationPresetAmounts' as const
+    name: 'sponsorTranslationPresetAmounts'
   });
 
   const {
     fields: hearFromUsFields,
     append: appendHearFromUs,
     remove: removeHearFromUs
-  } = useFieldArray({
+  } = useFieldArray<CheckoutSettingsForm>({
     control,
-    name: 'hearFromUsOptions' as const
+    name: 'hearFromUsOptions'
   });
 
   const selectedCurrencies = watch('availableCurrencies');
