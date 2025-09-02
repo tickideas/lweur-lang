@@ -7,6 +7,9 @@ import { z } from 'zod';
 const createPaymentIntentSchema = z.object({
   campaignType: z.enum(['ADOPT_LANGUAGE', 'SPONSOR_TRANSLATION']),
   languageId: z.string(),
+  amount: z.number().positive(),
+  currency: z.string().min(3).max(3),
+  isRecurring: z.boolean(),
   partnerInfo: z.object({
     email: z.string().email(),
     firstName: z.string(),
@@ -30,10 +33,29 @@ const emailService = new EmailService();
 
 export async function POST(req: NextRequest) {
   try {
+    // Check if Stripe is properly configured
+    if (!process.env.STRIPE_SECRET_KEY || process.env.STRIPE_SECRET_KEY.startsWith('sk_test_...')) {
+      console.error('Stripe secret key not properly configured');
+      return NextResponse.json(
+        { error: 'Payment service not configured. Please add your Stripe keys to the .env file.' },
+        { status: 500 }
+      );
+    }
+
     const body = await req.json();
+    console.log('Received payment intent request:', JSON.stringify(body, null, 2));
+    
     const validatedData = createPaymentIntentSchema.parse(body);
 
-    const { campaignType, languageId, partnerInfo, billingAddress } = validatedData;
+    const { campaignType, languageId, amount, currency, isRecurring, partnerInfo, billingAddress } = validatedData;
+
+    // Currently only support recurring subscriptions
+    if (!isRecurring) {
+      return NextResponse.json(
+        { error: 'One-time donations are not currently supported. Please select a monthly recurring option.' },
+        { status: 400 }
+      );
+    }
 
     // Check if language is available for adoption (if it's an adoption campaign)
     if (campaignType === 'ADOPT_LANGUAGE') {
@@ -113,43 +135,27 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    // Create product and price if they don't exist
+    // Create product and price for this specific campaign
     const productName = campaignType === 'ADOPT_LANGUAGE' 
       ? 'Language Adoption' 
       : 'Translation Sponsorship';
     
-    let price;
-    try {
-      // Try to find existing price
-      const prices = await stripe.prices.list({
-        product: STRIPE_CONFIG.PRODUCT_IDS[campaignType],
-        active: true,
-        limit: 1,
-      });
-      
-      if (prices.data.length > 0) {
-        price = prices.data[0];
-      } else {
-        throw new Error('Price not found');
-      }
-    } catch {
-      // Create product and price if they don't exist
-      const product = await stripe.products.create({
-        name: productName,
-        description: campaignType === 'ADOPT_LANGUAGE'
-          ? 'Monthly language channel adoption for Loveworld Europe'
-          : 'Monthly translation sponsorship for Passacris program',
-      });
+    // Create product and price for this campaign
+    const product = await stripe.products.create({
+      name: productName,
+      description: campaignType === 'ADOPT_LANGUAGE'
+        ? 'Monthly language channel adoption for Loveworld Europe'
+        : 'Monthly translation sponsorship for Passacris program',
+    });
 
-      price = await stripe.prices.create({
-        product: product.id,
-        unit_amount: STRIPE_CONFIG.MONTHLY_AMOUNT,
-        currency: STRIPE_CONFIG.CURRENCY,
-        recurring: {
-          interval: 'month',
-        },
-      });
-    }
+    const price = await stripe.prices.create({
+      product: product.id,
+      unit_amount: amount,
+      currency: currency.toLowerCase(),
+      recurring: {
+        interval: 'month',
+      },
+    });
 
     // Create subscription
     const subscription = await stripe.subscriptions.create({
@@ -171,8 +177,8 @@ export async function POST(req: NextRequest) {
         type: campaignType,
         partnerId: partner.id,
         languageId,
-        monthlyAmount: STRIPE_CONFIG.MONTHLY_AMOUNT,
-        currency: STRIPE_CONFIG.CURRENCY.toUpperCase(),
+        monthlyAmount: amount,
+        currency: currency.toUpperCase(),
         stripeSubscriptionId: subscription.id,
         status: 'ACTIVE',
         nextBillingDate: new Date(subscription.current_period_end * 1000),
@@ -191,21 +197,25 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    // Send welcome email to new partner
+    // Send welcome email to new partner (optional - don't fail if email service is not configured)
     try {
-      await emailService.sendWelcomeEmail(campaign.partner);
+      if (process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASS) {
+        await emailService.sendWelcomeEmail(campaign.partner);
 
-      // Log email communication
-      await prisma.communication.create({
-        data: {
-          partnerId: partner.id,
-          type: 'EMAIL',
-          subject: `Welcome to Loveworld Europe - ${campaignType === 'ADOPT_LANGUAGE' ? 'Language Adoption' : 'Translation Sponsorship'} Partnership`,
-          content: 'Welcome email sent to new partner',
-          sentAt: new Date(),
-          status: 'SENT',
-        },
-      });
+        // Log email communication
+        await prisma.communication.create({
+          data: {
+            partnerId: partner.id,
+            type: 'EMAIL',
+            subject: `Welcome to Loveworld Europe - ${campaignType === 'ADOPT_LANGUAGE' ? 'Language Adoption' : 'Translation Sponsorship'} Partnership`,
+            content: 'Welcome email sent to new partner',
+            sentAt: new Date(),
+            status: 'SENT',
+          },
+        });
+      } else {
+        console.log('Email service not configured - skipping welcome email');
+      }
     } catch (emailError) {
       console.error('Failed to send welcome email:', emailError);
       // Don't fail the entire process if email fails
@@ -223,6 +233,11 @@ export async function POST(req: NextRequest) {
 
   } catch (error) {
     console.error('Error creating payment intent:', error);
+    console.error('Error details:', {
+      message: error instanceof Error ? error.message : 'Unknown error',
+      stack: error instanceof Error ? error.stack : undefined,
+      error: error
+    });
     
     if (error instanceof z.ZodError) {
       return NextResponse.json(
@@ -232,7 +247,10 @@ export async function POST(req: NextRequest) {
     }
 
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { 
+        error: 'Internal server error', 
+        details: error instanceof Error ? error.message : 'Unknown error' 
+      },
       { status: 500 }
     );
   }

@@ -8,9 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
   Zap,
   Globe,
-  Clock,
   Users,
-  Play,
   Tv,
   Languages,
   ArrowRight,
@@ -115,85 +113,6 @@ export default function SponsorTranslationPage() {
         </div>
       </section>
 
-      {/* Passacris Program Overview */}
-      <section className="bg-white py-16">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-            <div>
-              <h2 className="font-display text-3xl font-bold text-gray-900 mb-6">
-                About Passacris Program
-              </h2>
-              <p className="text-lg text-gray-600 mb-6">
-                Passacris is Loveworld Europe&apos;s flagship program, featuring powerful teachings, 
-                worship, and testimonies that transform lives. By sponsoring translation, you enable 
-                real-time access to this life-changing content for non-English speaking communities.
-              </p>
-              
-              <div className="space-y-4">
-                <div className="flex items-center">
-                  <div className="bg-accent-100 rounded-full p-2 mr-4">
-                    <Play className="h-5 w-5 text-accent-600" />
-                  </div>
-                  <div>
-                    <h3 className="font-semibold">Live Broadcasting</h3>
-                    <p className="text-gray-600 text-sm">Real-time translation during live broadcasts</p>
-                  </div>
-                </div>
-                
-                <div className="flex items-center">
-                  <div className="bg-accent-100 rounded-full p-2 mr-4">
-                    <Clock className="h-5 w-5 text-accent-600" />
-                  </div>
-                  <div>
-                    <h3 className="font-semibold">Regular Schedule</h3>
-                    <p className="text-gray-600 text-sm">Weekly programs with consistent translation support</p>
-                  </div>
-                </div>
-                
-                <div className="flex items-center">
-                  <div className="bg-accent-100 rounded-full p-2 mr-4">
-                    <Globe className="h-5 w-5 text-accent-600" />
-                  </div>
-                  <div>
-                    <h3 className="font-semibold">Multi-Language Reach</h3>
-                    <p className="text-gray-600 text-sm">Simultaneous translation into multiple European languages</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-            
-            <div className="bg-gray-50 rounded-2xl p-8">
-              <div className="bg-white rounded-lg p-6 shadow-sm">
-                <h3 className="font-display text-xl font-semibold mb-4">Program Schedule</h3>
-                <div className="space-y-3">
-                  <div className="flex justify-between items-center py-2 border-b border-gray-100">
-                    <span className="font-medium">Sundays</span>
-                    <span className="text-gray-600">10:00 AM - 12:00 PM CET</span>
-                  </div>
-                  <div className="flex justify-between items-center py-2 border-b border-gray-100">
-                    <span className="font-medium">Wednesdays</span>
-                    <span className="text-gray-600">7:00 PM - 9:00 PM CET</span>
-                  </div>
-                  <div className="flex justify-between items-center py-2">
-                    <span className="font-medium">Special Events</span>
-                    <span className="text-gray-600">As announced</span>
-                  </div>
-                </div>
-                
-                <div className="mt-6 p-4 bg-accent-50 rounded-lg">
-                  <div className="flex items-center mb-2">
-                    <Zap className="h-5 w-5 text-accent-600 mr-2" />
-                    <span className="font-semibold text-accent-800">Your Impact</span>
-                  </div>
-                  <p className="text-sm text-accent-700">
-                    Each sponsorship enables professional translation services for an entire language community.
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
 
       {/* Priority Languages */}
       <section className="bg-gray-50 py-16">

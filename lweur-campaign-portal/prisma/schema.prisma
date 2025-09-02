@@ -229,6 +229,13 @@ model CheckoutSettings {
   checkoutTitle         String    @default("Your generosity is transforming lives!")
   checkoutSubtitle      String    @default("Support Loveworld Europe's mission to reach every European language with the Gospel")
   
+  // Hero section configuration
+  heroEnabled           Boolean   @default(true)
+  heroTitle             String    @default("YOU'RE A\nWORLD\nCHANGER")
+  heroSubtitle          String    @default("Your generosity is transforming lives across Europe")
+  heroBackgroundColor   String    @default("from-[#1226AA] to-blue-800")
+  heroTextColor         String    @default("text-white")
+  
   createdAt             DateTime  @default(now())
   updatedAt             DateTime  @updatedAt
   

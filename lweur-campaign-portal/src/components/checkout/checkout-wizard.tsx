@@ -5,7 +5,7 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { AmountSelection } from './amount-selection';
 import { PersonalDetailsForm } from './personal-details-form';
 import { CheckoutForm } from './checkout-form';
@@ -28,6 +28,14 @@ const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!
 interface CheckoutWizardProps {
   campaignType: CampaignType;
   selectedLanguage?: Language | null;
+}
+
+interface HeroSettings {
+  heroEnabled: boolean;
+  heroTitle: string;
+  heroSubtitle: string;
+  heroBackgroundColor: string;
+  heroTextColor: string;
 }
 
 interface CheckoutData {
@@ -71,6 +79,34 @@ export function CheckoutWizard({ campaignType, selectedLanguage }: CheckoutWizar
   });
   const [clientSecret, setClientSecret] = useState<string>('');
   const [campaignId, setCampaignId] = useState<string>('');
+  const [heroSettings, setHeroSettings] = useState<HeroSettings>({
+    heroEnabled: true,
+    heroTitle: "YOU'RE A\nWORLD\nCHANGER",
+    heroSubtitle: "Your generosity is transforming lives across Europe",
+    heroBackgroundColor: "from-[#1226AA] to-blue-800",
+    heroTextColor: "text-white"
+  });
+  const [heroLoading, setHeroLoading] = useState(true);
+
+  // Fetch hero settings on component mount
+  useEffect(() => {
+    fetchHeroSettings();
+  }, []);
+
+  const fetchHeroSettings = async () => {
+    try {
+      const response = await fetch('/api/hero-settings');
+      const result = await response.json();
+      
+      if (result.success && result.data) {
+        setHeroSettings(result.data);
+      }
+    } catch (error) {
+      console.error('Error fetching hero settings:', error);
+    } finally {
+      setHeroLoading(false);
+    }
+  };
 
   const getCampaignIcon = () => {
     if (campaignType === 'ADOPT_LANGUAGE') {
@@ -146,7 +182,15 @@ export function CheckoutWizard({ campaignType, selectedLanguage }: CheckoutWizar
       setCurrentStep('payment');
     } catch (error: any) {
       console.error('Error creating payment intent:', error);
-      // For now, continue to payment step even if payment intent creation fails
+      
+      // Show a more user-friendly error if it's a configuration issue
+      if (error.message && error.message.includes('Payment service not configured')) {
+        alert('Payment service is not configured. Please check your Stripe configuration in the .env file.');
+        return;
+      }
+      
+      // For other errors, show generic message but still continue to payment step for testing
+      console.warn('Payment intent creation failed, continuing to payment step for testing purposes');
       setCurrentStep('payment');
     }
   };
@@ -330,6 +374,20 @@ export function CheckoutWizard({ campaignType, selectedLanguage }: CheckoutWizar
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      {/* Dynamic Hero Section */}
+      {heroSettings.heroEnabled && !heroLoading && (
+        <div className="text-center mb-12">
+          <div className={`bg-gradient-to-br ${heroSettings.heroBackgroundColor} rounded-2xl p-8 md:p-12 ${heroSettings.heroTextColor} mb-8`}>
+            <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-4 leading-tight whitespace-pre-line">
+              {heroSettings.heroTitle}
+            </h1>
+            <p className="text-lg md:text-xl opacity-90 max-w-2xl mx-auto">
+              {heroSettings.heroSubtitle}
+            </p>
+          </div>
+        </div>
+      )}
+
       {/* Progress Indicator */}
       {renderProgressIndicator()}
 

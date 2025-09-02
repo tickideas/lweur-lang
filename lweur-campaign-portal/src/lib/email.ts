@@ -3,14 +3,18 @@ import { Partner, Campaign, Language } from '@/types';
 
 // Create email transporter
 const createTransporter = () => {
-  return nodemailer.createTransporter({
-    host: process.env.SMTP_HOST,
-    port: parseInt(process.env.SMTP_PORT || '587'),
-    secure: false, // true for 465, false for other ports
+  return nodemailer.createTransport({
+    host: process.env.BREVO_SMTP_HOST || 'smtp-relay.brevo.com',
+    port: parseInt(process.env.BREVO_SMTP_PORT || '587'),
+    secure: false, // Use STARTTLS
     auth: {
-      user: process.env.SMTP_USER,
-      pass: process.env.SMTP_PASS,
+      user: process.env.BREVO_SMTP_USER, // Your Brevo email
+      pass: process.env.BREVO_SMTP_KEY,  // Your Brevo SMTP key (not password)
     },
+    tls: {
+      ciphers: 'SSLv3',
+      rejectUnauthorized: false
+    }
   });
 };
 
@@ -270,7 +274,7 @@ export const emailService = {
     const transporter = createTransporter();
     
     const mailOptions = {
-      from: `"Loveworld Europe" <${process.env.SMTP_USER}>`,
+      from: `"Loveworld Europe" <${process.env.BREVO_SMTP_USER}>`,
       to: partner.email,
       subject: templates.welcome.subject,
       html: templates.welcome.html(partner, campaign),
@@ -293,7 +297,7 @@ export const emailService = {
     const transporter = createTransporter();
     
     const mailOptions = {
-      from: `"Loveworld Europe" <${process.env.SMTP_USER}>`,
+      from: `"Loveworld Europe" <${process.env.BREVO_SMTP_USER}>`,
       to: partner.email,
       subject: templates.monthlyUpdate.subject,
       html: templates.monthlyUpdate.html(partner, campaign),
@@ -317,7 +321,7 @@ export const emailService = {
     const transporter = createTransporter();
     
     const mailOptions = {
-      from: `"Loveworld Europe" <${process.env.SMTP_USER}>`,
+      from: `"Loveworld Europe" <${process.env.BREVO_SMTP_USER}>`,
       to: partner.email,
       subject: templates.paymentConfirmation.subject,
       html: templates.paymentConfirmation.html(partner, amount, currency),
@@ -337,7 +341,7 @@ export const emailService = {
     const transporter = createTransporter();
     
     const mailOptions = {
-      from: `"Loveworld Europe" <${process.env.SMTP_USER}>`,
+      from: `"Loveworld Europe" <${process.env.BREVO_SMTP_USER}>`,
       to: partner.email,
       subject: templates.paymentFailed.subject,
       html: templates.paymentFailed.html(partner),
@@ -362,7 +366,7 @@ export const emailService = {
     const transporter = createTransporter();
     
     const mailOptions = {
-      from: from || `"Loveworld Europe" <${process.env.SMTP_USER}>`,
+      from: from || `"Loveworld Europe" <${process.env.BREVO_SMTP_USER}>`,
       to,
       subject,
       html,

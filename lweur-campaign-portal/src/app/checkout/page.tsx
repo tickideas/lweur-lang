@@ -97,43 +97,10 @@ export default function CheckoutPage() {
       <Header />
       
       <div className="min-h-screen bg-neutral-50 py-8">
-        {/* Breadcrumb */}
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-8">
-          <Link
-            href={campaignType === 'ADOPT_LANGUAGE' ? '/adopt-language' : '/sponsor-translation'}
-            className="inline-flex items-center text-[#1226AA] hover:text-blue-800 transition-colors"
-          >
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Back to {campaignType === 'ADOPT_LANGUAGE' ? 'Language Selection' : 'Translation Sponsorship'}
-          </Link>
-        </div>
-
-        {/* CBN Europe Style Layout */}
-        <div className="relative">
-          {/* Left Side Background - CBN Europe Style */}
-          <div className="hidden lg:block fixed left-0 top-0 w-1/2 h-full bg-gradient-to-br from-[#1226AA] to-blue-800">
-            <div className="h-full flex items-center justify-center p-12">
-              <div className="text-white text-center max-w-lg">
-                <h1 className="text-6xl font-bold mb-6 leading-tight">
-                  YOU'RE A<br />
-                  WORLD<br />
-                  CHANGER
-                </h1>
-                <p className="text-xl opacity-90">
-                  Your generosity is transforming lives across Europe
-                </p>
-              </div>
-            </div>
-          </div>
-
-          {/* Right Side Content */}
-          <div className="lg:ml-[50%] lg:pl-8">
-            <CheckoutWizard
-              campaignType={campaignType}
-              selectedLanguage={selectedLanguage}
-            />
-          </div>
-        </div>
+        <CheckoutWizard
+          campaignType={campaignType}
+          selectedLanguage={selectedLanguage}
+        />
       </div>
 
       <Footer />

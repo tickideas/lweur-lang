@@ -55,7 +55,7 @@ This is a CRITICAL step that must NEVER be skipped when working on any code-rela
 - **Database**: PostgreSQL
 - **Payments**: Stripe (recurring subscriptions)
 - **Authentication**: JWT-based admin system with role-based access
-- **Email**: Nodemailer with SMTP
+- **Email**: Nodemailer with Brevo SMTP
 - **Testing**: Jest with React Testing Library
 
 ### Core Models (Prisma Schema)
@@ -107,7 +107,7 @@ npm run lint           # ESLint checking
 - `NEXTAUTH_URL` - Application base URL
 - `NEXTAUTH_SECRET` - JWT signing secret
 - Stripe keys: `STRIPE_SECRET_KEY`, `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY`, `STRIPE_WEBHOOK_SECRET`
-- Email SMTP settings: `EMAIL_FROM`, `SMTP_HOST`, `SMTP_USER`, `SMTP_PASS`
+- Brevo email settings: `BREVO_SMTP_HOST`, `BREVO_SMTP_PORT`, `BREVO_SMTP_USER`, `BREVO_SMTP_KEY`
 
 ### Payment Flow Architecture
 1. Frontend creates payment intent via `/api/payments/create-intent`

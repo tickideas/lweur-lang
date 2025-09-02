@@ -173,7 +173,7 @@ export function CheckoutForm({
         throw new Error(submitError.message);
       }
 
-      const { error: confirmError } = await stripe.confirmPayment({
+      const { error: confirmError, paymentIntent } = await stripe.confirmPayment({
         elements,
         confirmParams: {
           return_url: `${window.location.origin}/checkout?step=confirmation`,
@@ -185,6 +185,10 @@ export function CheckoutForm({
         throw new Error(confirmError.message);
       }
 
+      if (!paymentIntent || !paymentIntent.id) {
+        throw new Error('Payment intent not found in confirmation result');
+      }
+
       // Confirm payment on backend
       const confirmResponse = await fetch('/api/payments/confirm', {
         method: 'POST',
@@ -193,12 +197,15 @@ export function CheckoutForm({
         },
         body: JSON.stringify({
           campaignId,
-          paymentIntentId: 'payment_intent_id', // This would come from Stripe
+          paymentIntentId: paymentIntent.id,
         }),
       });
 
       if (confirmResponse.ok) {
         onSuccess?.();
+      } else {
+        const errorData = await confirmResponse.json();
+        throw new Error(errorData.error || 'Failed to confirm payment on backend');
       }
     } catch (err: any) {
       setError(err.message);
