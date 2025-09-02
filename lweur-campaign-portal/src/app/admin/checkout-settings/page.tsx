@@ -113,7 +113,7 @@ export default function CheckoutSettingsPage() {
     remove: removeAdoptPreset
   } = useFieldArray({
     control,
-    name: 'adoptLanguagePresetAmounts'
+    name: 'adoptLanguagePresetAmounts' as const
   });
 
   const {
@@ -122,7 +122,7 @@ export default function CheckoutSettingsPage() {
     remove: removeSponsorPreset
   } = useFieldArray({
     control,
-    name: 'sponsorTranslationPresetAmounts'
+    name: 'sponsorTranslationPresetAmounts' as const
   });
 
   const {
@@ -131,7 +131,7 @@ export default function CheckoutSettingsPage() {
     remove: removeHearFromUs
   } = useFieldArray({
     control,
-    name: 'hearFromUsOptions'
+    name: 'hearFromUsOptions' as const
   });
 
   const selectedCurrencies = watch('availableCurrencies');
