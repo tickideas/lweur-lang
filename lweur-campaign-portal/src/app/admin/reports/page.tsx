@@ -14,10 +14,8 @@ import {
   CreditCard, 
   Languages, 
   BarChart3,
-  Calendar,
   Filter
 } from 'lucide-react';
-import { format } from 'date-fns';
 
 const reportTypes = [
   {
@@ -265,7 +263,7 @@ export default function ReportsPage() {
                   <li>• Leave dates empty to include all historical data</li>
                   <li>• Partners/Campaigns: Filtered by creation date</li>
                   <li>• Payments: Filtered by payment date</li>
-                  <li>• Languages: Date filters don't apply</li>
+                  <li>• Languages: Date filters don&apos;t apply</li>
                 </ul>
               </div>
               <div>

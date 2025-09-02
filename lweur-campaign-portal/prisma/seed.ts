@@ -376,6 +376,7 @@ async function main() {
   await prisma.communication.deleteMany({});
   await prisma.payment.deleteMany({});
   await prisma.campaign.deleteMany({});
+  await prisma.checkoutSettings.deleteMany({});
   await prisma.language.deleteMany({});
   await prisma.partner.deleteMany({});
   await prisma.admin.deleteMany({});
@@ -401,6 +402,40 @@ async function main() {
   });
 
   console.log(`✅ Created admin user: ${adminUser.email}`);
+
+  // Create checkout settings for testing the new checkout flow
+  const checkoutSettings = await prisma.checkoutSettings.create({
+    data: {
+      availableCurrencies: ['GBP', 'EUR', 'USD'],
+      defaultCurrency: 'GBP',
+      adoptLanguageDefaultAmount: 15000, // £150
+      adoptLanguagePresetAmounts: [2000, 3500, 5000, 15000, 25000], // £20, £35, £50, £150, £250
+      adoptLanguageMinAmount: 1000, // £10
+      adoptLanguageMaxAmount: 100000, // £1000
+      sponsorTranslationDefaultAmount: 15000, // £150
+      sponsorTranslationPresetAmounts: [2000, 3500, 5000, 15000, 25000], // £20, £35, £50, £150, £250
+      sponsorTranslationMinAmount: 1000, // £10
+      sponsorTranslationMaxAmount: 100000, // £1000
+      showOneTimeOption: false, // Currently monthly only
+      requirePhone: false,
+      requireOrganization: false,
+      hearFromUsOptions: [
+        'Search Engine',
+        'Social Media', 
+        'Friend/Family',
+        'Church',
+        'Advertisement',
+        'Email',
+        'Newsletter',
+        'Word of Mouth',
+        'Other'
+      ],
+      checkoutTitle: 'Your generosity is transforming lives!',
+      checkoutSubtitle: 'Support Loveworld Europe\'s mission to reach every European language with the Gospel',
+    },
+  });
+
+  console.log(`✅ Created checkout settings with ${checkoutSettings.availableCurrencies.length} currencies`);
 
   // Create some demo partners and campaigns
   const demoPartner = await prisma.partner.create({
@@ -440,12 +475,102 @@ async function main() {
     }
   }
 
+  // Create additional test partners for different scenarios
+  const testPartners = [
+    {
+      email: 'john.smith@example.com',
+      firstName: 'John',
+      lastName: 'Smith',
+      country: 'GB',
+      preferredLanguage: 'en',
+      organization: 'London Community Church',
+      phoneNumber: '+44 20 7123 4567',
+    },
+    {
+      email: 'marie.dubois@example.fr',
+      firstName: 'Marie',
+      lastName: 'Dubois',
+      country: 'FR',
+      preferredLanguage: 'fr',
+      organization: 'Église de Paris',
+      phoneNumber: '+33 1 23 45 67 89',
+    },
+    {
+      email: 'anna.mueller@example.de',
+      firstName: 'Anna',
+      lastName: 'Müller',
+      country: 'DE',
+      preferredLanguage: 'de',
+      organization: 'Berliner Gemeinde',
+      phoneNumber: '+49 30 12345678',
+    },
+  ];
+
+  const createdPartners = [];
+  for (const partnerData of testPartners) {
+    const partner = await prisma.partner.create({ data: partnerData });
+    createdPartners.push(partner);
+    console.log(`✅ Created test partner: ${partner.firstName} ${partner.lastName}`);
+  }
+
+  // Create more diverse campaigns for testing
+  const availableLanguages = await prisma.language.findMany({
+    where: { adoptionStatus: 'AVAILABLE' },
+    take: 10,
+  });
+
+  let campaignCount = 3; // Already created 3 above
+
+  // Create some sponsor translation campaigns
+  for (const [index, partner] of createdPartners.entries()) {
+    if (index < availableLanguages.length) {
+      await prisma.campaign.create({
+        data: {
+          type: 'SPONSOR_TRANSLATION',
+          partnerId: partner.id,
+          languageId: availableLanguages[index].id,
+          monthlyAmount: 15000, // £150
+          currency: 'GBP',
+          status: 'ACTIVE',
+          startDate: new Date(),
+          nextBillingDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+        },
+      });
+      console.log(`✅ Created translation sponsorship for ${availableLanguages[index].name}`);
+      campaignCount++;
+    }
+  }
+
+  // Create some sample payment records for testing
+  const campaigns = await prisma.campaign.findMany({ take: 3 });
+  for (const campaign of campaigns) {
+    await prisma.payment.create({
+      data: {
+        campaignId: campaign.id,
+        partnerId: campaign.partnerId,
+        amount: campaign.monthlyAmount,
+        currency: campaign.currency,
+        status: 'SUCCEEDED',
+        paymentDate: new Date(),
+        stripePaymentIntentId: `pi_test_${Math.random().toString(36).substring(7)}`,
+        receiptUrl: 'https://pay.stripe.com/receipts/test_receipt_url',
+      },
+    });
+  }
+
+  console.log(`✅ Created sample payment records`);
+
   console.log('🎉 Seeding completed successfully!');
   console.log(`📊 Summary:`);
   console.log(`   - ${EUROPEAN_LANGUAGES.length} languages added`);
-  console.log(`   - 1 admin user created`);
-  console.log(`   - 1 demo partner created`);
-  console.log(`   - 3 demo campaigns created`);
+  console.log(`   - 1 admin user created (admin@loveworldeurope.org / password123)`);
+  console.log(`   - ${testPartners.length + 1} demo partners created`);
+  console.log(`   - ${campaignCount} demo campaigns created`);
+  console.log(`   - 1 checkout settings configuration created`);
+  console.log(`   - Sample payment records created`);
+  console.log(`\n🚀 Ready to test the checkout flow!`);
+  console.log(`   Visit: http://localhost:3000/adopt-language to start testing`);
+  console.log(`   Admin: http://localhost:3000/admin (admin@loveworldeurope.org / password123)`);
 }
 
 main()
@@ -455,4 +580,4 @@ main()
   })
   .finally(async () => {
     await prisma.$disconnect();
-  });"
+  });

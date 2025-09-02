@@ -21,9 +21,12 @@ import {
   Building,
   Phone,
   Globe,
+  Check,
+  CreditCard,
 } from 'lucide-react';
 import { Language, CampaignType } from '@/types';
 import { EUROPEAN_COUNTRIES } from '@/utils';
+import Link from 'next/link';
 
 const partnerInfoSchema = z.object({
   firstName: z.string().min(1, 'First name is required'),
@@ -33,16 +36,40 @@ const partnerInfoSchema = z.object({
   organization: z.string().optional(),
   country: z.string().min(1, 'Country is required'),
   preferredLanguage: z.string().default('en'),
+  street: z.string().optional(),
+  city: z.string().optional(),
+  postalCode: z.string().optional(),
+  hearFromUs: z.string().optional(),
+  marketingConsent: z.boolean().default(true),
+  termsConsent: z.boolean().default(true),
 });
 
 type PartnerInfoForm = z.infer<typeof partnerInfoSchema>;
+
+interface CheckoutData {
+  amount: number;
+  currency: string;
+  isRecurring: boolean;
+  partnerInfo?: {
+    firstName: string;
+    lastName: string;
+    email: string;
+    phoneNumber?: string;
+    organization?: string;
+    country: string;
+    preferredLanguage: string;
+  };
+  hearFromUs?: string;
+}
 
 interface CheckoutFormProps {
   campaignType?: CampaignType;
   selectedLanguage?: Language | null;
   step?: 'details' | 'payment' | 'confirmation';
   campaignId?: string;
-  onStepChange?: (step: 'details' | 'payment' | 'confirmation') => void;
+  checkoutData?: CheckoutData;
+  clientSecret?: string;
+  onDetailsComplete?: (partnerInfo: any) => void;
   onPaymentReady?: (clientSecret: string, campaignId: string) => void;
   onSuccess?: () => void;
   onBack?: () => void;
@@ -53,7 +80,9 @@ export function CheckoutForm({
   selectedLanguage,
   step = 'details',
   campaignId,
-  onStepChange,
+  checkoutData,
+  clientSecret,
+  onDetailsComplete,
   onPaymentReady,
   onSuccess,
   onBack,
@@ -62,14 +91,11 @@ export function CheckoutForm({
   const elements = useElements();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string>('');
-  const [partnerInfo, setPartnerInfo] = useState<PartnerInfoForm | null>(null);
 
   const {
     register,
     handleSubmit,
     formState: { errors },
-    setValue,
-    watch,
   } = useForm<PartnerInfoForm>({
     resolver: zodResolver(partnerInfoSchema),
     defaultValues: {
@@ -79,8 +105,16 @@ export function CheckoutForm({
   });
 
   const onSubmitDetails = async (data: PartnerInfoForm) => {
-    if (!campaignType || !selectedLanguage) {
-      setError('Campaign type and language selection are required');
+    if (step === 'details') {
+      // For details step in wizard, just pass data back to wizard
+      if (onDetailsComplete) {
+        onDetailsComplete(data);
+        return;
+      }
+    }
+
+    if (!campaignType || !selectedLanguage || !checkoutData) {
+      setError('Campaign type, language selection, and checkout data are required');
       return;
     }
 
@@ -96,11 +130,14 @@ export function CheckoutForm({
         body: JSON.stringify({
           campaignType,
           languageId: selectedLanguage.id,
+          amount: checkoutData.amount,
+          currency: checkoutData.currency,
+          isRecurring: checkoutData.isRecurring,
           partnerInfo: data,
           billingAddress: {
-            line1: '123 Main Street', // This will be collected in payment form
-            city: 'London',
-            postalCode: 'SW1A 1AA',
+            line1: data.street || 'Address to be collected',
+            city: data.city || 'City to be collected',
+            postalCode: data.postalCode || 'Postcode to be collected',
             country: data.country,
           },
         }),
@@ -112,7 +149,6 @@ export function CheckoutForm({
         throw new Error(result.error || 'Failed to create payment');
       }
 
-      setPartnerInfo(data);
       onPaymentReady?.(result.clientSecret, result.campaignId);
     } catch (err: any) {
       setError(err.message);
@@ -209,7 +245,7 @@ export function CheckoutForm({
               <div>
                 <p className="font-medium">Welcome Email</p>
                 <p className="text-sm text-gray-600">
-                  You'll receive a welcome email with details about your sponsorship and how to track impact.
+                  You&apos;ll receive a welcome email with details about your sponsorship and how to track impact.
                 </p>
               </div>
             </div>
@@ -233,12 +269,12 @@ export function CheckoutForm({
           </Button>
           
           <div>
-            <a
+            <Link
               href="/"
               className="text-primary-600 hover:text-primary-500 font-medium"
             >
               Return to Homepage
-            </a>
+            </Link>
           </div>
         </div>
       </div>
@@ -247,62 +283,95 @@ export function CheckoutForm({
 
   if (step === 'payment') {
     return (
-      <form onSubmit={onSubmitPayment} className="space-y-6">
+      <div className="space-y-8">
+        <div className="text-center">
+          <h2 className="text-2xl font-bold text-neutral-900 mb-2">Donate</h2>
+          <p className="text-neutral-600">Select a payment method</p>
+        </div>
+
+        <form onSubmit={onSubmitPayment} className="space-y-6">
+          {error && (
+            <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+              <p className="text-red-700 text-sm">{error}</p>
+            </div>
+          )}
+
+          {/* Payment Method Selection */}
+          <div className="border border-[#1226AA] rounded-lg p-4 bg-blue-50">
+            <div className="flex items-center space-x-3 mb-4">
+              <div className="w-5 h-5 rounded-full bg-[#1226AA] flex items-center justify-center">
+                <Check className="h-3 w-3 text-white" />
+              </div>
+              <CreditCard className="h-5 w-5 text-neutral-700" />
+              <span className="font-medium text-neutral-900">CreditCard</span>
+            </div>
+          </div>
+
+          {/* Billing Address */}
+          {clientSecret && (
+            <>
+              <div>
+                <h3 className="text-lg font-semibold mb-4">Billing Address</h3>
+                <AddressElement options={{ mode: 'billing' }} />
+              </div>
+
+              {/* Payment Method */}
+              <div>
+                <h3 className="text-lg font-semibold mb-4">Payment Method</h3>
+                <PaymentElement />
+              </div>
+            </>
+          )}
+
+
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+            <p className="text-blue-800 text-sm">
+              <strong>Secure Payment:</strong> Your payment information is encrypted and processed 
+              securely by Stripe. We never store your card details on our servers.
+            </p>
+          </div>
+
+          <div className="flex space-x-4">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={onBack}
+              className="flex-1"
+            >
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              Back
+            </Button>
+            
+            <Button
+              type="submit"
+              disabled={!stripe || loading || !clientSecret}
+              className="flex-1 bg-[#1226AA] hover:bg-blue-800"
+              isLoading={loading}
+            >
+              Donate
+              <ArrowRight className="ml-2 h-4 w-4" />
+            </Button>
+          </div>
+        </form>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-8">
+      {step === 'details' && (
+        <div className="text-center">
+          <h2 className="text-2xl font-bold text-neutral-900 mb-2">Personal Details</h2>
+          <p className="text-neutral-600">Please provide your information</p>
+        </div>
+      )}
+
+      <form onSubmit={handleSubmit(onSubmitDetails)} className="space-y-6">
         {error && (
           <div className="bg-red-50 border border-red-200 rounded-lg p-4">
             <p className="text-red-700 text-sm">{error}</p>
           </div>
         )}
-
-        <div>
-          <h3 className="text-lg font-semibold mb-4">Billing Address</h3>
-          <AddressElement options={{ mode: 'billing' }} />
-        </div>
-
-        <div>
-          <h3 className="text-lg font-semibold mb-4">Payment Method</h3>
-          <PaymentElement />
-        </div>
-
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-          <p className="text-blue-800 text-sm">
-            <strong>Secure Payment:</strong> Your payment information is encrypted and processed 
-            securely by Stripe. We never store your card details on our servers.
-          </p>
-        </div>
-
-        <div className="flex space-x-4">
-          <Button
-            type="button"
-            variant="outline"
-            onClick={onBack}
-            className="flex-1"
-          >
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            Back
-          </Button>
-          
-          <Button
-            type="submit"
-            disabled={!stripe || loading}
-            className="flex-1"
-            isLoading={loading}
-          >
-            Complete Sponsorship
-            <ArrowRight className="ml-2 h-4 w-4" />
-          </Button>
-        </div>
-      </form>
-    );
-  }
-
-  return (
-    <form onSubmit={handleSubmit(onSubmitDetails)} className="space-y-6">
-      {error && (
-        <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-          <p className="text-red-700 text-sm">{error}</p>
-        </div>
-      )}
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div>
@@ -399,24 +468,95 @@ export function CheckoutForm({
         )}
       </div>
 
-      <div className="bg-gray-50 rounded-lg p-6">
+      {step === 'details' && (
+        <>
+          {/* Address Fields */}
+          <div>
+            <label htmlFor="street" className="form-label">
+              Street Address
+            </label>
+            <input
+              {...register('street')}
+              type="text"
+              className="form-input"
+              placeholder="123 Main Street"
+            />
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <label htmlFor="city" className="form-label">
+                City
+              </label>
+              <input
+                {...register('city')}
+                type="text"
+                className="form-input"
+                placeholder="London"
+              />
+            </div>
+
+            <div>
+              <label htmlFor="postalCode" className="form-label">
+                Postal/Zip Code
+              </label>
+              <input
+                {...register('postalCode')}
+                type="text"
+                className="form-input"
+                placeholder="SW1A 1AA"
+              />
+            </div>
+          </div>
+
+          {/* How did you hear from us */}
+          <div>
+            <label htmlFor="hearFromUs" className="form-label">
+              How did you last hear from us?
+            </label>
+            <select {...register('hearFromUs')} className="form-input">
+              <option value="">None</option>
+              <option value="Search Engine">Search Engine</option>
+              <option value="Social Media">Social Media</option>
+              <option value="Friend/Family">Friend/Family</option>
+              <option value="Church">Church</option>
+              <option value="Advertisement">Advertisement</option>
+              <option value="Email">Email</option>
+              <option value="Other">Other</option>
+            </select>
+          </div>
+        </>
+      )}
+
+
+      <div className="bg-neutral-50 rounded-lg p-6">
         <h3 className="font-semibold mb-3">Privacy & Communication</h3>
-        <div className="space-y-3 text-sm text-gray-600">
+        <div className="space-y-3 text-sm text-neutral-600">
           <label className="flex items-start">
-            <input type="checkbox" className="mt-1 mr-3" defaultChecked />
+            <input 
+              type="checkbox" 
+              {...register('marketingConsent')}
+              className="mt-1 mr-3" 
+              defaultChecked 
+            />
             <span>
               I would like to receive monthly impact reports showing how my support is making a difference.
             </span>
           </label>
           
           <label className="flex items-start">
-            <input type="checkbox" className="mt-1 mr-3" defaultChecked />
+            <input 
+              type="checkbox" 
+              {...register('termsConsent')}
+              className="mt-1 mr-3" 
+              defaultChecked 
+            />
             <span>
-              I agree to receive important updates about my sponsorship and Loveworld Europe's mission.
+              I agree to receive important updates about my sponsorship and Loveworld Europe&apos;s mission.
             </span>
           </label>
           
-          <p className="text-xs text-gray-500">
+          <p className="text-xs text-neutral-500">
             By proceeding, you agree to our Terms of Service and Privacy Policy. 
             You can unsubscribe from communications at any time.
           </p>
@@ -431,8 +571,9 @@ export function CheckoutForm({
         isLoading={loading}
       >
         Continue to Payment
-        <ArrowRight className="ml-2 h-4 w-4" />
-      </Button>
-    </form>
+          <ArrowRight className="ml-2 h-4 w-4" />
+        </Button>
+      </form>
+    </div>
   );
 }

@@ -34,7 +34,7 @@ export default function AdminDashboard() {
       <div className="mb-8">
         <h2 className="text-3xl font-bold text-gray-900">Welcome back, {session?.user.firstName}!</h2>
         <p className="mt-2 text-gray-600">
-          Here's an overview of the Loveworld Europe campaign performance.
+          Here&apos;s an overview of the Loveworld Europe campaign performance.
         </p>
       </div>
 

@@ -197,3 +197,40 @@ enum CommunicationType {
   PAYMENT_REMINDER
   IMPACT_REPORT
 }
+
+// Checkout Settings Model for admin-configurable checkout experience
+model CheckoutSettings {
+  id                    String    @id @default(cuid())
+  // Currency configuration
+  availableCurrencies   String[]  @default(["GBP", "EUR", "USD"])
+  defaultCurrency       String    @default("GBP")
+  
+  // Amount configuration for Adopt Language campaign
+  adoptLanguageDefaultAmount      Int       @default(15000) // £150 in pence
+  adoptLanguagePresetAmounts      Int[]     @default([5000, 10000, 15000, 25000]) // £50, £100, £150, £250
+  adoptLanguageMinAmount          Int       @default(1000)  // £10 minimum
+  adoptLanguageMaxAmount          Int       @default(100000) // £1000 maximum
+  
+  // Amount configuration for Sponsor Translation campaign  
+  sponsorTranslationDefaultAmount    Int       @default(15000) // £150 in pence
+  sponsorTranslationPresetAmounts    Int[]     @default([5000, 10000, 15000, 25000]) // £50, £100, £150, £250
+  sponsorTranslationMinAmount        Int       @default(1000)  // £10 minimum
+  sponsorTranslationMaxAmount        Int       @default(100000) // £1000 maximum
+  
+  // Checkout flow configuration
+  showOneTimeOption     Boolean   @default(false) // For future flexibility
+  requirePhone          Boolean   @default(false)
+  requireOrganization   Boolean   @default(false)
+  
+  // How did you hear from us options
+  hearFromUsOptions     String[]  @default(["Search Engine", "Social Media", "Friend/Family", "Church", "Advertisement", "Email", "Other"])
+  
+  // Branding and messaging
+  checkoutTitle         String    @default("Your generosity is transforming lives!")
+  checkoutSubtitle      String    @default("Support Loveworld Europe's mission to reach every European language with the Gospel")
+  
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+  
+  @@map("checkout_settings")
+}

@@ -21,7 +21,7 @@ export default function HomePage() {
               in Every Language
             </h1>
             <p className="mt-6 text-lg leading-8 text-primary-100">
-              Join Loveworld Europe's mission to broadcast Christian content across 60 languages in Europe, 
+              Join Loveworld Europe&apos;s mission to broadcast Christian content across 60 languages in Europe, 
               reaching 750 million souls with life-transforming programming. Adopt a language or sponsor 
               translation for just £150 per month.
             </p>
@@ -88,7 +88,7 @@ export default function HomePage() {
               Two Ways to Make an Impact
             </h2>
             <p className="mt-4 text-lg leading-8 text-gray-600">
-              Choose how you'd like to support our mission to reach Europe with the Gospel
+              Choose how you&apos;d like to support our mission to reach Europe with the Gospel
             </p>
           </div>
           
@@ -143,7 +143,7 @@ export default function HomePage() {
               </CardHeader>
               <CardContent>
                 <p className="text-gray-700 mb-6">
-                  Enable live translation of our flagship program "Passacris" into multiple 
+                  Enable live translation of our flagship program &ldquo;Passacris&rdquo; into multiple 
                   European languages. Your sponsorship brings real-time Gospel content to 
                   diverse communities across the continent.
                 </p>

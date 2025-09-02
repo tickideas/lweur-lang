@@ -2,7 +2,6 @@ import { POST } from '@/app/api/webhooks/stripe/route'
 import { NextRequest } from 'next/server'
 import { stripe } from '@/lib/stripe'
 import { prisma } from '@/lib/prisma'
-import { EmailService } from '@/lib/email'
 
 // Mock dependencies
 jest.mock('@/lib/stripe')

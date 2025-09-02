@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useSession } from 'next-auth/react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
@@ -16,7 +15,6 @@ import {
   Calendar,
   DollarSign,
   Eye,
-  Edit,
   MoreHorizontal,
 } from 'lucide-react';
 import Link from 'next/link';
@@ -43,11 +41,9 @@ interface Partner {
 }
 
 export default function PartnersPage() {
-  const { data: session } = useSession();
   const [partners, setPartners] = useState<Partner[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState('');
   const [countryFilter, setCountryFilter] = useState('');
 
   useEffect(() => {

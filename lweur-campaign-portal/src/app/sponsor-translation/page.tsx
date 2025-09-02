@@ -14,10 +14,8 @@ import {
   Tv,
   Languages,
   ArrowRight,
-  CheckCircle,
   Star,
   MapPin,
-  Calendar,
 } from 'lucide-react';
 import Link from 'next/link';
 import { Language } from '@/types';
@@ -34,7 +32,6 @@ type LanguageWithStats = Language & {
 export default function SponsorTranslationPage() {
   const [languages, setLanguages] = useState<LanguageWithStats[]>([]);
   const [loading, setLoading] = useState(true);
-  const [selectedLanguages, setSelectedLanguages] = useState<string[]>([]);
 
   useEffect(() => {
     fetchLanguages();
@@ -55,14 +52,6 @@ export default function SponsorTranslationPage() {
     } finally {
       setLoading(false);
     }
-  };
-
-  const toggleLanguageSelection = (languageId: string) => {
-    setSelectedLanguages(prev => 
-      prev.includes(languageId)
-        ? prev.filter(id => id !== languageId)
-        : [...prev, languageId]
-    );
   };
 
   const priorityLanguages = languages.filter(lang => lang.priority <= 10);
@@ -96,7 +85,7 @@ export default function SponsorTranslationPage() {
               Sponsor Live Translation
             </h1>
             <p className="text-xl text-accent-100 mb-8 max-w-3xl mx-auto">
-              Enable real-time translation of our flagship program "Passacris" into European languages. 
+              Enable real-time translation of our flagship program &ldquo;Passacris&rdquo; into European languages. 
               Your £150 monthly sponsorship brings live Gospel content to diverse communities across the continent.
             </p>
           </div>
@@ -135,7 +124,7 @@ export default function SponsorTranslationPage() {
                 About Passacris Program
               </h2>
               <p className="text-lg text-gray-600 mb-6">
-                Passacris is Loveworld Europe's flagship program, featuring powerful teachings, 
+                Passacris is Loveworld Europe&apos;s flagship program, featuring powerful teachings, 
                 worship, and testimonies that transform lives. By sponsoring translation, you enable 
                 real-time access to this life-changing content for non-English speaking communities.
               </p>
@@ -359,7 +348,7 @@ export default function SponsorTranslationPage() {
               </div>
               <h3 className="text-xl font-semibold mb-2">Choose Your Language</h3>
               <p className="text-gray-600">
-                Select one or more European languages you'd like to sponsor for translation services.
+                Select one or more European languages you&apos;d like to sponsor for translation services.
               </p>
             </div>
             
