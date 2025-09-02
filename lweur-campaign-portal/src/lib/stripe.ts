@@ -69,4 +69,4 @@ export const formatAmountFromDisplay = (amount: string): number => {
   // Remove currency symbols and convert to pence
   const cleanAmount = amount.replace(/[£$€,\\s]/g, '');
   return Math.round(parseFloat(cleanAmount) * 100);
-};"
+};
