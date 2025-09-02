@@ -1,0 +1,199 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Partner/User Model for donors and supporters
+model Partner {
+  id                 String    @id @default(cuid())
+  email              String    @unique
+  firstName          String
+  lastName           String
+  phoneNumber        String?
+  organization       String?
+  country            String
+  preferredLanguage  String    @default("en")
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+  stripeCustomerId   String?   @unique
+  isActive           Boolean   @default(true)
+  
+  // Relations
+  campaigns          Campaign[]
+  payments           Payment[]
+  communications     Communication[]
+  
+  @@map("partners")
+}
+
+// Language Model for European languages
+model Language {
+  id                        String       @id @default(cuid())
+  name                      String       @unique
+  nativeName                String
+  iso639Code                String       @unique
+  region                    String
+  countries                 String[]
+  speakerCount              Int
+  flagUrl                   String
+  isActive                  Boolean      @default(true)
+  adoptionStatus            AdoptionStatus @default(AVAILABLE)
+  translationNeedsSponsorship Boolean     @default(true)
+  priority                  Int          @default(1)
+  description               String?
+  createdAt                 DateTime     @default(now())
+  updatedAt                 DateTime     @updatedAt
+  
+  // Relations
+  campaigns                 Campaign[]
+  
+  @@map("languages")
+}
+
+// Campaign Model for both adoption and translation sponsorship
+model Campaign {
+  id                    String        @id @default(cuid())
+  type                  CampaignType
+  partnerId             String
+  languageId            String
+  monthlyAmount         Int           // Amount in pence (£150 = 15000)
+  currency              String        @default("GBP")
+  startDate             DateTime      @default(now())
+  endDate               DateTime?
+  status                CampaignStatus @default(ACTIVE)
+  stripeSubscriptionId  String?       @unique
+  nextBillingDate       DateTime?
+  notes                 String?
+  createdAt             DateTime      @default(now())
+  updatedAt             DateTime      @updatedAt
+  
+  // Relations
+  partner               Partner       @relation(fields: [partnerId], references: [id], onDelete: Cascade)
+  language              Language      @relation(fields: [languageId], references: [id])
+  payments              Payment[]
+  
+  @@map("campaigns")
+  @@index([partnerId])
+  @@index([languageId])
+  @@index([status])
+}
+
+// Payment Model for transaction tracking
+model Payment {
+  id                    String        @id @default(cuid())
+  campaignId            String
+  partnerId             String
+  amount                Int           // Amount in pence
+  currency              String        @default("GBP")
+  stripePaymentIntentId String?       @unique
+  stripeInvoiceId       String?
+  status                PaymentStatus @default(PENDING)
+  paymentDate           DateTime      @default(now())
+  failureReason         String?
+  receiptUrl            String?
+  createdAt             DateTime      @default(now())
+  updatedAt             DateTime      @updatedAt
+  
+  // Relations
+  campaign              Campaign      @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  partner               Partner       @relation(fields: [partnerId], references: [id])
+  
+  @@map("payments")
+  @@index([campaignId])
+  @@index([partnerId])
+  @@index([status])
+}
+
+// Admin User Model for dashboard access
+model Admin {
+  id                String      @id @default(cuid())
+  email             String      @unique
+  firstName         String
+  lastName          String
+  role              AdminRole   @default(VIEWER)
+  passwordHash      String
+  isActive          Boolean     @default(true)
+  lastLoginAt       DateTime?
+  createdAt         DateTime    @default(now())
+  updatedAt         DateTime    @updatedAt
+  
+  // Relations
+  communications    Communication[]
+  
+  @@map("admins")
+}
+
+// Communication Model for partner interaction tracking
+model Communication {
+  id            String            @id @default(cuid())
+  partnerId     String
+  adminId       String?
+  type          CommunicationType
+  subject       String
+  content       String
+  sentAt        DateTime          @default(now())
+  followUpDate  DateTime?
+  status        String            @default("sent")
+  createdAt     DateTime          @default(now())
+  
+  // Relations
+  partner       Partner           @relation(fields: [partnerId], references: [id], onDelete: Cascade)
+  admin         Admin?            @relation(fields: [adminId], references: [id])
+  
+  @@map("communications")
+  @@index([partnerId])
+}
+
+// Enums
+enum AdoptionStatus {
+  AVAILABLE
+  ADOPTED
+  PENDING
+  WAITLIST
+}
+
+enum CampaignType {
+  ADOPT_LANGUAGE
+  SPONSOR_TRANSLATION
+}
+
+enum CampaignStatus {
+  ACTIVE
+  PAUSED
+  CANCELLED
+  COMPLETED
+}
+
+enum PaymentStatus {
+  PENDING
+  SUCCEEDED
+  FAILED
+  REFUNDED
+}
+
+enum AdminRole {
+  SUPER_ADMIN
+  CAMPAIGN_MANAGER
+  FINANCE
+  VIEWER
+}
+
+enum CommunicationType {
+  EMAIL
+  PHONE
+  SMS
+  NEWSLETTER
+  WELCOME_SERIES
+  PAYMENT_REMINDER
+  IMPACT_REPORT
+}
