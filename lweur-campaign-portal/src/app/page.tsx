@@ -76,10 +76,10 @@ We’re reaching over <strong>750 million people</strong> with the Gospel — on
         <div className="mx-auto max-w-7xl px-6 lg:px-8">
           <div className="mx-auto max-w-2xl text-center mb-16">
             <h2 className="font-display text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">
-              Hear From Our Partners
+             Hear From Our Partners & Viewers
             </h2>
             <p className="mt-4 text-lg leading-8 text-gray-600">
-              Real stories of transformation and impact from supporters across Europe
+              Real voices. Real impact. Lives changed by the Gospel through your support.
             </p>
           </div>
           
