@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 
 # /Users/0xanyi/Developer/lweur-lang/lweur-campaign-portal/migrate-and-start.sh
 # Production startup script with automated database migrations and safety checks
@@ -15,16 +15,24 @@ if [ -z "$DATABASE_URL" ]; then
     exit 1
 fi
 
-echo "📊 Checking database connection..."
+echo "📊 Waiting for database to be ready..."
 
-# Test database connection
-if ! npx prisma db pull --schema=./prisma/schema.prisma >/dev/null 2>&1; then
-    echo "❌ ERROR: Cannot connect to database"
-    echo "   Please check your DATABASE_URL and ensure the database server is running"
-    exit 1
-fi
+# Simple retry loop to wait for the database
+RETRIES=${DB_CONNECT_RETRIES:-10}
+SLEEP_SECONDS=${DB_CONNECT_SLEEP:-3}
+i=0
+until npx prisma migrate status --schema=./prisma/schema.prisma >/dev/null 2>&1; do
+    i=$((i+1))
+    if [ "$i" -ge "$RETRIES" ]; then
+        echo "❌ ERROR: Database not reachable after $RETRIES attempts"
+        echo "   Please check your DATABASE_URL and ensure the database server is running"
+        exit 1
+    fi
+    echo "⏳ Database not ready yet, retry $i/$RETRIES..."
+    sleep "$SLEEP_SECONDS"
+done
 
-echo "✅ Database connection successful"
+echo "✅ Database reachable"
 
 # Backup existing data (optional, for safety)
 if [ "$ENABLE_DB_BACKUP" = "true" ]; then
@@ -75,16 +83,9 @@ else
     fi
 fi
 
-# Generate fresh Prisma client (in case of schema changes)
-echo "🔨 Generating Prisma client..."
-npx prisma generate --schema=./prisma/schema.prisma
-
-if [ $? -eq 0 ]; then
-    echo "✅ Prisma client generated successfully"
-else
-    echo "❌ ERROR: Failed to generate Prisma client"
-    exit 1
-fi
+# Note: We do not run `prisma generate` here because the client
+# is generated during the build phase. Running it at runtime can
+# fail due to file permissions and is unnecessary in production.
 
 # Optional: Seed database if needed
 if [ "$RUN_SEED" = "true" ]; then
