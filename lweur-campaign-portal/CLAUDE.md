@@ -122,6 +122,23 @@ npm run lint           # ESLint checking
 - Protected API routes using middleware.ts
 - Admin login at `/admin/login`
 
+## Admin Interface Design
+
+### Modern Card-Based Admin Pages
+- **Languages Admin Page** (`/admin/languages`) - Completely redesigned with modern card-based layout
+  - Statistics dashboard with key metrics (Total, Active, Adopted, Need Sponsorship, Total Speakers)
+  - Beautiful language cards with visual status badges and priority indicators
+  - Advanced search and filtering (by region, status, active/inactive)
+  - Comprehensive edit modal with all language fields
+  - Enhanced delete confirmation with context awareness
+  - Responsive grid layout (1 column mobile, 2 tablet, 3 desktop)
+
+### Checkout Settings Admin
+- **Amount Configuration** - User-friendly interface displaying amounts in pounds (£) instead of pence
+  - Automatic conversion between pounds (UI) and pence (API/database)
+  - Real-time preview of formatted currency amounts
+  - Separate preset amounts for "Adopt Language" vs "Sponsor Translation" campaigns
+
 ## Development Guidelines
 
 ### **MANDATORY Development Workflow**

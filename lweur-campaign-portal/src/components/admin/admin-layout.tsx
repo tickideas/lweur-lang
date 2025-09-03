@@ -4,6 +4,7 @@ import { useSession, signOut } from 'next-auth/react';
 import { useRouter, usePathname } from 'next/navigation';
 import { useEffect } from 'react';
 import { Button } from '@/components/ui/button';
+import { AdminFooter } from '@/components/admin/admin-footer';
 import Link from 'next/link';
 import { 
   LogOut,
@@ -96,29 +97,29 @@ export function AdminLayout({ children }: AdminLayoutProps) {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 flex flex-col">
       {/* Header */}
       <header className="bg-white shadow-sm border-b">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center py-6">
             <div className="flex items-center space-x-4">
               <Link href="/admin" className="flex items-center space-x-4">
-                <div className="h-10 w-10 bg-primary-900 rounded-lg flex items-center justify-center">
+                <div className="h-10 w-10 bg-[#1226AA] rounded-lg flex items-center justify-center">
                   <span className="text-white font-bold">LWE</span>
                 </div>
                 <div>
-                  <h1 className="text-2xl font-bold text-gray-900">Admin Dashboard</h1>
-                  <p className="text-sm text-gray-500">Campaign Management Portal</p>
+                  <h1 className="text-2xl font-bold text-neutral-900">Admin Dashboard</h1>
+                  <p className="text-sm text-neutral-500">Campaign Management Portal</p>
                 </div>
               </Link>
             </div>
             
             <div className="flex items-center space-x-4">
               <div className="text-right">
-                <p className="text-sm font-medium text-gray-900">
+                <p className="text-sm font-medium text-neutral-900">
                   {session.user.firstName} {session.user.lastName}
                 </p>
-                <p className="text-xs text-gray-500 capitalize">
+                <p className="text-xs text-neutral-500 capitalize">
                   {session.user.role.replace('_', ' ').toLowerCase()}
                 </p>
               </div>
@@ -132,7 +133,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
       </header>
 
       {/* Navigation */}
-      <nav className="bg-white border-b border-gray-200">
+      <nav className="bg-white border-b border-neutral-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex space-x-8">
             {navigation.map((item) => {
@@ -146,8 +147,8 @@ export function AdminLayout({ children }: AdminLayoutProps) {
                   className={cn(
                     "flex items-center space-x-2 py-4 px-1 border-b-2 font-medium text-sm transition-colors",
                     isActive
-                      ? "border-primary-600 text-primary-700"
-                      : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                      ? "border-[#1226AA] text-[#1226AA]"
+                      : "border-transparent text-neutral-500 hover:text-neutral-700 hover:border-neutral-300"
                   )}
                 >
                   <IconComponent className="h-4 w-4" />
@@ -160,9 +161,12 @@ export function AdminLayout({ children }: AdminLayoutProps) {
       </nav>
 
       {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <main className="flex-1 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full">
         {children}
       </main>
+      
+      {/* Footer */}
+      <AdminFooter />
     </div>
   );
 }
