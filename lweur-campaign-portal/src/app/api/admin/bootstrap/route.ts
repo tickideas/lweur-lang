@@ -2,6 +2,9 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import bcrypt from 'bcryptjs';
 
+// Force Node.js runtime (bcryptjs & Prisma need it; avoids edge runtime surprises)
+export const runtime = 'nodejs';
+
 /*
   Secure one-off SUPER_ADMIN bootstrap endpoint.
   Usage (recommended – rely on env, avoid sending password over network):
@@ -42,6 +45,7 @@ interface BootstrapBody {
   lastName?: string;
   force?: boolean;
   reset?: boolean; // alias for force
+  dryRun?: boolean; // if true, don't mutate
 }
 
 function json(status: number, data: any) {
@@ -73,6 +77,8 @@ export async function POST(req: NextRequest) {
   const firstName = body.firstName || process.env.ADMIN_BOOTSTRAP_FIRST_NAME || 'Super';
   const lastName = body.lastName || process.env.ADMIN_BOOTSTRAP_LAST_NAME || 'Admin';
   const force = body.force || body.reset || false;
+  const dryRun = body.dryRun || false;
+  const debug = process.env.ADMIN_BOOTSTRAP_DEBUG === '1' || req.nextUrl.searchParams.get('debug') === '1';
 
   if (!email) return json(400, { ok: false, error: 'Email required (env or body).' });
   if (!password) return json(400, { ok: false, error: 'Password required (env or body).' });
@@ -80,6 +86,10 @@ export async function POST(req: NextRequest) {
 
   try {
     const existing = await prisma.admin.findUnique({ where: { email } });
+
+    if (dryRun) {
+      return json(200, { ok: true, action: 'dry-run', existing: !!existing, role: existing?.role || null });
+    }
 
     if (existing) {
       if (force) {
@@ -107,7 +117,12 @@ export async function POST(req: NextRequest) {
       data: { email, passwordHash, firstName, lastName, role: 'SUPER_ADMIN', isActive: true }
     });
     return json(201, { ok: true, action: 'created', email: created.email, role: created.role });
-  } catch (e) {
+  } catch (e: any) {
+    if (debug) {
+      console.error('ADMIN BOOTSTRAP DEBUG ERROR:', e);
+      return json(500, { ok: false, error: 'Internal error', detail: e?.message || 'unknown' });
+    }
+    console.error('Admin bootstrap error');
     return json(500, { ok: false, error: 'Internal error' });
   }
 }
