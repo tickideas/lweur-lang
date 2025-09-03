@@ -12,7 +12,9 @@ import {
   BarChart3,
   Settings,
   FileText,
-  Heart
+  Heart,
+  Languages as LanguagesIcon,
+  Globe
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -30,6 +32,16 @@ const navigation = [
     name: 'Partners',
     href: '/admin/partners',
     icon: Users,
+  },
+  {
+    name: 'Languages',
+    href: '/admin/languages',
+    icon: LanguagesIcon,
+  },
+  {
+    name: 'Translations',
+    href: '/admin/translations',
+    icon: Globe,
   },
   {
     name: 'Impact',

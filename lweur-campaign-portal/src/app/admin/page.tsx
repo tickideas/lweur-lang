@@ -247,6 +247,23 @@ export default function AdminDashboard() {
         <Card className="hover:shadow-lg transition-shadow cursor-pointer">
           <CardHeader>
             <CardTitle className="flex items-center">
+              <Languages className="h-5 w-5 mr-2" />
+              Languages
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-gray-600 mb-4">
+              Manage adoption status and translation needs by language.
+            </p>
+            <Link href="/admin/languages">
+              <Button className="w-full" variant="secondary">Manage Languages</Button>
+            </Link>
+          </CardContent>
+        </Card>
+
+        <Card className="hover:shadow-lg transition-shadow cursor-pointer">
+          <CardHeader>
+            <CardTitle className="flex items-center">
               <Settings className="h-5 w-5 mr-2" />
               Campaign Settings
             </CardTitle>
