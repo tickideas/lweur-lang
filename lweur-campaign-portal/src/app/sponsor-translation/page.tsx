@@ -82,10 +82,18 @@ export default function SponsorTranslationPage() {
             <h1 className="font-display text-4xl font-bold mb-4">
               Sponsor Live Translation
             </h1>
-            <p className="text-xl text-neutral-800 mb-8 max-w-3xl mx-auto">
-              Enable real-time translation of our flagship program &ldquo;Passacris&rdquo; into European languages. 
-              Your £150 monthly sponsorship brings live Gospel content to diverse communities across the continent.
+             <div className="text-xl text-neutral-800 mb-8 max-w-4xl mx-auto space-y-4">
+              <p className="font-bold text-xg">
+                Make the Gospel heard — and understood — in every language. 
+              </p>
+              <p className="text-base">
+                Your <strong>£150 monthly sponsorship</strong> enables real-time translation of our flagship programs — including: <br/>
+<strong>Your Loveworld Specials with Pastor Chris, Healing Streams Live Services, Global Day of Prayer,</strong> and more — into European languages.
+              
+                Together, we’re bringing life-transforming messages directly to communities across the continent in the languages they understand best.
             </p>
+              
+            </div>
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6 max-w-4xl mx-auto">

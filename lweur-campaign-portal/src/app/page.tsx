@@ -1,28 +1,11 @@
 import { Header } from '@/components/layout/header';
 import { Footer } from '@/components/layout/footer';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ImpactPreview } from '@/components/impact/impact-preview';
-import { Globe, Heart, Languages, TrendingUp, Users, Zap } from 'lucide-react';
+import { Heart, Languages, Zap } from 'lucide-react';
 import Link from 'next/link';
-import { prisma } from '@/lib/prisma';
 
-export default async function HomePage() {
-  // Pull live metrics from the database
-  const [
-    totalLanguages,
-    activeCampaigns,
-    monthlyRevenueAgg,
-    distinctCountries,
-  ] = await Promise.all([
-    prisma.language.count(),
-    prisma.campaign.count({ where: { status: 'ACTIVE' } }),
-    prisma.campaign.aggregate({ where: { status: 'ACTIVE' }, _sum: { monthlyAmount: true } }),
-    prisma.partner.findMany({ select: { country: true }, distinct: ['country'] }),
-  ]);
-
-  const monthlyRevenue = (monthlyRevenueAgg._sum.monthlyAmount || 0) / 100;
-  const countriesReached = distinctCountries.length;
+export default function HomePage() {
 
   return (
     <>
@@ -39,13 +22,14 @@ export default async function HomePage() {
               in Every Language
             </h1>
             <p className="mt-6 text-lg leading-8 text-primary-100">
-              Join Loveworld Europe&apos;s mission to broadcast inspiring and faith-filled content across 60 languages in Europe, 
-              reaching 750 million souls with life-transforming programming. Adopt a language or sponsor 
-              translation for just £150 per month.
+              Join Loveworld Europe&apos;s mission to broadcast inspiring, faith-filled content in 60+ languages across Europe.
+We’re reaching over <strong>750 million people</strong> with the Gospel — one language at a time. 
+<strong> Adopt a Language</strong> or <strong>Sponsor a Translation</strong> for just <strong>£150/month</strong> and help us transform nations.
+
             </p>
             <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">
               <Link href="/adopt-language">
-                <Button size="lg" variant="primary">
+                <Button size="lg" variant="outline" className="bg-white text-[#1226AA] border-white hover:bg-[#1226AA] hover:text-white">
                   <Languages className="mr-2 h-5 w-5" />
                   Adopt a Language
                 </Button>
@@ -61,129 +45,20 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* Impact Metrics (Live) */}
-      <section className="bg-white py-16 sm:py-24">
-        <div className="mx-auto max-w-7xl px-6 lg:px-8">
-          <div className="mx-auto max-w-2xl text-center">
-            <h2 className="font-display text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">
-              Our Impact Across Europe
-            </h2>
-            <p className="mt-4 text-lg leading-8 text-gray-600">
-              See how Loveworld Europe is transforming lives across the continent
-            </p>
-          </div>
-          
-          <div className="mx-auto mt-16 grid max-w-lg grid-cols-1 gap-8 sm:max-w-none sm:grid-cols-2 lg:grid-cols-4">
-            <div className="metric-card">
-              <div className="metric-number">{activeCampaigns}</div>
-              <div className="metric-label">Active Campaigns</div>
-              <p className="mt-2 text-sm text-gray-500">Live sponsorships and adoptions</p>
-            </div>
-            <div className="metric-card">
-              <div className="metric-number">{totalLanguages}</div>
-              <div className="metric-label">Languages Available</div>
-              <p className="mt-2 text-sm text-gray-500">In our current pipeline</p>
-            </div>
-            <div className="metric-card">
-              <div className="metric-number">{countriesReached}</div>
-              <div className="metric-label">Countries Reached</div>
-              <p className="mt-2 text-sm text-gray-500">Based on partner locations</p>
-            </div>
-            <div className="metric-card">
-              <div className="metric-number">£{monthlyRevenue.toLocaleString()}</div>
-              <div className="metric-label">Monthly Support</div>
-              <p className="mt-2 text-sm text-gray-500">From active commitments</p>
-            </div>
-          </div>
-        </div>
-      </section>
 
-      {/* Campaign Overview */}
+
+      {/* Mission Statement */}
       <section className="bg-gray-50 py-16 sm:py-24">
         <div className="mx-auto max-w-7xl px-6 lg:px-8">
-          <div className="mx-auto max-w-2xl text-center">
+          <div className="mx-auto max-w-4xl text-center">
             <h2 className="font-display text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">
-              Two Ways to Make an Impact
+              Our Mission
             </h2>
-            <p className="mt-4 text-lg leading-8 text-gray-600">
-              Choose how you&apos;d like to support our mission to reach Europe with the Gospel
+            <p className="mt-6 text-xl leading-8 text-gray-600">
+              To complete the full preaching of the Gospel of Jesus Christ across the nations of Europe, this year 2025 — in 
+              the language they best understand. To disciple men and women through life-transforming 
+              programming, bombarding the airwaves with truth, faith, and love.
             </p>
-          </div>
-          
-          <div className="mx-auto mt-16 grid max-w-lg grid-cols-1 gap-8 lg:max-w-none lg:grid-cols-2">
-            {/* Adopt a Language Card */}
-            <Card className="campaign-card">
-              <CardHeader>
-                <div className="flex items-center justify-between">
-                  <Languages className="h-12 w-12 text-primary-700" />
-                  <span className="rounded-full bg-primary-200 px-3 py-1 text-sm font-medium text-primary-800">
-                    £150/month
-                  </span>
-                </div>
-                <CardTitle className="text-primary-900">Adopt a Language</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-gray-700 mb-6">
-                  Become the exclusive sponsor of a European language channel. Your support 
-                  enables us to broadcast Christian programming in that language, reaching 
-                  millions of souls with life-transforming content.
-                </p>
-                <ul className="space-y-2 text-sm text-gray-600 mb-6">
-                  <li className="flex items-center">
-                    <TrendingUp className="h-4 w-4 text-success-600 mr-2" />
-                    Exclusive language sponsorship
-                  </li>
-                  <li className="flex items-center">
-                    <Users className="h-4 w-4 text-success-600 mr-2" />
-                    Reach millions of speakers
-                  </li>
-                  <li className="flex items-center">
-                    <Heart className="h-4 w-4 text-success-600 mr-2" />
-                    Monthly impact reports
-                  </li>
-                </ul>
-                <Link href="/adopt-language">
-                  <Button className="w-full">Choose Your Language</Button>
-                </Link>
-              </CardContent>
-            </Card>
-
-            {/* Sponsor Translation Card */}
-            <Card className="campaign-card">
-              <CardHeader>
-                <div className="flex items-center justify-between">
-                  <Zap className="h-12 w-12 text-primary-700" />
-                  <span className="rounded-full bg-primary-200 px-3 py-1 text-sm font-medium text-primary-800">
-                    £150/month
-                  </span>
-                </div>
-                <CardTitle className="text-primary-900">Sponsor Translation</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-gray-700 mb-6">
-                  Enable live translation of our flagship program &ldquo;Passacris&rdquo; into multiple 
-                  European languages. Your sponsorship brings real-time Gospel content to 
-                  diverse communities across the continent.
-                </p>
-                <ul className="space-y-2 text-sm text-gray-600 mb-6">
-                  <li className="flex items-center">
-                    <Globe className="h-4 w-4 text-success-600 mr-2" />
-                    Live program translation
-                  </li>
-                  <li className="flex items-center">
-                    <Zap className="h-4 w-4 text-success-600 mr-2" />
-                    Real-time impact
-                  </li>
-                  <li className="flex items-center">
-                    <Heart className="h-4 w-4 text-success-600 mr-2" />
-                    Multiple languages supported
-                  </li>
-                </ul>
-                <Link href="/sponsor-translation">
-                  <Button className="w-full" variant="secondary">Start Sponsoring</Button>
-                </Link>
-              </CardContent>
-            </Card>
           </div>
         </div>
       </section>
@@ -211,27 +86,6 @@ export default async function HomePage() {
                 View All Impact Stories
               </Button>
             </Link>
-          </div>
-        </div>
-      </section>
-
-      {/* Mission Statement */}
-      <section className="bg-gray-50 py-16 sm:py-24">
-        <div className="mx-auto max-w-7xl px-6 lg:px-8">
-          <div className="mx-auto max-w-4xl text-center">
-            <h2 className="font-display text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">
-              Our Mission
-            </h2>
-            <p className="mt-6 text-lg leading-8 text-gray-600">
-              To complete the full preaching of the Gospel of Jesus Christ across the nations of Europe—in 
-              the language they best understand. To disciple men and women through life-transforming 
-              programming, bombarding the airwaves with truth, faith, and love.
-            </p>
-            <div className="mt-10">
-              <Link href="/about">
-                <Button size="lg">Learn More About Our Mission</Button>
-              </Link>
-            </div>
           </div>
         </div>
       </section>
