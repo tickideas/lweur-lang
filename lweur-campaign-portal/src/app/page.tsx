@@ -2,6 +2,7 @@ import { Header } from '@/components/layout/header';
 import { Footer } from '@/components/layout/footer';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { ImpactPreview } from '@/components/impact/impact-preview';
 import { Globe, Heart, Languages, TrendingUp, Users, Zap } from 'lucide-react';
 import Link from 'next/link';
 
@@ -170,8 +171,35 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Mission Statement */}
+      {/* Impact Preview Section */}
       <section className="bg-white py-16 sm:py-24">
+        <div className="mx-auto max-w-7xl px-6 lg:px-8">
+          <div className="mx-auto max-w-2xl text-center mb-16">
+            <h2 className="font-display text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">
+              Hear From Our Partners
+            </h2>
+            <p className="mt-4 text-lg leading-8 text-gray-600">
+              Real stories of transformation and impact from supporters across Europe
+            </p>
+          </div>
+          
+          {/* Impact Stories Preview */}
+          <ImpactPreview />
+          
+          {/* View More Link */}
+          <div className="text-center mt-12">
+            <Link href="/impact">
+              <Button size="lg" variant="outline">
+                <Heart className="mr-2 h-5 w-5" />
+                View All Impact Stories
+              </Button>
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* Mission Statement */}
+      <section className="bg-gray-50 py-16 sm:py-24">
         <div className="mx-auto max-w-7xl px-6 lg:px-8">
           <div className="mx-auto max-w-4xl text-center">
             <h2 className="font-display text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">

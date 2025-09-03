@@ -198,6 +198,35 @@ enum CommunicationType {
   IMPACT_REPORT
 }
 
+// Impact Story Model for testimonials and impact content
+model ImpactStory {
+  id            String              @id @default(cuid())
+  title         String?
+  content       String              // The testimonial or impact story content
+  authorName    String              // Name of person giving testimonial
+  location      String?             // Location/country (optional)
+  email         String?             // Contact email (for public submissions)
+  isPublished   Boolean             @default(false)
+  isFeatured    Boolean             @default(false) // For highlighted center card
+  displayOrder  Int                 @default(1)     // For ordering stories
+  imageUrl      String?             // Optional image for the testimonial
+  submissionType SubmissionType     @default(ADMIN) // How the story was created
+  isApproved    Boolean             @default(false) // Admin approval for public submissions
+  approvedAt    DateTime?           // When it was approved
+  approvedBy    String?             // Admin who approved it
+  createdAt     DateTime            @default(now())
+  updatedAt     DateTime            @updatedAt
+  
+  @@map("impact_stories")
+  @@index([isPublished, displayOrder])
+  @@index([submissionType, isApproved])
+}
+
+enum SubmissionType {
+  ADMIN      // Created by admin
+  PUBLIC     // Submitted by public user
+}
+
 // Checkout Settings Model for admin-configurable checkout experience
 model CheckoutSettings {
   id                    String    @id @default(cuid())

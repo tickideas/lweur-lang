@@ -11,7 +11,8 @@ import {
   Users,
   BarChart3,
   Settings,
-  FileText
+  FileText,
+  Heart
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -29,6 +30,11 @@ const navigation = [
     name: 'Partners',
     href: '/admin/partners',
     icon: Users,
+  },
+  {
+    name: 'Impact',
+    href: '/admin/impact',
+    icon: Heart,
   },
   {
     name: 'Reports',
