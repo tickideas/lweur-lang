@@ -185,42 +185,6 @@ export default function ImpactPage() {
           </div>
         </section>
 
-        {/* Call to Action */}
-        <section className="bg-gradient-to-r from-[#1226AA] to-blue-800 py-16 sm:py-20">
-          <div className="mx-auto max-w-7xl px-6 lg:px-8">
-            <div className="mx-auto max-w-2xl text-center">
-              <h2 className="text-3xl font-bold tracking-tight text-white sm:text-4xl mb-6">
-                Be Part of the Story
-              </h2>
-              <p className="text-xl text-blue-100 mb-8">
-                Your partnership creates the testimonials you&apos;ve just read. 
-                Join us in transforming lives across Europe.
-              </p>
-              <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                <Link href="/adopt-language">
-                  <Button 
-                    size="lg" 
-                    variant="secondary"
-                    className="bg-[#FFBF06] text-[#1226AA] hover:bg-[#FFBF06]/90 font-semibold"
-                  >
-                    Adopt a Language
-                    <ArrowRight className="ml-2 h-5 w-5" />
-                  </Button>
-                </Link>
-                <Link href="/sponsor-translation">
-                  <Button 
-                    size="lg" 
-                    variant="outline"
-                    className="border-white text-white hover:bg-white hover:text-[#1226AA]"
-                  >
-                    Sponsor Translation
-                    <ArrowRight className="ml-2 h-5 w-5" />
-                  </Button>
-                </Link>
-              </div>
-            </div>
-          </div>
-        </section>
       </main>
 
       <Footer />
