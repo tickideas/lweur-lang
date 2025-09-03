@@ -74,4 +74,4 @@ CMD ["./migrate-and-start.sh"]
 # Basic HTTP healthcheck against API health endpoint
 # Gives the app time to boot after migrations
 HEALTHCHECK --interval=30s --timeout=5s --start-period=90s --retries=3 \
-  CMD ["CMD-SHELL", "curl -fsS http://127.0.0.1:${PORT:-3000}/api/health >/dev/null || exit 1"]
+  CMD curl -fsS http://127.0.0.1:${PORT:-3000}/api/health >/dev/null || exit 1
