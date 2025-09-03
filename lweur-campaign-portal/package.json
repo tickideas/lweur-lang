@@ -15,6 +15,7 @@
     "db:migrate:deploy": "prisma migrate deploy",
     "db:migrate:status": "prisma migrate status",
     "db:seed": "prisma db seed",
+    "db:seed:languages": "ts-node --compiler-options '{\"module\":\"CommonJS\"}' prisma/seed-languages-only.ts",
     "db:studio": "prisma studio",
     "db:reset": "prisma migrate reset",
     "admin:ensure": "ts-node --compiler-options '{\"module\":\"CommonJS\"}' scripts/ensure-admin.ts",
