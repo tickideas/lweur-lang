@@ -13,7 +13,15 @@ export default function HomePage() {
       
       {/* Hero Section */}
       <section className="relative bg-gradient-to-br from-primary-900 via-primary-800 to-primary-900 text-white">
-        <div className="absolute inset-0 bg-black/20"></div>
+        {/* Background Image */}
+        <div 
+          className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+          style={{
+            backgroundImage: 'url(/lw_eur_bg.png)',
+          }}
+        ></div>
+        {/* Gradient Overlay */}
+        <div className="absolute inset-0 bg-gradient-to-br from-primary-900/95 via-primary-800/97 to-primary-900/95"></div>
         <div className="relative mx-auto max-w-7xl px-6 py-24 sm:py-32 lg:px-8">
           <div className="mx-auto max-w-4xl text-center">
             <h1 className="font-display text-4xl font-bold tracking-tight sm:text-6xl">

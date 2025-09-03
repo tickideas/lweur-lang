@@ -76,8 +76,17 @@ export default function SponsorTranslationPage() {
       <Header />
       
       {/* Hero Section */}
-      <section className="bg-gradient-to-br from-[#FFBF06] via-[#f59e0b] to-[#FFBF06] text-neutral-900 py-20">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <section className="relative bg-gradient-to-br from-[#FFBF06] via-[#f59e0b] to-[#FFBF06] text-neutral-900 py-20">
+        {/* Background Image */}
+        <div 
+          className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+          style={{
+            backgroundImage: 'url(/lw_eur_bg.png)',
+          }}
+        ></div>
+        {/* Gradient Overlay */}
+        <div className="absolute inset-0 bg-gradient-to-br from-[#FFBF06]/95 via-[#f59e0b]/97 to-[#FFBF06]/95"></div>
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
             <h1 className="font-display text-4xl font-bold mb-4">
               Sponsor Live Translation

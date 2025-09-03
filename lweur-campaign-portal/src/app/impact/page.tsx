@@ -119,8 +119,8 @@ export default function ImpactPage() {
                     Transforming Lives Together
                   </h2>
                   <p className="text-lg leading-8 text-neutral-600 mb-6">
-                    Hear directly from our partners and supporters about the incredible impact 
-                    of your generosity in spreading the Gospel across Europe.
+                    Hear directly from our partners and viewers about the incredible impact your generosity is making — spreading the Gospel across Europe, one language, one soul, one life at a time.
+
                   </p>
                   <Button 
                     onClick={() => setShowTestimonyModal(true)}

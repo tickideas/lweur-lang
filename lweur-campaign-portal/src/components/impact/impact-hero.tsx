@@ -21,15 +21,17 @@ interface ImpactHeroProps {
 export function ImpactHero({ className, onShareTestimony, stats }: ImpactHeroProps) {
   return (
     <section className={`relative bg-gradient-to-br from-[#1226AA] via-blue-800 to-[#1226AA] text-white ${className || ''}`}>
-      <div className="absolute inset-0 bg-black/10"></div>
+      {/* Background Image */}
+      <div 
+        className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+        style={{
+          backgroundImage: 'url(/lw_eur_bg.png)',
+        }}
+      ></div>
+      {/* Gradient Overlay */}
+      <div className="absolute inset-0 bg-gradient-to-br from-[#1226AA]/95 via-blue-800/97 to-[#1226AA]/95"></div>
       <div className="relative mx-auto max-w-7xl px-6 py-16 sm:py-24 lg:px-8">
         <div className="mx-auto max-w-4xl text-center">
-          {/* Icon */}
-          <div className="flex justify-center mb-6">
-            <div className="rounded-full bg-white/10 p-4">
-              <Heart className="h-12 w-12 text-white" />
-            </div>
-          </div>
 
           {/* Main Heading */}
           <h1 className="font-display text-4xl font-bold tracking-tight sm:text-6xl mb-6">
@@ -39,14 +41,13 @@ export function ImpactHero({ className, onShareTestimony, stats }: ImpactHeroPro
 
           {/* Subheading */}
           <p className="text-xl sm:text-2xl leading-8 text-blue-100 mb-8 font-medium">
-            Real stories from real people whose lives have been transformed
+           Real stories. Real people. Transformed lives.
           </p>
 
           {/* Description */}
           <p className="mx-auto max-w-2xl text-lg leading-8 text-blue-200 mb-8">
-            See how Loveworld Europe&apos;s mission is reaching hearts and changing lives across the continent. 
-            These testimonials from our partners and supporters show the powerful impact of your generosity 
-            in spreading the Gospel to every European language.
+            Discover how Loveworld Europe is reaching hearts and changing lives across the continent.
+These powerful testimonials from our partners and viewers reveal the tangible impact of your generosity — as the Gospel is preached in every European language.
           </p>
 
           {/* Share Testimony Button */}

@@ -61,7 +61,7 @@ export function Header() {
         
         <div className="hidden lg:flex lg:flex-1 lg:justify-end">
           <Link href="/adopt-language">
-            <Button variant="primary">Start Supporting</Button>
+            <Button variant="primary">Start Now</Button>
           </Link>
         </div>
       </nav>
