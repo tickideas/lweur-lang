@@ -14,7 +14,8 @@
     "db:migrate": "prisma migrate dev",
     "db:seed": "prisma db seed",
     "db:studio": "prisma studio",
-    "db:reset": "prisma migrate reset"
+  "db:reset": "prisma migrate reset",
+  "admin:ensure": "ts-node --compiler-options '{\"module\":\"CommonJS\"}' scripts/ensure-admin.ts"
   },
   "prisma": {
     "seed": "ts-node --compiler-options {\"module\":\"CommonJS\"} prisma/seed.ts"
