@@ -17,7 +17,7 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import { Language } from '@/types';
-import { formatNumber, getCountryFlag } from '@/utils';
+import { formatNumber, formatCompactNumber, getCountryFlag } from '@/utils';
 
 type LanguageWithStats = Language & {
   campaignStats: {
@@ -126,6 +126,7 @@ export default function AdoptLanguagePage() {
 
   const availableCount = languages.filter(l => l.adoptionStatus === 'AVAILABLE').length;
   const adoptedCount = languages.filter(l => l.adoptionStatus === 'ADOPTED').length;
+  const totalSpeakers = languages.reduce((sum, lang) => sum + lang.speakerCount, 0);
 
   if (loading) {
     return (
@@ -153,10 +154,17 @@ export default function AdoptLanguagePage() {
             <h1 className="font-display text-4xl font-bold mb-4">
               Adopt a Language Channel
             </h1>
-            <p className="text-xl text-primary-100 mb-8 max-w-3xl mx-auto">
-              Become the exclusive sponsor of a European language channel for just £150 per month. 
-              Your support enables us to broadcast life-transforming Christian programming to millions of souls.
-            </p>
+            <div className="text-xl text-primary-100 mb-8 max-w-4xl mx-auto space-y-4">
+              <p className="font-bold text-lg">
+                Become the exclusive sponsor of a European language channel for just £150/month.
+              </p>
+              <p className="text-base">
+                Your sponsorship powers the broadcast of life-transforming messages from the Man of God, Pastor Chris, along with inspiring, faith-filled content and educational Christian programming — all in the local languages of Europe.
+              </p>
+              <p className="text-base font-medium">
+                Together, we're speaking the Gospel into billions of hearts — one language at a time.
+              </p>
+            </div>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-3xl mx-auto">
               <div className="bg-white/10 rounded-lg p-4">
                 <div className="text-2xl font-bold">{availableCount}</div>
@@ -167,7 +175,7 @@ export default function AdoptLanguagePage() {
                 <div className="text-primary-200">Already Adopted</div>
               </div>
               <div className="bg-white/10 rounded-lg p-4">
-                <div className="text-2xl font-bold">750M</div>
+                <div className="text-2xl font-bold">{formatCompactNumber(totalSpeakers)}</div>
                 <div className="text-primary-200">Potential Reach</div>
               </div>
             </div>
@@ -326,50 +334,6 @@ export default function AdoptLanguagePage() {
         </div>
       </section>
 
-      {/* Impact Section */}
-      <section className="bg-white py-16">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h2 className="font-display text-3xl font-bold text-gray-900 mb-4">
-            Your Impact as a Language Adopter
-          </h2>
-          <p className="text-lg text-gray-600 mb-12 max-w-3xl mx-auto">
-            When you adopt a language, you become the exclusive sponsor enabling us to broadcast 
-            life-transforming Christian programming to millions of speakers across Europe.
-          </p>
-          
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <div className="text-center">
-              <div className="bg-primary-100 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
-                <Globe className="h-8 w-8 text-primary-600" />
-              </div>
-              <h3 className="text-xl font-semibold mb-2">Exclusive Sponsorship</h3>
-              <p className="text-gray-600">
-                Be the sole supporter of your chosen language channel, with recognition and regular updates.
-              </p>
-            </div>
-            
-            <div className="text-center">
-              <div className="bg-accent-100 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
-                <Users className="h-8 w-8 text-accent-600" />
-              </div>
-              <h3 className="text-xl font-semibold mb-2">Reach Millions</h3>
-              <p className="text-gray-600">
-                Your support directly enables broadcasts reaching millions of speakers in their native language.
-              </p>
-            </div>
-            
-            <div className="text-center">
-              <div className="bg-success-100 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
-                <Heart className="h-8 w-8 text-success-600" />
-              </div>
-              <h3 className="text-xl font-semibold mb-2">Transform Lives</h3>
-              <p className="text-gray-600">
-                Receive monthly impact reports showing how your support is changing lives across Europe.
-              </p>
-            </div>
-          </div>
-        </div>
-      </section>
 
       <Footer />
     </>

@@ -6,12 +6,19 @@
 import { Heart, Star, MessageSquare } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
+interface ImpactStats {
+  totalLanguages: number;
+  formattedSpeakers: string;
+  totalCountries: number;
+}
+
 interface ImpactHeroProps {
   className?: string;
   onShareTestimony?: () => void;
+  stats?: ImpactStats;
 }
 
-export function ImpactHero({ className, onShareTestimony }: ImpactHeroProps) {
+export function ImpactHero({ className, onShareTestimony, stats }: ImpactHeroProps) {
   return (
     <section className={`relative bg-gradient-to-br from-[#1226AA] via-blue-800 to-[#1226AA] text-white ${className || ''}`}>
       <div className="absolute inset-0 bg-black/10"></div>
@@ -59,15 +66,21 @@ export function ImpactHero({ className, onShareTestimony }: ImpactHeroProps) {
           {/* Stats or Highlights */}
           <div className="mt-12 grid grid-cols-1 sm:grid-cols-3 gap-8 max-w-3xl mx-auto">
             <div className="text-center">
-              <div className="text-3xl sm:text-4xl font-bold text-[#FFBF06] mb-2">60+</div>
+              <div className="text-3xl sm:text-4xl font-bold text-[#FFBF06] mb-2">
+                {stats?.totalLanguages ? `${stats.totalLanguages}+` : '60+'}
+              </div>
               <div className="text-blue-200">Languages Supported</div>
             </div>
             <div className="text-center">
-              <div className="text-3xl sm:text-4xl font-bold text-[#FFBF06] mb-2">750M</div>
+              <div className="text-3xl sm:text-4xl font-bold text-[#FFBF06] mb-2">
+                {stats?.formattedSpeakers || '750M'}
+              </div>
               <div className="text-blue-200">Lives Reached</div>
             </div>
             <div className="text-center">
-              <div className="text-3xl sm:text-4xl font-bold text-[#FFBF06] mb-2">50+</div>
+              <div className="text-3xl sm:text-4xl font-bold text-[#FFBF06] mb-2">
+                {stats?.totalCountries ? `${stats.totalCountries}+` : '50+'}
+              </div>
               <div className="text-blue-200">Countries Impacted</div>
             </div>
           </div>

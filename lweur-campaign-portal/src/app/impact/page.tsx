@@ -13,17 +13,28 @@ import { ImpactCarousel } from '@/components/impact/impact-carousel';
 import { TestimonyModal } from '@/components/impact/testimony-modal';
 import { Button } from '@/components/ui/button';
 import { PublicImpactStory } from '@/types/impact';
+
+interface ImpactStats {
+  totalLanguages: number;
+  totalSpeakers: number;
+  totalCountries: number;
+  adoptedLanguages: number;
+  availableLanguages: number;
+  formattedSpeakers: string;
+}
 import { Heart, Quote, ArrowRight, MessageSquare } from 'lucide-react';
 import Link from 'next/link';
 
 export default function ImpactPage() {
   const [stories, setStories] = useState<PublicImpactStory[]>([]);
+  const [stats, setStats] = useState<ImpactStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showTestimonyModal, setShowTestimonyModal] = useState(false);
 
   useEffect(() => {
     fetchStories();
+    fetchStats();
   }, []);
 
   const fetchStories = async () => {
@@ -43,12 +54,33 @@ export default function ImpactPage() {
     }
   };
 
+  const fetchStats = async () => {
+    try {
+      const response = await fetch('/api/impact/stats');
+      if (response.ok) {
+        const data = await response.json();
+        setStats(data);
+      } else {
+        console.error('Failed to fetch stats');
+      }
+    } catch (error) {
+      console.error('Error fetching impact stats:', error);
+    }
+  };
+
   return (
     <>
       <Header />
       
       {/* Hero Section */}
-      <ImpactHero onShareTestimony={() => setShowTestimonyModal(true)} />
+      <ImpactHero 
+        onShareTestimony={() => setShowTestimonyModal(true)} 
+        stats={stats ? {
+          totalLanguages: stats.totalLanguages,
+          formattedSpeakers: stats.formattedSpeakers,
+          totalCountries: stats.totalCountries
+        } : undefined}
+      />
 
       {/* Main Content */}
       <main className="bg-neutral-50">
@@ -133,12 +165,16 @@ export default function ImpactPage() {
                       <div className="text-xs text-neutral-500 mt-1">Continuous Content</div>
                     </div>
                     <div className="text-center">
-                      <div className="text-3xl font-bold text-[#1226AA] mb-2">60</div>
+                      <div className="text-3xl font-bold text-[#1226AA] mb-2">
+                        {stats?.totalLanguages || '60'}
+                      </div>
                       <div className="text-sm text-neutral-600">Languages</div>
                       <div className="text-xs text-neutral-500 mt-1">Across Europe</div>
                     </div>
                     <div className="text-center">
-                      <div className="text-3xl font-bold text-[#1226AA] mb-2">750M</div>
+                      <div className="text-3xl font-bold text-[#1226AA] mb-2">
+                        {stats?.formattedSpeakers || '750M'}
+                      </div>
                       <div className="text-sm text-neutral-600">Potential Reach</div>
                       <div className="text-xs text-neutral-500 mt-1">Lives Impacted</div>
                     </div>
