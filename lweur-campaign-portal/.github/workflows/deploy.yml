@@ -1,0 +1,111 @@
+# /Users/0xanyi/Developer/lweur-lang/lweur-campaign-portal/.github/workflows/deploy.yml
+# GitHub Actions workflow for automated deployment with database migrations
+# Integrates with Coolify for zero-downtime deployments with migration safety
+# RELEVANT FILES: Dockerfile.production, scripts/migrate-and-start.sh, package.json
+
+name: Deploy to Production
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Set up Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+
+    - name: Install dependencies
+      run: npm ci
+
+    - name: Run tests
+      run: npm test
+
+    - name: Run linting
+      run: npm run lint
+
+    - name: Type check
+      run: npx tsc --noEmit
+
+    - name: Log in to Container Registry
+      uses: docker/login-action@v3
+      with:
+        registry: ${{ env.REGISTRY }}
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Extract metadata
+      id: meta
+      uses: docker/metadata-action@v5
+      with:
+        images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+        tags: |
+          type=ref,event=branch
+          type=ref,event=pr
+          type=sha,prefix={{branch}}-
+
+    - name: Build and push Docker image
+      uses: docker/build-push-action@v5
+      with:
+        context: .
+        file: ./Dockerfile.production
+        push: true
+        tags: ${{ steps.meta.outputs.tags }}
+        labels: ${{ steps.meta.outputs.labels }}
+
+    - name: Deploy to Coolify
+      env:
+        COOLIFY_WEBHOOK_URL: ${{ secrets.COOLIFY_WEBHOOK_URL }}
+      run: |
+        curl -X POST "$COOLIFY_WEBHOOK_URL" \
+          -H "Content-Type: application/json" \
+          -d '{"ref": "refs/heads/main", "after": "${{ github.sha }}"}'
+
+  migrate-database:
+    needs: build-and-deploy
+    runs-on: ubuntu-latest
+    if: success()
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Set up Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+
+    - name: Install dependencies
+      run: npm ci
+
+    - name: Run database migrations
+      env:
+        DATABASE_URL: ${{ secrets.DATABASE_URL }}
+      run: |
+        echo "Running database migrations..."
+        npx prisma migrate deploy
+        echo "Migrations completed successfully"
+
+    - name: Verify deployment
+      run: |
+        echo "Waiting for deployment to be ready..."
+        sleep 30
+        curl -f ${{ secrets.PRODUCTION_URL }}/api/health || exit 1
+        echo "Deployment verified successfully"
