@@ -33,8 +33,11 @@ RUN npm run build
 FROM base AS runner
 WORKDIR /app
 
-# Install postgresql-client for database operations
-RUN apk add --no-cache postgresql-client
+# Install runtime dependencies for Prisma + Postgres
+# - postgresql-client: pg_isready, pg_dump
+# - openssl: required by Prisma engines on Alpine
+# - libc6-compat: compatibility layer for some native deps
+RUN apk add --no-cache postgresql-client openssl libc6-compat
 
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1

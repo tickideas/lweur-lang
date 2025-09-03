@@ -17,20 +17,45 @@ fi
 
 echo "📊 Waiting for database to be ready..."
 
-# Simple retry loop to wait for the database
+# Extract connection details from DATABASE_URL
+DB_HOST=$(echo "$DATABASE_URL" | sed -n 's/.*@\([^:\/]*\)[:\/]\{1\}.*/\1/p')
+DB_PORT=$(echo "$DATABASE_URL" | sed -n 's/.*:\([0-9]\{2,5\}\)\/.*/\1/p')
+DB_NAME=$(echo "$DATABASE_URL" | sed -n 's/.*\/\([^?]*\).*/\1/p')
+DB_USER=$(echo "$DATABASE_URL" | sed -n 's/.*:\/\/\([^:]*\).*/\1/p')
+DB_PORT=${DB_PORT:-5432}
+
 RETRIES=${DB_CONNECT_RETRIES:-10}
 SLEEP_SECONDS=${DB_CONNECT_SLEEP:-3}
 i=0
-until npx prisma migrate status --schema=./prisma/schema.prisma >/dev/null 2>&1; do
-    i=$((i+1))
-    if [ "$i" -ge "$RETRIES" ]; then
-        echo "❌ ERROR: Database not reachable after $RETRIES attempts"
-        echo "   Please check your DATABASE_URL and ensure the database server is running"
-        exit 1
-    fi
-    echo "⏳ Database not ready yet, retry $i/$RETRIES..."
-    sleep "$SLEEP_SECONDS"
-done
+
+if command -v pg_isready >/dev/null 2>&1; then
+    echo "🔍 Checking Postgres at $DB_HOST:$DB_PORT (db=$DB_NAME)"
+    while ! pg_isready -h "$DB_HOST" -p "$DB_PORT" -d "$DB_NAME" >/dev/null 2>&1; do
+        i=$((i+1))
+        if [ "$i" -ge "$RETRIES" ]; then
+            echo "❌ ERROR: Database not reachable after $RETRIES attempts"
+            echo "   Host: $DB_HOST  Port: $DB_PORT  DB: $DB_NAME"
+            echo "   Please verify DATABASE_URL and Coolify networking between services"
+            exit 1
+        fi
+        echo "⏳ Database not ready yet, retry $i/$RETRIES..."
+        sleep "$SLEEP_SECONDS"
+    done
+else
+    # Fallback to Prisma CLI check if pg_isready is unavailable
+    until npx prisma migrate status --schema=./prisma/schema.prisma >/dev/null 2>&1; do
+        i=$((i+1))
+        if [ "$i" -ge "$RETRIES" ]; then
+            echo "❌ ERROR: Database not reachable after $RETRIES attempts"
+            echo "   Please check your DATABASE_URL and ensure the database server is running"
+            # Print last Prisma error for debugging
+            npx prisma migrate status --schema=./prisma/schema.prisma || true
+            exit 1
+        fi
+        echo "⏳ Database not ready yet, retry $i/$RETRIES..."
+        sleep "$SLEEP_SECONDS"
+    done
+fi
 
 echo "✅ Database reachable"
 
