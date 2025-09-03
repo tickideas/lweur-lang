@@ -65,6 +65,9 @@ describe('/api/payments/create-intent', () => {
     const validPayload = {
       campaignType: 'ADOPT_LANGUAGE' as const,
       languageId: 'lang-123',
+      amount: 15000,
+      currency: 'GBP',
+      isRecurring: true,
       partnerInfo: {
         email: 'test@example.com',
         firstName: 'John',
@@ -75,9 +78,6 @@ describe('/api/payments/create-intent', () => {
         preferredLanguage: 'en',
       },
       billingAddress: {
-        line1: '123 Test Street',
-        city: 'London',
-        postalCode: 'SW1A 1AA',
         country: 'GB',
       },
     }

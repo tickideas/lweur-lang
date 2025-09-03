@@ -5,6 +5,8 @@ import { prisma } from '@/lib/prisma';
 import bcrypt from 'bcryptjs';
 import { AdminRole } from '@/types';
 import { NextRequest } from 'next/server';
+import jwt from 'jsonwebtoken';
+import { getToken } from 'next-auth/jwt';
 
 declare module 'next-auth' {
   interface Session {
@@ -118,24 +120,36 @@ export const authOptions: NextAuthOptions = {
   secret: process.env.NEXTAUTH_SECRET,
 };
 
-// Verify admin authentication from request
+// Verify admin authentication from request using NextAuth JWT
 export async function verifyAdminAuth(request: NextRequest) {
   try {
-    const token = request.headers.get('authorization')?.replace('Bearer ', '');
+    // Use NextAuth's getToken function to verify JWT token
+    const token = await getToken({ 
+      req: request,
+      secret: process.env.NEXTAUTH_SECRET 
+    });
     
     if (!token) {
+      console.log('No valid JWT token found');
       return { isValid: false, admin: null };
     }
 
-    // In a real implementation, you'd verify the JWT token here
-    // For now, we'll check if there's a valid session token
-    const admin = await prisma.admin.findFirst({
-      where: { isActive: true },
+    console.log('Found JWT token for email:', token.email);
+
+    // Find the admin record by email from the JWT token
+    const admin = await prisma.admin.findUnique({
+      where: { 
+        email: token.email as string,
+        isActive: true
+      },
     });
 
     if (!admin) {
+      console.log('Admin not found for email:', token.email);
       return { isValid: false, admin: null };
     }
+
+    console.log('Admin authenticated:', admin.email, 'Role:', admin.role);
 
     return { 
       isValid: true, 
@@ -148,6 +162,7 @@ export async function verifyAdminAuth(request: NextRequest) {
       }
     };
   } catch (error) {
+    console.error('Auth verification error:', error);
     return { isValid: false, admin: null };
   }
 }

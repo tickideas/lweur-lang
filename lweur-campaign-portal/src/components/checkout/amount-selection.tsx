@@ -60,12 +60,12 @@ export function AmountSelection({
     availableCurrencies: ['GBP', 'EUR', 'USD'],
     defaultCurrency: 'GBP',
     adoptLanguageDefaultAmount: 15000,
-    adoptLanguagePresetAmounts: [2000, 3500, 5000, 15000],
-    adoptLanguageMinAmount: 1000,
+    adoptLanguagePresetAmounts: [15000, 25000],
+    adoptLanguageMinAmount: 15000,
     adoptLanguageMaxAmount: 100000,
     sponsorTranslationDefaultAmount: 15000,
-    sponsorTranslationPresetAmounts: [2000, 3500, 5000, 15000],
-    sponsorTranslationMinAmount: 1000,
+    sponsorTranslationPresetAmounts: [15000, 25000],
+    sponsorTranslationMinAmount: 15000,
     sponsorTranslationMaxAmount: 100000,
     enableGiftAid: true,
     showOneTimeOption: false
@@ -242,7 +242,7 @@ export function AmountSelection({
 
           {/* Preset Amounts */}
           <div className="space-y-4">
-            <div className="grid grid-cols-3 gap-3">
+            <div className="grid grid-cols-2 gap-3">
               {getPresetAmounts().map((amount) => (
                 <button
                   key={amount}

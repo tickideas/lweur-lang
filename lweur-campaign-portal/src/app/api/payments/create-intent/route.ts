@@ -20,11 +20,11 @@ const createPaymentIntentSchema = z.object({
     preferredLanguage: z.string().default('en'),
   }),
   billingAddress: z.object({
-    line1: z.string(),
+    line1: z.string().optional(),
     line2: z.string().optional(),
-    city: z.string(),
+    city: z.string().optional(),
     state: z.string().optional(),
-    postalCode: z.string(),
+    postalCode: z.string().optional(),
     country: z.string(),
   }),
 });
@@ -101,11 +101,11 @@ export async function POST(req: NextRequest) {
         name: `${partnerInfo.firstName} ${partnerInfo.lastName}`,
         phone: partnerInfo.phoneNumber,
         address: {
-          line1: billingAddress.line1,
-          line2: billingAddress.line2,
-          city: billingAddress.city,
-          state: billingAddress.state,
-          postal_code: billingAddress.postalCode,
+          ...(billingAddress.line1 && { line1: billingAddress.line1 }),
+          ...(billingAddress.line2 && { line2: billingAddress.line2 }),
+          ...(billingAddress.city && { city: billingAddress.city }),
+          ...(billingAddress.state && { state: billingAddress.state }),
+          ...(billingAddress.postalCode && { postal_code: billingAddress.postalCode }),
           country: billingAddress.country,
         },
         metadata: {

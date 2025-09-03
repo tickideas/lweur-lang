@@ -173,8 +173,11 @@ export default function CheckoutSettingsPage() {
     setMessage(null);
 
     try {
+      console.log('Submitting checkout settings:', data);
+      
       // Sanitize data before sending to API
       const sanitizedData = sanitizeCheckoutSettings(data);
+      console.log('Sanitized data:', sanitizedData);
 
       const response = await fetch('/api/admin/checkout-settings', {
         method: 'POST',
@@ -184,12 +187,19 @@ export default function CheckoutSettingsPage() {
         body: JSON.stringify(sanitizedData),
       });
 
+      console.log('Response status:', response.status);
+      
       if (!response.ok) {
-        throw new Error('Failed to save settings');
+        const errorData = await response.json();
+        console.error('Save failed:', errorData);
+        throw new Error(errorData.error || 'Failed to save settings');
       }
 
+      const result = await response.json();
+      console.log('Save successful:', result);
       setMessage({ type: 'success', text: 'Settings saved successfully!' });
     } catch (error: unknown) {
+      console.error('Save error:', error);
       setMessage({ 
         type: 'error', 
         text: error instanceof Error ? error.message : 'An error occurred' 

@@ -36,10 +36,6 @@ const partnerInfoSchema = z.object({
   organization: z.string().optional(),
   country: z.string().min(1, 'Country is required'),
   preferredLanguage: z.string().default('en'),
-  street: z.string().optional(),
-  city: z.string().optional(),
-  postalCode: z.string().optional(),
-  hearFromUs: z.string().optional(),
   marketingConsent: z.boolean().default(true),
   termsConsent: z.boolean().default(true),
 });
@@ -135,9 +131,6 @@ export function CheckoutForm({
           isRecurring: checkoutData.isRecurring,
           partnerInfo: data,
           billingAddress: {
-            line1: data.street || 'Address to be collected',
-            city: data.city || 'City to be collected',
-            postalCode: data.postalCode || 'Postcode to be collected',
             country: data.country,
           },
         }),
@@ -475,65 +468,6 @@ export function CheckoutForm({
         )}
       </div>
 
-      {step === 'details' && (
-        <>
-          {/* Address Fields */}
-          <div>
-            <label htmlFor="street" className="form-label">
-              Street Address
-            </label>
-            <input
-              {...register('street')}
-              type="text"
-              className="form-input"
-              placeholder="123 Main Street"
-            />
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
-              <label htmlFor="city" className="form-label">
-                City
-              </label>
-              <input
-                {...register('city')}
-                type="text"
-                className="form-input"
-                placeholder="London"
-              />
-            </div>
-
-            <div>
-              <label htmlFor="postalCode" className="form-label">
-                Postal/Zip Code
-              </label>
-              <input
-                {...register('postalCode')}
-                type="text"
-                className="form-input"
-                placeholder="SW1A 1AA"
-              />
-            </div>
-          </div>
-
-          {/* How did you hear from us */}
-          <div>
-            <label htmlFor="hearFromUs" className="form-label">
-              How did you last hear from us?
-            </label>
-            <select {...register('hearFromUs')} className="form-input">
-              <option value="">None</option>
-              <option value="Search Engine">Search Engine</option>
-              <option value="Social Media">Social Media</option>
-              <option value="Friend/Family">Friend/Family</option>
-              <option value="Church">Church</option>
-              <option value="Advertisement">Advertisement</option>
-              <option value="Email">Email</option>
-              <option value="Other">Other</option>
-            </select>
-          </div>
-        </>
-      )}
 
 
       <div className="bg-neutral-50 rounded-lg p-6">

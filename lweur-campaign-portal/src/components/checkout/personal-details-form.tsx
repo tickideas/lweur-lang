@@ -30,10 +30,6 @@ const partnerInfoSchema = z.object({
   organization: z.string().optional(),
   country: z.string().min(1, 'Country is required'),
   preferredLanguage: z.string().default('en'),
-  street: z.string().optional(),
-  city: z.string().optional(),
-  postalCode: z.string().optional(),
-  hearFromUs: z.string().optional(),
   marketingConsent: z.boolean().default(true),
   termsConsent: z.boolean().default(true),
 });
@@ -172,61 +168,6 @@ export function PersonalDetailsForm({ onComplete }: PersonalDetailsFormProps) {
           )}
         </div>
 
-        {/* Address Fields */}
-        <div>
-          <Label htmlFor="street" className="text-sm font-medium text-neutral-700">
-            Street Address
-          </Label>
-          <Input
-            {...register('street')}
-            type="text"
-            className="mt-1"
-            placeholder="123 Main Street"
-          />
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div>
-            <Label htmlFor="city" className="text-sm font-medium text-neutral-700">
-              City
-            </Label>
-            <Input
-              {...register('city')}
-              type="text"
-              className="mt-1"
-              placeholder="London"
-            />
-          </div>
-
-          <div>
-            <Label htmlFor="postalCode" className="text-sm font-medium text-neutral-700">
-              Postal/Zip Code
-            </Label>
-            <Input
-              {...register('postalCode')}
-              type="text"
-              className="mt-1"
-              placeholder="SW1A 1AA"
-            />
-          </div>
-        </div>
-
-        {/* How did you hear from us */}
-        <div>
-          <Label htmlFor="hearFromUs" className="text-sm font-medium text-neutral-700">
-            How did you last hear from us?
-          </Label>
-          <select {...register('hearFromUs')} className="w-full p-3 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-[#1226AA] focus:border-transparent mt-1">
-            <option value="">None</option>
-            <option value="Search Engine">Search Engine</option>
-            <option value="Social Media">Social Media</option>
-            <option value="Friend/Family">Friend/Family</option>
-            <option value="Church">Church</option>
-            <option value="Advertisement">Advertisement</option>
-            <option value="Email">Email</option>
-            <option value="Other">Other</option>
-          </select>
-        </div>
 
         <div className="bg-neutral-50 rounded-lg p-6">
           <h3 className="font-semibold mb-3">Privacy & Communication</h3>
