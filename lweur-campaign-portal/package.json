@@ -21,9 +21,7 @@
     "deploy:migrate": "chmod +x scripts/migrate-and-start.sh && scripts/migrate-and-start.sh",
     "predeploy": "chmod +x scripts/coolify-predeploy.sh && scripts/coolify-predeploy.sh"
   },
-  "prisma": {
-    "seed": "ts-node --compiler-options {\"module\":\"CommonJS\"} prisma/seed.ts"
-  },
+  
   "dependencies": {
     "@headlessui/react": "^2.2.7",
     "@hookform/resolvers": "^5.2.1",
