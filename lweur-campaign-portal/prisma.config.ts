@@ -9,9 +9,7 @@ export default defineConfig({
 
   // Migrations-related settings
   migrations: {
-    // Seed command previously defined in package.json#prisma.seed
-    // Keep ts-node here since seed.ts is TypeScript
-    seed: "ts-node --compiler-options '{\"module\":\"CommonJS\"}' prisma/seed.ts",
+    // Seed command switched to tsx for zero-config TS execution
+    seed: "tsx prisma/seed.ts",
   },
 });
-
