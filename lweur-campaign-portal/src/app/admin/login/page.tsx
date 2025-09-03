@@ -16,26 +16,28 @@ export default function AdminLoginPage() {
   const [error, setError] = useState('');
   const router = useRouter();
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setIsLoading(true);
     setError('');
 
     try {
+      const form = e.currentTarget;
+      const fd = new FormData(form);
+      const emailVal = (fd.get('email') as string)?.trim();
+      const passwordVal = (fd.get('password') as string) || '';
+
       const result = await signIn('credentials', {
-        email,
-        password,
+        email: emailVal,
+        password: passwordVal,
         redirect: false,
       });
 
       if (result?.error) {
         setError('Invalid email or password');
       } else {
-        // Check if login was successful
         const session = await getSession();
-        if (session) {
-          router.push('/admin');
-        }
+        if (session) router.push('/admin');
       }
     } catch {
       setError('An unexpected error occurred');
@@ -130,7 +132,7 @@ export default function AdminLoginPage() {
                 className="w-full"
                 size="lg"
                 isLoading={isLoading}
-                disabled={!email || !password}
+                disabled={isLoading}
               >
                 Sign In
               </Button>

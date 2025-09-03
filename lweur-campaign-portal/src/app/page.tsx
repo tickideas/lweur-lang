@@ -5,8 +5,25 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ImpactPreview } from '@/components/impact/impact-preview';
 import { Globe, Heart, Languages, TrendingUp, Users, Zap } from 'lucide-react';
 import Link from 'next/link';
+import { prisma } from '@/lib/prisma';
 
-export default function HomePage() {
+export default async function HomePage() {
+  // Pull live metrics from the database
+  const [
+    totalLanguages,
+    activeCampaigns,
+    monthlyRevenueAgg,
+    distinctCountries,
+  ] = await Promise.all([
+    prisma.language.count(),
+    prisma.campaign.count({ where: { status: 'ACTIVE' } }),
+    prisma.campaign.aggregate({ where: { status: 'ACTIVE' }, _sum: { monthlyAmount: true } }),
+    prisma.partner.findMany({ select: { country: true }, distinct: ['country'] }),
+  ]);
+
+  const monthlyRevenue = (monthlyRevenueAgg._sum.monthlyAmount || 0) / 100;
+  const countriesReached = distinctCountries.length;
+
   return (
     <>
       <Header />
@@ -44,7 +61,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Impact Metrics */}
+      {/* Impact Metrics (Live) */}
       <section className="bg-white py-16 sm:py-24">
         <div className="mx-auto max-w-7xl px-6 lg:px-8">
           <div className="mx-auto max-w-2xl text-center">
@@ -58,24 +75,24 @@ export default function HomePage() {
           
           <div className="mx-auto mt-16 grid max-w-lg grid-cols-1 gap-8 sm:max-w-none sm:grid-cols-2 lg:grid-cols-4">
             <div className="metric-card">
-              <div className="metric-number">30</div>
-              <div className="metric-label">Language Channels</div>
-              <p className="mt-2 text-sm text-gray-500">Currently broadcasting</p>
+              <div className="metric-number">{activeCampaigns}</div>
+              <div className="metric-label">Active Campaigns</div>
+              <p className="mt-2 text-sm text-gray-500">Live sponsorships and adoptions</p>
             </div>
             <div className="metric-card">
-              <div className="metric-number">60</div>
-              <div className="metric-label">Target Languages</div>
-              <p className="mt-2 text-sm text-gray-500">By end of year</p>
+              <div className="metric-number">{totalLanguages}</div>
+              <div className="metric-label">Languages Available</div>
+              <p className="mt-2 text-sm text-gray-500">In our current pipeline</p>
             </div>
             <div className="metric-card">
-              <div className="metric-number">50</div>
+              <div className="metric-number">{countriesReached}</div>
               <div className="metric-label">Countries Reached</div>
-              <p className="mt-2 text-sm text-gray-500">Across Europe</p>
+              <p className="mt-2 text-sm text-gray-500">Based on partner locations</p>
             </div>
             <div className="metric-card">
-              <div className="metric-number">750M</div>
-              <div className="metric-label">Potential Audience</div>
-              <p className="mt-2 text-sm text-gray-500">Souls to reach</p>
+              <div className="metric-number">£{monthlyRevenue.toLocaleString()}</div>
+              <div className="metric-label">Monthly Support</div>
+              <p className="mt-2 text-sm text-gray-500">From active commitments</p>
             </div>
           </div>
         </div>

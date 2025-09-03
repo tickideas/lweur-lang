@@ -1,5 +1,6 @@
 'use client';
 
+import { useEffect, useState } from 'react';
 import { useSession } from 'next-auth/react';
 import { AdminLayout } from '@/components/admin/admin-layout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -16,17 +17,50 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 
+interface DashboardData {
+  overview: {
+    totalRevenue: number;
+    activeSubscriptions: number;
+    languageAdoptions: number;
+    totalLanguages: number;
+    translationSponsors: number;
+    monthlyRevenue: number;
+    monthlyRevenueTarget: number;
+  };
+  recentActivities: Array<{
+    id: string;
+    partnerName: string;
+    type: 'ADOPT_LANGUAGE' | 'SPONSOR_TRANSLATION';
+    language: string;
+    monthlyAmount: number;
+    createdAt: string;
+  }>;
+  progress: {
+    languages: { current: number; total: number; percent: number };
+    sponsors: { current: number; total: number; percent: number };
+    revenue: { current: number; target: number; percent: number };
+  };
+}
+
 export default function AdminDashboard() {
   const { data: session } = useSession();
+  const [data, setData] = useState<DashboardData | null>(null);
+  const [loading, setLoading] = useState(true);
 
-  // Mock data for demonstration
-  const stats = {
-    totalRevenue: 45000,
-    activeSubscriptions: 25,
-    languageAdoptions: 15,
-    translationSponsors: 10,
-    newPartnersThisMonth: 8,
-  };
+  useEffect(() => {
+    const load = async () => {
+      try {
+        const res = await fetch('/api/admin/dashboard');
+        if (res.ok) {
+          const json = await res.json();
+          setData(json.data);
+        }
+      } finally {
+        setLoading(false);
+      }
+    };
+    load();
+  }, []);
 
   return (
     <AdminLayout>
@@ -46,10 +80,10 @@ export default function AdminDashboard() {
             <DollarSign className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">£{stats.totalRevenue.toLocaleString()}</div>
-            <p className="text-xs text-muted-foreground">
-              +12% from last month
-            </p>
+            <div className="text-2xl font-bold">
+              {loading ? '—' : `£${(data?.overview.totalRevenue ?? 0).toLocaleString()}`}
+            </div>
+            <p className="text-xs text-muted-foreground">All-time successful payments</p>
           </CardContent>
         </Card>
         
@@ -59,10 +93,8 @@ export default function AdminDashboard() {
             <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.activeSubscriptions}</div>
-            <p className="text-xs text-muted-foreground">
-              +3 new this week
-            </p>
+            <div className="text-2xl font-bold">{loading ? '—' : data?.overview.activeSubscriptions ?? 0}</div>
+            <p className="text-xs text-muted-foreground">Currently active campaigns</p>
           </CardContent>
         </Card>
         
@@ -72,10 +104,12 @@ export default function AdminDashboard() {
             <Languages className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.languageAdoptions}/60</div>
-            <p className="text-xs text-muted-foreground">
-              25% of target reached
-            </p>
+            <div className="text-2xl font-bold">
+              {loading
+                ? '—'
+                : `${data?.overview.languageAdoptions ?? 0}/${data?.overview.totalLanguages ?? 0}`}
+            </div>
+            <p className="text-xs text-muted-foreground">Languages marked as adopted</p>
           </CardContent>
         </Card>
         
@@ -85,10 +119,8 @@ export default function AdminDashboard() {
             <Globe className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.translationSponsors}</div>
-            <p className="text-xs text-muted-foreground">
-              Supporting Passacris
-            </p>
+            <div className="text-2xl font-bold">{loading ? '—' : data?.overview.translationSponsors ?? 0}</div>
+            <p className="text-xs text-muted-foreground">Active translation sponsorships</p>
           </CardContent>
         </Card>
       </div>
@@ -104,27 +136,21 @@ export default function AdminDashboard() {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="font-medium">John Smith adopted German</p>
-                  <p className="text-sm text-gray-500">2 hours ago</p>
+              {loading && <div className="text-sm text-gray-500">Loading…</div>}
+              {!loading && (data?.recentActivities?.length ?? 0) === 0 && (
+                <div className="text-sm text-gray-500">No recent activity.</div>
+              )}
+              {!loading && data?.recentActivities?.map((a) => (
+                <div key={a.id} className="flex items-center justify-between">
+                  <div>
+                    <p className="font-medium">
+                      {a.partnerName} {a.type === 'ADOPT_LANGUAGE' ? 'adopted' : 'sponsored translation for'} {a.language}
+                    </p>
+                    <p className="text-sm text-gray-500">{new Date(a.createdAt).toLocaleString()}</p>
+                  </div>
+                  <span className="text-green-600 font-medium">£{a.monthlyAmount.toLocaleString()}/month</span>
                 </div>
-                <span className="text-green-600 font-medium">£150/month</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="font-medium">Sarah Johnson sponsored French translation</p>
-                  <p className="text-sm text-gray-500">5 hours ago</p>
-                </div>
-                <span className="text-green-600 font-medium">£150/month</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="font-medium">David Brown adopted Spanish</p>
-                  <p className="text-sm text-gray-500">1 day ago</p>
-                </div>
-                <span className="text-green-600 font-medium">£150/month</span>
-              </div>
+              ))}
             </div>
           </CardContent>
         </Card>
@@ -141,28 +167,40 @@ export default function AdminDashboard() {
               <div>
                 <div className="flex justify-between text-sm">
                   <span>Language Adoptions</span>
-                  <span>15/60 (25%)</span>
+                  <span>
+                    {loading
+                      ? '—'
+                      : `${data?.progress.languages.current}/${data?.progress.languages.total} (${data?.progress.languages.percent}%)`}
+                  </span>
                 </div>
                 <div className="w-full bg-gray-200 rounded-full h-2 mt-1">
-                  <div className="bg-primary-600 h-2 rounded-full" style={{ width: '25%' }}></div>
+                  <div className="bg-primary-600 h-2 rounded-full" style={{ width: `${data?.progress.languages.percent ?? 0}%` }}></div>
                 </div>
               </div>
               <div>
                 <div className="flex justify-between text-sm">
                   <span>Translation Sponsors</span>
-                  <span>10/30 (33%)</span>
+                  <span>
+                    {loading
+                      ? '—'
+                      : `${data?.progress.sponsors.current}/${data?.progress.sponsors.total} (${data?.progress.sponsors.percent}%)`}
+                  </span>
                 </div>
                 <div className="w-full bg-gray-200 rounded-full h-2 mt-1">
-                  <div className="bg-accent-600 h-2 rounded-full" style={{ width: '33%' }}></div>
+                  <div className="bg-accent-600 h-2 rounded-full" style={{ width: `${data?.progress.sponsors.percent ?? 0}%` }}></div>
                 </div>
               </div>
               <div>
                 <div className="flex justify-between text-sm">
                   <span>Monthly Revenue Target</span>
-                  <span>£45K/£100K (45%)</span>
+                  <span>
+                    {loading
+                      ? '—'
+                      : `£${(data?.progress.revenue.current ?? 0).toLocaleString()}/£${(data?.progress.revenue.target ?? 0).toLocaleString()} (${data?.progress.revenue.percent ?? 0}%)`}
+                  </span>
                 </div>
                 <div className="w-full bg-gray-200 rounded-full h-2 mt-1">
-                  <div className="bg-success-600 h-2 rounded-full" style={{ width: '45%' }}></div>
+                  <div className="bg-success-600 h-2 rounded-full" style={{ width: `${data?.progress.revenue.percent ?? 0}%` }}></div>
                 </div>
               </div>
             </div>

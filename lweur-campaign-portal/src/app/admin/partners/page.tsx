@@ -3,10 +3,9 @@
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import {
+import { 
   Users,
   Search,
-  Filter,
   Download,
   Mail,
   Phone,
@@ -15,9 +14,11 @@ import {
   Calendar,
   DollarSign,
   Eye,
-  MoreHorizontal,
 } from 'lucide-react';
 import Link from 'next/link';
+import { AdminLayout } from '@/components/admin/admin-layout';
+import { useDebounce } from '@/hooks/useDebounce';
+import { useRouter } from 'next/navigation';
 
 interface Partner {
   id: string;
@@ -28,6 +29,8 @@ interface Partner {
   organization?: string;
   country: string;
   createdAt: string;
+  firstContributionAt?: string | null;
+  lastContributionAt?: string | null;
   campaigns: {
     id: string;
     type: string;
@@ -41,79 +44,52 @@ interface Partner {
 }
 
 export default function PartnersPage() {
+  const router = useRouter();
   const [partners, setPartners] = useState<Partner[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [countryFilter, setCountryFilter] = useState('');
+  const debouncedSearch = useDebounce(searchTerm, 300);
+  const [countries, setCountries] = useState<string[]>([]);
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(25);
+  const [total, setTotal] = useState(0);
+  const totalPages = Math.max(1, Math.ceil(total / limit));
+  const [copiedId, setCopiedId] = useState<string | null>(null);
 
   useEffect(() => {
     fetchPartners();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [debouncedSearch, countryFilter, page, limit]);
+
+  useEffect(() => {
+    const loadCountries = async () => {
+      try {
+        const res = await fetch('/api/admin/partners/countries');
+        if (res.ok) {
+          const json = await res.json();
+          setCountries(json.countries || []);
+        }
+      } catch (e) {
+        console.error('Failed to load countries', e);
+      }
+    };
+    loadCountries();
   }, []);
 
   const fetchPartners = async () => {
     try {
       setLoading(true);
-      // Mock data for demonstration
-      const mockPartners: Partner[] = [
-        {
-          id: '1',
-          email: 'john.smith@example.com',
-          firstName: 'John',
-          lastName: 'Smith',
-          phoneNumber: '+44 20 1234 5678',
-          organization: 'London Christian Center',
-          country: 'GB',
-          createdAt: '2024-01-15T10:00:00Z',
-          campaigns: [
-            {
-              id: 'c1',
-              type: 'ADOPT_LANGUAGE',
-              status: 'ACTIVE',
-              monthlyAmount: 15000,
-              language: { name: 'German' },
-            },
-          ],
-          totalContributions: 45000,
-        },
-        {
-          id: '2',
-          email: 'sarah.johnson@example.com',
-          firstName: 'Sarah',
-          lastName: 'Johnson',
-          country: 'FR',
-          createdAt: '2024-02-20T14:30:00Z',
-          campaigns: [
-            {
-              id: 'c2',
-              type: 'SPONSOR_TRANSLATION',
-              status: 'ACTIVE',
-              monthlyAmount: 15000,
-              language: { name: 'French' },
-            },
-          ],
-          totalContributions: 30000,
-        },
-        {
-          id: '3',
-          email: 'david.brown@example.com',
-          firstName: 'David',
-          lastName: 'Brown',
-          organization: 'Grace Church',
-          country: 'DE',
-          createdAt: '2024-03-10T09:15:00Z',
-          campaigns: [
-            {
-              id: 'c3',
-              type: 'ADOPT_LANGUAGE',
-              status: 'ACTIVE',
-              monthlyAmount: 15000,
-              language: { name: 'Spanish' },
-            },
-          ],
-          totalContributions: 15000,
-        },
-      ];
-      setPartners(mockPartners);
+      const params = new URLSearchParams();
+      if (debouncedSearch) params.set('search', debouncedSearch);
+      if (countryFilter) params.set('country', countryFilter);
+      params.set('page', String(page));
+      params.set('limit', String(limit));
+      const res = await fetch(`/api/admin/partners?${params.toString()}`);
+      if (!res.ok) throw new Error('Failed to load partners');
+      const json = await res.json();
+      setPartners(json.data as Partner[]);
+      setTotal(json.pagination?.total ?? 0);
     } catch (error) {
       console.error('Error fetching partners:', error);
     } finally {
@@ -121,17 +97,7 @@ export default function PartnersPage() {
     }
   };
 
-  const filteredPartners = partners.filter(partner => {
-    const matchesSearch = searchTerm === '' || 
-      partner.firstName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      partner.lastName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      partner.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (partner.organization && partner.organization.toLowerCase().includes(searchTerm.toLowerCase()));
-    
-    const matchesCountry = countryFilter === '' || partner.country === countryFilter;
-    
-    return matchesSearch && matchesCountry;
-  });
+  const filteredPartners = partners; // Already filtered server-side
 
   const getStatusBadge = (status: string) => {
     const baseClasses = 'px-2 py-1 rounded-full text-xs font-medium';
@@ -175,265 +141,316 @@ export default function PartnersPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading partners...</p>
+      <AdminLayout>
+        <div className="flex items-center justify-center py-24">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mx-auto"></div>
+            <p className="mt-4 text-gray-600">Loading partners...</p>
+          </div>
         </div>
-      </div>
+      </AdminLayout>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <div className="bg-white shadow-sm border-b">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900">Partner Management</h1>
-              <p className="text-gray-600">Manage and communicate with campaign supporters</p>
-            </div>
-            <div className="flex space-x-3">
-              <Button variant="outline">
-                <Download className="h-4 w-4 mr-2" />
-                Export
-              </Button>
-              <Link href="/admin">
-                <Button variant="outline">Back to Dashboard</Button>
-              </Link>
-            </div>
-          </div>
+    <AdminLayout>
+      {/* Page Heading */}
+      <div className="flex items-center justify-between mb-6">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">Partner Management</h1>
+          <p className="text-gray-600">Manage and communicate with campaign supporters</p>
+        </div>
+        <div className="flex space-x-3">
+          <Button variant="outline" onClick={async () => {
+            const params = new URLSearchParams();
+            if (debouncedSearch) params.set('search', debouncedSearch);
+            if (countryFilter) params.set('country', countryFilter);
+            params.set('all', 'true');
+            params.set('format', 'csv');
+            const res = await fetch(`/api/admin/partners?${params.toString()}`);
+            if (!res.ok) return alert('Failed to export');
+            const blob = await res.blob();
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `partners-export-${new Date().toISOString().slice(0,10)}.csv`;
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+            window.URL.revokeObjectURL(url);
+          }}>
+            <Download className="h-4 w-4 mr-2" />
+            Export
+          </Button>
+          <Link href="/admin">
+            <Button variant="outline">Back to Dashboard</Button>
+          </Link>
         </div>
       </div>
 
       {/* Filters */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+      <Card className="mb-6">
+        <CardContent className="p-6">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-center">
+            <div className="flex-1 relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+              <input
+                type="text"
+                placeholder="Search partners by name, email, or organization..."
+                className="form-input pl-10 h-12"
+                value={searchTerm}
+                onChange={(e) => { setSearchTerm(e.target.value); setPage(1); }}
+              />
+            </div>
+            
+            <div className="flex gap-3 items-center w-full lg:w-auto">
+              <select
+                className="form-input h-12"
+                value={countryFilter}
+                onChange={(e) => { setCountryFilter(e.target.value); setPage(1); }}
+              >
+                <option value="">All Countries</option>
+                {countries.map((c) => (
+                  <option key={c} value={c}>{getCountryName(c)}</option>
+                ))}
+              </select>
+
+              <div className="flex items-center gap-2 ml-auto">
+                <span className="text-sm text-gray-600">Rows:</span>
+                <select
+                  className="form-input w-24 h-12"
+                  value={limit}
+                  onChange={(e) => { setLimit(Number(e.target.value)); setPage(1); }}
+                >
+                  {[10, 25, 50, 100].map(n => (
+                    <option key={n} value={n}>{n}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Stats */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
         <Card>
           <CardContent className="p-6">
-            <div className="flex flex-col lg:flex-row gap-4">
-              <div className="flex-1 relative">
-                <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-                <input
-                  type="text"
-                  placeholder="Search partners by name, email, or organization..."
-                  className="form-input pl-10"
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                />
-              </div>
-              
-              <div className="flex gap-3">
-                <select
-                  className="form-input"
-                  value={countryFilter}
-                  onChange={(e) => setCountryFilter(e.target.value)}
-                >
-                  <option value="">All Countries</option>
-                  <option value="GB">United Kingdom</option>
-                  <option value="FR">France</option>
-                  <option value="DE">Germany</option>
-                  <option value="ES">Spain</option>
-                  <option value="IT">Italy</option>
-                </select>
-                
-                <Button variant="outline">
-                  <Filter className="h-4 w-4 mr-2" />
-                  More Filters
-                </Button>
+            <div className="flex items-center">
+              <Users className="h-8 w-8 text-primary-600" />
+              <div className="ml-4">
+                <p className="text-sm font-medium text-gray-500">Total Partners</p>
+                <p className="text-2xl font-semibold text-gray-900">{total}</p>
               </div>
             </div>
           </CardContent>
         </Card>
-      </div>
-
-      {/* Stats */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-6">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center">
-                <Users className="h-8 w-8 text-primary-600" />
-                <div className="ml-4">
-                  <p className="text-sm font-medium text-gray-500">Total Partners</p>
-                  <p className="text-2xl font-semibold text-gray-900">{filteredPartners.length}</p>
-                </div>
+        
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex items-center">
+              <DollarSign className="h-8 w-8 text-green-600" />
+              <div className="ml-4">
+                <p className="text-sm font-medium text-gray-500">Total Contributions</p>
+                <p className="text-2xl font-semibold text-gray-900">
+                  {formatCurrency(filteredPartners.reduce((sum, p) => sum + p.totalContributions, 0))}
+                </p>
               </div>
-            </CardContent>
-          </Card>
-          
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center">
-                <DollarSign className="h-8 w-8 text-green-600" />
-                <div className="ml-4">
-                  <p className="text-sm font-medium text-gray-500">Total Contributions</p>
-                  <p className="text-2xl font-semibold text-gray-900">
-                    {formatCurrency(filteredPartners.reduce((sum, p) => sum + p.totalContributions, 0))}
-                  </p>
-                </div>
+            </div>
+          </CardContent>
+        </Card>
+        
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex items-center">
+              <Calendar className="h-8 w-8 text-blue-600" />
+              <div className="ml-4">
+                <p className="text-sm font-medium text-gray-500">Active Campaigns</p>
+                <p className="text-2xl font-semibold text-gray-900">
+                  {filteredPartners.reduce((sum, p) => sum + p.campaigns.filter(c => c.status === 'ACTIVE').length, 0)}
+                </p>
               </div>
-            </CardContent>
-          </Card>
-          
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center">
-                <Calendar className="h-8 w-8 text-blue-600" />
-                <div className="ml-4">
-                  <p className="text-sm font-medium text-gray-500">Active Campaigns</p>
-                  <p className="text-2xl font-semibold text-gray-900">
-                    {filteredPartners.reduce((sum, p) => sum + p.campaigns.filter(c => c.status === 'ACTIVE').length, 0)}
-                  </p>
-                </div>
+            </div>
+          </CardContent>
+        </Card>
+        
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex items-center">
+              <MapPin className="h-8 w-8 text-purple-600" />
+              <div className="ml-4">
+                <p className="text-sm font-medium text-gray-500">Countries</p>
+                <p className="text-2xl font-semibold text-gray-900">
+                  {new Set(filteredPartners.map(p => p.country)).size}
+                </p>
               </div>
-            </CardContent>
-          </Card>
-          
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center">
-                <MapPin className="h-8 w-8 text-purple-600" />
-                <div className="ml-4">
-                  <p className="text-sm font-medium text-gray-500">Countries</p>
-                  <p className="text-2xl font-semibold text-gray-900">
-                    {new Set(filteredPartners.map(p => p.country)).size}
-                  </p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
+            </div>
+          </CardContent>
+        </Card>
       </div>
 
       {/* Partners List */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-12">
-        <Card>
-          <CardHeader>
-            <CardTitle>Partners ({filteredPartners.length})</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Partner
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Contact
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Campaigns
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Total Contributions
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Joined
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Actions
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
-                  {filteredPartners.map((partner) => (
-                    <tr key={partner.id} className="hover:bg-gray-50">
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="flex items-center">
-                          <div className="h-10 w-10 bg-primary-100 rounded-full flex items-center justify-center">
-                            <span className="text-primary-600 font-medium">
-                              {partner.firstName[0]}{partner.lastName[0]}
-                            </span>
-                          </div>
-                          <div className="ml-4">
-                            <div className="text-sm font-medium text-gray-900">
-                              {partner.firstName} {partner.lastName}
-                            </div>
-                            {partner.organization && (
-                              <div className="text-sm text-gray-500 flex items-center">
-                                <Building className="h-3 w-3 mr-1" />
-                                {partner.organization}
-                              </div>
-                            )}
-                          </div>
+      <Card className="mb-12">
+        <CardHeader>
+          <CardTitle>Partners ({filteredPartners.length})</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="overflow-x-auto">
+            <table className="min-w-full divide-y divide-gray-200">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Partner
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Contact
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Campaigns
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Total Contributions
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Date of Contribution
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Actions
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {filteredPartners.map((partner) => (
+                  <tr key={partner.id} className="hover:bg-gray-50">
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="flex items-center">
+                        <div className="h-10 w-10 bg-primary-100 rounded-full flex items-center justify-center">
+                          <span className="text-primary-600 font-medium">
+                            {partner.firstName[0]}{partner.lastName[0]}
+                          </span>
                         </div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm text-gray-900">
-                          <div className="flex items-center mb-1">
-                            <Mail className="h-3 w-3 mr-2 text-gray-400" />
-                            {partner.email}
+                        <div className="ml-4">
+                          <div className="text-sm font-medium text-gray-900">
+                            {partner.firstName} {partner.lastName}
                           </div>
-                          {partner.phoneNumber && (
-                            <div className="flex items-center mb-1">
-                              <Phone className="h-3 w-3 mr-2 text-gray-400" />
-                              {partner.phoneNumber}
+                          {partner.organization && (
+                            <div className="text-sm text-gray-500 flex items-center">
+                              <Building className="h-3 w-3 mr-1" />
+                              {partner.organization}
                             </div>
                           )}
-                          <div className="flex items-center">
-                            <MapPin className="h-3 w-3 mr-2 text-gray-400" />
-                            {getCountryName(partner.country)}
-                          </div>
                         </div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="space-y-1">
-                          {partner.campaigns.map((campaign) => (
-                            <div key={campaign.id} className="flex items-center justify-between">
-                              <div className="text-sm">
-                                <span className="font-medium">{campaign.language.name}</span>
-                                <span className="text-gray-500 ml-2">
-                                  ({campaign.type === 'ADOPT_LANGUAGE' ? 'Adoption' : 'Translation'})
-                                </span>
-                              </div>
-                              <span className={getStatusBadge(campaign.status)}>
-                                {campaign.status}
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm text-gray-900">
+                        <div className="flex items-center mb-1">
+                          <Mail className="h-3 w-3 mr-2 text-gray-400" />
+                          {partner.email}
+                        </div>
+                        {partner.phoneNumber && (
+                          <div className="flex items-center mb-1">
+                            <Phone className="h-3 w-3 mr-2 text-gray-400" />
+                            {partner.phoneNumber}
+                          </div>
+                        )}
+                        <div className="flex items-center">
+                          <MapPin className="h-3 w-3 mr-2 text-gray-400" />
+                          {getCountryName(partner.country)}
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="space-y-1">
+                        {partner.campaigns.map((campaign) => (
+                          <div key={campaign.id} className="flex items-center justify-between">
+                            <div className="text-sm">
+                              <span className="font-medium">{campaign.language.name}</span>
+                              <span className="text-gray-500 ml-2">
+                                ({campaign.type === 'ADOPT_LANGUAGE' ? 'Adoption' : 'Translation'})
                               </span>
                             </div>
-                          ))}
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                        {formatCurrency(partner.totalContributions)}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {formatDate(partner.createdAt)}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                        <div className="flex space-x-2">
-                          <Button size="sm" variant="outline">
-                            <Eye className="h-3 w-3 mr-1" />
-                            View
-                          </Button>
-                          <Button size="sm" variant="outline">
-                            <Mail className="h-3 w-3 mr-1" />
-                            Contact
-                          </Button>
-                          <Button size="sm" variant="outline">
-                            <MoreHorizontal className="h-3 w-3" />
-                          </Button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+                            <span className={getStatusBadge(campaign.status)}>
+                              {campaign.status}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                      {formatCurrency(partner.totalContributions)}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      {partner.lastContributionAt ? formatDate(partner.lastContributionAt) : '—'}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                      <div className="flex space-x-2">
+                        <Button size="sm" variant="outline" onClick={() => router.push(`/admin/partners/${partner.id}`)}>
+                          <Eye className="h-3 w-3 mr-1" />
+                          View
+                        </Button>
+                        <Button size="sm" variant="outline" onClick={() => (window.location.href = `mailto:${partner.email}`)}>
+                          <Mail className="h-3 w-3 mr-1" />
+                          Contact
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={async () => {
+                            try {
+                              await navigator.clipboard.writeText(partner.email);
+                              setCopiedId(partner.id);
+                              setTimeout(() => setCopiedId(null), 1500);
+                            } catch {
+                              alert('Failed to copy email');
+                            }
+                          }}
+                        >
+                          {copiedId === partner.id ? 'Copied' : 'Copy Email'}
+                        </Button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          
+          {filteredPartners.length === 0 && (
+            <div className="text-center py-12">
+              <Users className="h-16 w-16 text-gray-300 mx-auto mb-4" />
+              <h3 className="text-lg font-medium text-gray-900 mb-2">No partners found</h3>
+              <p className="text-gray-500">
+                Try adjusting your search criteria or filters.
+              </p>
             </div>
-            
-            {filteredPartners.length === 0 && (
-              <div className="text-center py-12">
-                <Users className="h-16 w-16 text-gray-300 mx-auto mb-4" />
-                <h3 className="text-lg font-medium text-gray-900 mb-2">No partners found</h3>
-                <p className="text-gray-500">
-                  Try adjusting your search criteria or filters.
-                </p>
+          )}
+
+          {filteredPartners.length > 0 && (
+            <div className="flex items-center justify-between mt-6">
+              <div className="text-sm text-gray-600">Page {page} of {totalPages}</div>
+              <div className="space-x-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setPage((p) => Math.max(1, p - 1))}
+                  disabled={page <= 1}
+                >
+                  Previous
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                  disabled={page >= totalPages}
+                >
+                  Next
+                </Button>
               </div>
-            )}
-          </CardContent>
-        </Card>
-      </div>
-    </div>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    </AdminLayout>
   );
 }
