@@ -37,7 +37,7 @@ WORKDIR /app
 # - postgresql-client: pg_isready, pg_dump
 # - openssl: required by Prisma engines on Alpine
 # - libc6-compat: compatibility layer for some native deps
-RUN apk add --no-cache postgresql-client openssl libc6-compat
+RUN apk add --no-cache postgresql-client openssl libc6-compat curl
 
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
@@ -69,3 +69,8 @@ ENV HOSTNAME="0.0.0.0"
 
 # Run migrations before starting the app
 CMD ["./migrate-and-start.sh"]
+
+# Basic HTTP healthcheck against API health endpoint
+# Gives the app time to boot after migrations
+HEALTHCHECK --interval=30s --timeout=5s --start-period=90s --retries=3 \
+  CMD ["CMD-SHELL", "curl -fsS http://127.0.0.1:${PORT:-3000}/api/health >/dev/null || exit 1"]
