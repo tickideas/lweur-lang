@@ -198,7 +198,7 @@ export function AmountSelection({
           </h2>
         </div>
         <p className="text-neutral-600 max-w-md mx-auto">
-          Your monthly £150 donation can bring the gospel to thousands of people every day
+          Your contribution of £150 or more can bring the gospel to thousands of people every day
         </p>
       </div>
 

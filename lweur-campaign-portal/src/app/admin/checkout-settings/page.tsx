@@ -35,14 +35,14 @@ import { useCheckoutSettingsFieldArray, CheckoutSettingsFormType } from '@/hooks
 const checkoutSettingsSchema = z.object({
   availableCurrencies: z.array(z.string()).min(1, 'At least one currency is required'),
   defaultCurrency: z.string().min(1, 'Default currency is required'),
-  adoptLanguageDefaultAmount: z.number().min(100, 'Minimum £1'),
+  adoptLanguageDefaultAmount: z.number().min(1, 'Minimum £1'),
   adoptLanguagePresetAmounts: z.array(z.number()).min(1, 'At least one preset amount required'),
-  adoptLanguageMinAmount: z.number().min(100, 'Minimum £1'),
-  adoptLanguageMaxAmount: z.number().min(1000, 'Maximum must be at least £10'),
-  sponsorTranslationDefaultAmount: z.number().min(100, 'Minimum £1'),
+  adoptLanguageMinAmount: z.number().min(1, 'Minimum £1'),
+  adoptLanguageMaxAmount: z.number().min(10, 'Maximum must be at least £10'),
+  sponsorTranslationDefaultAmount: z.number().min(1, 'Minimum £1'),
   sponsorTranslationPresetAmounts: z.array(z.number()).min(1, 'At least one preset amount required'),
-  sponsorTranslationMinAmount: z.number().min(100, 'Minimum £1'),
-  sponsorTranslationMaxAmount: z.number().min(1000, 'Maximum must be at least £10'),
+  sponsorTranslationMinAmount: z.number().min(1, 'Minimum £1'),
+  sponsorTranslationMaxAmount: z.number().min(10, 'Maximum must be at least £10'),
   showOneTimeOption: z.boolean(),
   requirePhone: z.boolean(),
   requireOrganization: z.boolean(),
@@ -87,14 +87,14 @@ export default function CheckoutSettingsPage() {
     defaultValues: {
       availableCurrencies: ['GBP', 'EUR', 'USD'],
       defaultCurrency: 'GBP',
-      adoptLanguageDefaultAmount: 15000,
-      adoptLanguagePresetAmounts: [2000, 3500, 5000, 15000],
-      adoptLanguageMinAmount: 1000,
-      adoptLanguageMaxAmount: 100000,
-      sponsorTranslationDefaultAmount: 15000,
-      sponsorTranslationPresetAmounts: [2000, 3500, 5000, 15000],
-      sponsorTranslationMinAmount: 1000,
-      sponsorTranslationMaxAmount: 100000,
+      adoptLanguageDefaultAmount: 150,
+      adoptLanguagePresetAmounts: [20, 35, 50, 150],
+      adoptLanguageMinAmount: 10,
+      adoptLanguageMaxAmount: 1000,
+      sponsorTranslationDefaultAmount: 150,
+      sponsorTranslationPresetAmounts: [20, 35, 50, 150],
+      sponsorTranslationMinAmount: 10,
+      sponsorTranslationMaxAmount: 1000,
       showOneTimeOption: false,
       requirePhone: false,
       requireOrganization: false,
@@ -157,7 +157,19 @@ export default function CheckoutSettingsPage() {
       if (response.ok) {
         const data = await response.json();
         if (data.settings) {
-          reset(data.settings);
+          // Convert pence to pounds for display
+          const settingsInPounds = {
+            ...data.settings,
+            adoptLanguageDefaultAmount: data.settings.adoptLanguageDefaultAmount / 100,
+            adoptLanguagePresetAmounts: data.settings.adoptLanguagePresetAmounts.map((amount: number) => amount / 100),
+            adoptLanguageMinAmount: data.settings.adoptLanguageMinAmount / 100,
+            adoptLanguageMaxAmount: data.settings.adoptLanguageMaxAmount / 100,
+            sponsorTranslationDefaultAmount: data.settings.sponsorTranslationDefaultAmount / 100,
+            sponsorTranslationPresetAmounts: data.settings.sponsorTranslationPresetAmounts.map((amount: number) => amount / 100),
+            sponsorTranslationMinAmount: data.settings.sponsorTranslationMinAmount / 100,
+            sponsorTranslationMaxAmount: data.settings.sponsorTranslationMaxAmount / 100,
+          };
+          reset(settingsInPounds);
         }
       }
     } catch (error) {
@@ -175,8 +187,21 @@ export default function CheckoutSettingsPage() {
     try {
       console.log('Submitting checkout settings:', data);
       
+      // Convert pounds to pence for API
+      const dataInPence = {
+        ...data,
+        adoptLanguageDefaultAmount: Math.round(data.adoptLanguageDefaultAmount * 100),
+        adoptLanguagePresetAmounts: data.adoptLanguagePresetAmounts.map(amount => Math.round(amount * 100)),
+        adoptLanguageMinAmount: Math.round(data.adoptLanguageMinAmount * 100),
+        adoptLanguageMaxAmount: Math.round(data.adoptLanguageMaxAmount * 100),
+        sponsorTranslationDefaultAmount: Math.round(data.sponsorTranslationDefaultAmount * 100),
+        sponsorTranslationPresetAmounts: data.sponsorTranslationPresetAmounts.map(amount => Math.round(amount * 100)),
+        sponsorTranslationMinAmount: Math.round(data.sponsorTranslationMinAmount * 100),
+        sponsorTranslationMaxAmount: Math.round(data.sponsorTranslationMaxAmount * 100),
+      };
+      
       // Sanitize data before sending to API
-      const sanitizedData = sanitizeCheckoutSettings(data);
+      const sanitizedData = sanitizeCheckoutSettings(dataInPence);
       console.log('Sanitized data:', sanitizedData);
 
       const response = await fetch('/api/admin/checkout-settings', {
@@ -337,14 +362,15 @@ export default function CheckoutSettingsPage() {
             <CardContent className="space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div>
-                  <Label htmlFor="adoptLanguageDefaultAmount">Default Amount (pence)</Label>
+                  <Label htmlFor="adoptLanguageDefaultAmount">Default Amount (£)</Label>
                   <Input
                     {...register('adoptLanguageDefaultAmount', { valueAsNumber: true })}
                     type="number"
+                    step="0.01"
                     className="mt-1"
                   />
                   <p className="text-xs text-neutral-500 mt-1">
-                    {formatCurrency(watch('adoptLanguageDefaultAmount') || 0, defaultCurrency)}
+                    {formatCurrency((watch('adoptLanguageDefaultAmount') || 0) * 100, defaultCurrency)}
                   </p>
                   {errors.adoptLanguageDefaultAmount && (
                     <p className="text-red-600 text-sm mt-1">{errors.adoptLanguageDefaultAmount.message}</p>
@@ -352,14 +378,15 @@ export default function CheckoutSettingsPage() {
                 </div>
 
                 <div>
-                  <Label htmlFor="adoptLanguageMinAmount">Minimum Amount (pence)</Label>
+                  <Label htmlFor="adoptLanguageMinAmount">Minimum Amount (£)</Label>
                   <Input
                     {...register('adoptLanguageMinAmount', { valueAsNumber: true })}
                     type="number"
+                    step="0.01"
                     className="mt-1"
                   />
                   <p className="text-xs text-neutral-500 mt-1">
-                    {formatCurrency(watch('adoptLanguageMinAmount') || 0, defaultCurrency)}
+                    {formatCurrency((watch('adoptLanguageMinAmount') || 0) * 100, defaultCurrency)}
                   </p>
                   {errors.adoptLanguageMinAmount && (
                     <p className="text-red-600 text-sm mt-1">{errors.adoptLanguageMinAmount.message}</p>
@@ -367,14 +394,15 @@ export default function CheckoutSettingsPage() {
                 </div>
 
                 <div>
-                  <Label htmlFor="adoptLanguageMaxAmount">Maximum Amount (pence)</Label>
+                  <Label htmlFor="adoptLanguageMaxAmount">Maximum Amount (£)</Label>
                   <Input
                     {...register('adoptLanguageMaxAmount', { valueAsNumber: true })}
                     type="number"
+                    step="0.01"
                     className="mt-1"
                   />
                   <p className="text-xs text-neutral-500 mt-1">
-                    {formatCurrency(watch('adoptLanguageMaxAmount') || 0, defaultCurrency)}
+                    {formatCurrency((watch('adoptLanguageMaxAmount') || 0) * 100, defaultCurrency)}
                   </p>
                   {errors.adoptLanguageMaxAmount && (
                     <p className="text-red-600 text-sm mt-1">{errors.adoptLanguageMaxAmount.message}</p>
@@ -389,7 +417,7 @@ export default function CheckoutSettingsPage() {
                     type="button"
                     variant="outline"
                     size="sm"
-                    onClick={() => appendAdoptPreset(5000 as number)}
+                    onClick={() => appendAdoptPreset(50 as number)}
                   >
                     <Plus className="h-4 w-4 mr-1" />
                     Add Amount
@@ -401,6 +429,7 @@ export default function CheckoutSettingsPage() {
                       <Input
                         {...register(`adoptLanguagePresetAmounts.${index}`, { valueAsNumber: true })}
                         type="number"
+                        step="0.01"
                         className="flex-1"
                       />
                       <Button
@@ -430,14 +459,15 @@ export default function CheckoutSettingsPage() {
             <CardContent className="space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div>
-                  <Label htmlFor="sponsorTranslationDefaultAmount">Default Amount (pence)</Label>
+                  <Label htmlFor="sponsorTranslationDefaultAmount">Default Amount (£)</Label>
                   <Input
                     {...register('sponsorTranslationDefaultAmount', { valueAsNumber: true })}
                     type="number"
+                    step="0.01"
                     className="mt-1"
                   />
                   <p className="text-xs text-neutral-500 mt-1">
-                    {formatCurrency(watch('sponsorTranslationDefaultAmount') || 0, defaultCurrency)}
+                    {formatCurrency((watch('sponsorTranslationDefaultAmount') || 0) * 100, defaultCurrency)}
                   </p>
                   {errors.sponsorTranslationDefaultAmount && (
                     <p className="text-red-600 text-sm mt-1">{errors.sponsorTranslationDefaultAmount.message}</p>
@@ -445,14 +475,15 @@ export default function CheckoutSettingsPage() {
                 </div>
 
                 <div>
-                  <Label htmlFor="sponsorTranslationMinAmount">Minimum Amount (pence)</Label>
+                  <Label htmlFor="sponsorTranslationMinAmount">Minimum Amount (£)</Label>
                   <Input
                     {...register('sponsorTranslationMinAmount', { valueAsNumber: true })}
                     type="number"
+                    step="0.01"
                     className="mt-1"
                   />
                   <p className="text-xs text-neutral-500 mt-1">
-                    {formatCurrency(watch('sponsorTranslationMinAmount') || 0, defaultCurrency)}
+                    {formatCurrency((watch('sponsorTranslationMinAmount') || 0) * 100, defaultCurrency)}
                   </p>
                   {errors.sponsorTranslationMinAmount && (
                     <p className="text-red-600 text-sm mt-1">{errors.sponsorTranslationMinAmount.message}</p>
@@ -460,14 +491,15 @@ export default function CheckoutSettingsPage() {
                 </div>
 
                 <div>
-                  <Label htmlFor="sponsorTranslationMaxAmount">Maximum Amount (pence)</Label>
+                  <Label htmlFor="sponsorTranslationMaxAmount">Maximum Amount (£)</Label>
                   <Input
                     {...register('sponsorTranslationMaxAmount', { valueAsNumber: true })}
                     type="number"
+                    step="0.01"
                     className="mt-1"
                   />
                   <p className="text-xs text-neutral-500 mt-1">
-                    {formatCurrency(watch('sponsorTranslationMaxAmount') || 0, defaultCurrency)}
+                    {formatCurrency((watch('sponsorTranslationMaxAmount') || 0) * 100, defaultCurrency)}
                   </p>
                   {errors.sponsorTranslationMaxAmount && (
                     <p className="text-red-600 text-sm mt-1">{errors.sponsorTranslationMaxAmount.message}</p>
@@ -482,7 +514,7 @@ export default function CheckoutSettingsPage() {
                     type="button"
                     variant="outline"
                     size="sm"
-                    onClick={() => appendSponsorPreset(5000 as number)}
+                    onClick={() => appendSponsorPreset(50 as number)}
                   >
                     <Plus className="h-4 w-4 mr-1" />
                     Add Amount
@@ -494,6 +526,7 @@ export default function CheckoutSettingsPage() {
                       <Input
                         {...register(`sponsorTranslationPresetAmounts.${index}`, { valueAsNumber: true })}
                         type="number"
+                        step="0.01"
                         className="flex-1"
                       />
                       <Button
