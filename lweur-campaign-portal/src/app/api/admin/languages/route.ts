@@ -64,7 +64,7 @@ export async function GET(req: NextRequest) {
       iso639Code: l.iso639Code,
       region: l.region,
       countries: l.countries,
-      speakerCount: l.speakerCount,
+      speakerCount: Number(l.speakerCount),
       flagUrl: l.flagUrl,
       isActive: l.isActive,
       adoptionStatus: l.adoptionStatus,

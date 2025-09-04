@@ -89,6 +89,7 @@ export default function LanguagesPage() {
   const [editingLanguage, setEditingLanguage] = useState<LanguageRow | null>(null);
   const [showAddForm, setShowAddForm] = useState(false);
   const [editForm, setEditForm] = useState<Partial<LanguageRow>>({});
+  const [addForm, setAddForm] = useState<Partial<LanguageRow>>({});
   
   const debouncedSearch = useDebounce(search, 300);
 
@@ -181,6 +182,57 @@ export default function LanguagesPage() {
   const closeEditModal = () => {
     setEditingLanguage(null);
     setEditForm({});
+  };
+
+  const closeAddModal = () => {
+    setShowAddForm(false);
+    setAddForm({});
+  };
+
+  const handleAdd = async () => {
+    if (!addForm.name || !addForm.nativeName || !addForm.iso639Code) {
+      alert('Please fill in all required fields');
+      return;
+    }
+
+    // Validate speaker count doesn't exceed safe integer limit
+    const speakerCount = addForm.speakerCount || 0;
+    if (speakerCount > Number.MAX_SAFE_INTEGER) {
+      alert('Speaker count is too large. Please enter a smaller number.');
+      return;
+    }
+    
+    try {
+      const newLanguageData = {
+        ...addForm,
+        countries: Array.isArray(addForm.countries)
+          ? addForm.countries
+          : String(addForm.countries || '').split(',').map(c => c.trim()).filter(Boolean),
+        speakerCount,
+        priority: addForm.priority || 1,
+        isActive: addForm.isActive ?? true,
+        adoptionStatus: addForm.adoptionStatus || 'AVAILABLE',
+        translationNeedsSponsorship: addForm.translationNeedsSponsorship ?? true
+      };
+      
+      const res = await fetch('/api/admin/languages', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newLanguageData),
+      });
+      
+      if (!res.ok) {
+        const j = await res.json().catch(() => ({}));
+        throw new Error(j.error || 'Failed to create language');
+      }
+      
+      const newLanguage = await res.json();
+      setLanguages(prev => [...prev, newLanguage.data]);
+      setTotal(t => t + 1);
+      closeAddModal();
+    } catch (e: any) {
+      alert(e.message || 'Failed to create language');
+    }
   };
 
   const handleEdit = async () => {
@@ -716,6 +768,195 @@ export default function LanguagesPage() {
               <Button onClick={handleEdit} className="bg-[#1226AA] hover:bg-blue-800">
                 <CheckCircle className="mr-2 h-4 w-4" />
                 Save Changes
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Add Language Modal */}
+      {showAddForm && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between p-6 border-b border-neutral-200">
+              <div>
+                <h2 className="text-xl font-semibold text-neutral-900">Add New Language</h2>
+                <p className="text-sm text-neutral-600 mt-1">
+                  Create a new language for adoption and translation sponsorship
+                </p>
+              </div>
+              <Button variant="ghost" size="sm" onClick={closeAddModal}>
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+            
+            <div className="p-6 space-y-6">
+              {/* Basic Information */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-neutral-700 mb-2">
+                    Language Name *
+                  </label>
+                  <Input
+                    value={addForm.name || ''}
+                    onChange={(e) => setAddForm(prev => ({ ...prev, name: e.target.value }))}
+                    placeholder="English"
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-neutral-700 mb-2">
+                    Native Name *
+                  </label>
+                  <Input
+                    value={addForm.nativeName || ''}
+                    onChange={(e) => setAddForm(prev => ({ ...prev, nativeName: e.target.value }))}
+                    placeholder="English"
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-neutral-700 mb-2">
+                    ISO 639 Code *
+                  </label>
+                  <Input
+                    value={addForm.iso639Code || ''}
+                    onChange={(e) => setAddForm(prev => ({ ...prev, iso639Code: e.target.value }))}
+                    placeholder="en"
+                  />
+                </div>
+              </div>
+
+              {/* Geographic Information */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-neutral-700 mb-2">
+                    Region *
+                  </label>
+                  <Input
+                    value={addForm.region || ''}
+                    onChange={(e) => setAddForm(prev => ({ ...prev, region: e.target.value }))}
+                    placeholder="Western Europe"
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-neutral-700 mb-2">
+                    Countries (comma separated) *
+                  </label>
+                  <Input
+                    value={Array.isArray(addForm.countries) ? addForm.countries.join(', ') : addForm.countries || ''}
+                    onChange={(e) => setAddForm(prev => ({ ...prev, countries: e.target.value.split(',').map(c => c.trim()) }))}
+                    placeholder="GB, US, AU"
+                  />
+                </div>
+              </div>
+
+              {/* Metrics */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-neutral-700 mb-2">
+                    Speaker Count *
+                  </label>
+                  <Input
+                    type="number"
+                    value={addForm.speakerCount || 0}
+                    onChange={(e) => setAddForm(prev => ({ ...prev, speakerCount: Number(e.target.value) }))}
+                    placeholder="1500000000"
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-neutral-700 mb-2">
+                    Priority (1-100) *
+                  </label>
+                  <Input
+                    type="number"
+                    value={addForm.priority || 1}
+                    onChange={(e) => setAddForm(prev => ({ ...prev, priority: Number(e.target.value) }))}
+                    placeholder="1"
+                    min="1"
+                    max="100"
+                  />
+                  <p className="text-xs text-neutral-500 mt-1">Lower numbers = higher priority</p>
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-neutral-700 mb-2">
+                    Flag URL
+                  </label>
+                  <Input
+                    value={addForm.flagUrl || ''}
+                    onChange={(e) => setAddForm(prev => ({ ...prev, flagUrl: e.target.value }))}
+                    placeholder="https://example.com/flag.svg"
+                  />
+                </div>
+              </div>
+
+              {/* Status Options */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-neutral-700 mb-2">
+                    Adoption Status
+                  </label>
+                  <select
+                    value={addForm.adoptionStatus || 'AVAILABLE'}
+                    onChange={(e) => setAddForm(prev => ({ ...prev, adoptionStatus: e.target.value as AdoptionStatus }))}
+                    className="w-full px-3 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-[#1226AA] focus:border-transparent"
+                  >
+                    <option value="AVAILABLE">Available</option>
+                    <option value="ADOPTED">Adopted</option>
+                    <option value="PENDING">Pending</option>
+                    <option value="WAITLIST">Waitlist</option>
+                  </select>
+                </div>
+                
+                <div className="flex items-center space-x-6 pt-6">
+                  <label className="flex items-center space-x-2">
+                    <input
+                      type="checkbox"
+                      checked={addForm.isActive ?? true}
+                      onChange={(e) => setAddForm(prev => ({ ...prev, isActive: e.target.checked }))}
+                      className="rounded border-neutral-300 focus:ring-[#1226AA]"
+                    />
+                    <span className="text-sm font-medium text-neutral-700">Active</span>
+                  </label>
+                  
+                  <label className="flex items-center space-x-2">
+                    <input
+                      type="checkbox"
+                      checked={addForm.translationNeedsSponsorship ?? true}
+                      onChange={(e) => setAddForm(prev => ({ ...prev, translationNeedsSponsorship: e.target.checked }))}
+                      className="rounded border-neutral-300 focus:ring-[#1226AA]"
+                    />
+                    <span className="text-sm font-medium text-neutral-700">Needs Translation</span>
+                  </label>
+                </div>
+              </div>
+
+              {/* Description */}
+              <div>
+                <label className="block text-sm font-medium text-neutral-700 mb-2">
+                  Description
+                </label>
+                <textarea
+                  value={addForm.description || ''}
+                  onChange={(e) => setAddForm(prev => ({ ...prev, description: e.target.value }))}
+                  className="w-full px-3 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-[#1226AA] focus:border-transparent"
+                  rows={3}
+                  placeholder="Optional description about this language..."
+                />
+              </div>
+            </div>
+
+            {/* Modal Actions */}
+            <div className="flex justify-end gap-3 p-6 border-t border-neutral-200 bg-neutral-50">
+              <Button variant="outline" onClick={closeAddModal}>
+                Cancel
+              </Button>
+              <Button onClick={handleAdd} className="bg-[#1226AA] hover:bg-blue-800">
+                <Plus className="mr-2 h-4 w-4" />
+                Add Language
               </Button>
             </div>
           </div>

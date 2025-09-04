@@ -44,7 +44,7 @@ model Language {
   iso639Code                String       @unique
   region                    String
   countries                 String[]
-  speakerCount              Int
+  speakerCount              BigInt
   flagUrl                   String
   isActive                  Boolean      @default(true)
   adoptionStatus            AdoptionStatus @default(AVAILABLE)
