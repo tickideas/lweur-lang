@@ -8,8 +8,9 @@ import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 
 const navigation = [
-  { name: 'Adopt a Language', href: '/adopt-language' },
+  { name: 'Home', href: 'https://loveworldeurope.org/' },
   { name: 'Sponsor Translation', href: '/sponsor-translation' },
+  { name: 'Adopt a Language', href: '/adopt-language' },
   { name: 'Impact Stories', href: '/impact' },
 ];
 

@@ -50,12 +50,7 @@ export async function POST(req: NextRequest) {
     const { campaignType, languageId, amount, currency, isRecurring, partnerInfo, billingAddress } = validatedData;
 
     // Validate business rules for campaign types and payment types
-    if (campaignType === 'ADOPT_LANGUAGE' && !isRecurring) {
-      return NextResponse.json(
-        { error: 'Language adoption requires a monthly recurring subscription. Please select the monthly option.' },
-        { status: 400 }
-      );
-    }
+    // Note: Both campaign types now support one-time and recurring payments
 
     // Check if language is available for adoption (if it's an adoption campaign)
     if (campaignType === 'ADOPT_LANGUAGE') {
@@ -195,7 +190,12 @@ export async function POST(req: NextRequest) {
       });
 
       paymentIntentClientSecret = paymentIntent.client_secret!;
-      nextBillingDate = new Date(); // For one-time, set to current date
+      // For one-time language adoption, set expiry to 30 days from now
+      if (campaignType === 'ADOPT_LANGUAGE') {
+        nextBillingDate = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000); // 30 days from now
+      } else {
+        nextBillingDate = new Date(); // For one-time translation sponsorship, no expiry needed
+      }
     }
 
     // Create campaign in database

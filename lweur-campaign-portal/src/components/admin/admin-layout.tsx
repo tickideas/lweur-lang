@@ -15,7 +15,8 @@ import {
   FileText,
   Heart,
   Languages as LanguagesIcon,
-  Globe
+  Globe,
+  Clock
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -58,6 +59,11 @@ const navigation = [
     name: 'Analytics',
     href: '/admin/analytics',
     icon: BarChart3,
+  },
+  {
+    name: 'Campaign Expiry',
+    href: '/admin/campaign-expiry',
+    icon: Clock,
   },
   {
     name: 'Settings',

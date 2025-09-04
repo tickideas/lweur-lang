@@ -33,7 +33,7 @@ const mockSettings = {
   sponsorTranslationPresetAmounts: [2000, 3500, 5000, 15000],
   sponsorTranslationMinAmount: 1000,
   sponsorTranslationMaxAmount: 100000,
-  showOneTimeOption: false,
+  showOneTimeOption: true,
   requirePhone: false,
   requireOrganization: false,
   hearFromUsOptions: ['Search Engine', 'Social Media'],

@@ -95,7 +95,7 @@ export default function CheckoutSettingsPage() {
       sponsorTranslationPresetAmounts: [20, 35, 50, 150],
       sponsorTranslationMinAmount: 10,
       sponsorTranslationMaxAmount: 1000,
-      showOneTimeOption: false,
+      showOneTimeOption: true,
       requirePhone: false,
       requireOrganization: false,
       hearFromUsOptions: ['Search Engine', 'Social Media', 'Friend/Family', 'Church', 'Advertisement', 'Email', 'Other'],

@@ -140,13 +140,13 @@ export function PersonalDetailsForm({ onComplete }: PersonalDetailsFormProps) {
           <div>
             <Label htmlFor="organization" className="text-sm font-medium text-neutral-700">
               <Building className="inline h-4 w-4 mr-1" />
-              Organization (Optional)
+              Reference (Optional)
             </Label>
             <Input
               {...register('organization')}
               type="text"
               className="mt-1"
-              placeholder="Your Church or Organization"
+              placeholder="Enter Your Reference"
             />
           </div>
         </div>

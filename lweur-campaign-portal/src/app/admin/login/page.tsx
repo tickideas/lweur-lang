@@ -152,18 +152,6 @@ export default function AdminLoginPage() {
           </CardContent>
         </Card>
 
-        {/* Demo Credentials */}
-        <Card className="bg-blue-50 border-blue-200">
-          <CardContent className="pt-6">
-            <div className="text-center">
-              <h3 className="text-sm font-medium text-blue-900 mb-2">Demo Credentials</h3>
-              <div className="text-xs text-blue-700 space-y-1">
-                <p><strong>Email:</strong> admin@loveworldeurope.org</p>
-                <p><strong>Password:</strong> password123</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
 
         {/* Back to Site */}
         <div className="text-center">

@@ -28,7 +28,7 @@ export async function GET(request: NextRequest) {
         sponsorTranslationMinAmount: 1000,
         sponsorTranslationMaxAmount: 100000,
         enableGiftAid: true,
-        showOneTimeOption: false,
+        showOneTimeOption: true,
         requirePhone: false,
         requireOrganization: false,
         hearFromUsOptions: ['Search Engine', 'Social Media', 'Friend/Family', 'Church', 'Advertisement', 'Email', 'Other'],

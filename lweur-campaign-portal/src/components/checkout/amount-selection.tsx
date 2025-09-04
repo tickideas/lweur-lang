@@ -68,7 +68,7 @@ export function AmountSelection({
     sponsorTranslationMinAmount: 15000,
     sponsorTranslationMaxAmount: 100000,
     enableGiftAid: true,
-    showOneTimeOption: false
+    showOneTimeOption: true
   };
 
   useEffect(() => {

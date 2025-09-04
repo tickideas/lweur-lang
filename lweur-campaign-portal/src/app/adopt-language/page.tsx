@@ -289,21 +289,6 @@ export default function AdoptLanguagePage() {
                       </p>
                     )}
                     
-                    {language.currentSponsor && (
-                      <div className="bg-primary-50 rounded-lg p-3 mt-4">
-                        <p className="text-sm font-medium text-primary-800">
-                          Sponsored by:
-                        </p>
-                        <p className="text-sm text-primary-700">
-                          {language.currentSponsor.firstName} {language.currentSponsor.lastName}
-                          {language.currentSponsor.organization && (
-                            <span className="block text-xs">
-                              {language.currentSponsor.organization}
-                            </span>
-                          )}
-                        </p>
-                      </div>
-                    )}
                   </div>
                   
                   <div className="mt-6">
