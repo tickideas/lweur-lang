@@ -30,13 +30,6 @@ interface CheckoutWizardProps {
   selectedLanguage?: Language | null;
 }
 
-interface HeroSettings {
-  heroEnabled: boolean;
-  heroTitle: string;
-  heroSubtitle: string;
-  heroBackgroundColor: string;
-  heroTextColor: string;
-}
 
 interface CheckoutData {
   amount: number;
@@ -79,34 +72,7 @@ export function CheckoutWizard({ campaignType, selectedLanguage }: CheckoutWizar
   });
   const [clientSecret, setClientSecret] = useState<string>('');
   const [campaignId, setCampaignId] = useState<string>('');
-  const [heroSettings, setHeroSettings] = useState<HeroSettings>({
-    heroEnabled: true,
-    heroTitle: "YOU'RE A\nWORLD\nCHANGER",
-    heroSubtitle: "Your generosity is transforming lives across Europe",
-    heroBackgroundColor: "from-[#1226AA] to-blue-800",
-    heroTextColor: "text-white"
-  });
-  const [heroLoading, setHeroLoading] = useState(true);
 
-  // Fetch hero settings on component mount
-  useEffect(() => {
-    fetchHeroSettings();
-  }, []);
-
-  const fetchHeroSettings = async () => {
-    try {
-      const response = await fetch('/api/hero-settings');
-      const result = await response.json();
-      
-      if (result.success && result.data) {
-        setHeroSettings(result.data);
-      }
-    } catch (error) {
-      console.error('Error fetching hero settings:', error);
-    } finally {
-      setHeroLoading(false);
-    }
-  };
 
   const getCampaignIcon = () => {
     if (campaignType === 'ADOPT_LANGUAGE') {
@@ -374,93 +340,88 @@ export function CheckoutWizard({ campaignType, selectedLanguage }: CheckoutWizar
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-      {/* Dynamic Hero Section */}
-      {heroSettings.heroEnabled && !heroLoading && (
-        <div className="text-center mb-12">
-          <div className={`bg-gradient-to-br ${heroSettings.heroBackgroundColor} rounded-2xl p-8 md:p-12 ${heroSettings.heroTextColor} mb-8`}>
-            <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-4 leading-tight whitespace-pre-line">
-              {heroSettings.heroTitle}
-            </h1>
-            <p className="text-lg md:text-xl opacity-90 max-w-2xl mx-auto">
-              {heroSettings.heroSubtitle}
-            </p>
-          </div>
-        </div>
-      )}
 
       {/* Progress Indicator */}
       {renderProgressIndicator()}
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Order Summary - Left Column */}
-        <div className="lg:col-span-1 order-2 lg:order-1">
-          <Card className="sticky top-8">
-            <CardContent className="p-6 space-y-6">
-              <div className="flex items-center space-x-3">
-                {getCampaignIcon()}
-                <div>
-                  <h3 className="font-semibold text-lg">{getCampaignTitle()}</h3>
-                  <p className="text-sm text-neutral-600">Order Summary</p>
-                </div>
-              </div>
-
-              {selectedLanguage && (
-                <div className="border rounded-lg p-4 bg-neutral-50">
-                  <div className="flex items-center space-x-3 mb-3">
-                    <img
-                      src={selectedLanguage.flagUrl}
-                      alt={`${selectedLanguage.name} flag`}
-                      className="w-8 h-6 rounded object-cover"
-                      onError={(e) => {
-                        e.currentTarget.style.display = 'none';
-                      }}
-                    />
-                    <div>
-                      <h4 className="font-semibold">{selectedLanguage.name}</h4>
-                      <p className="text-sm text-neutral-500">{selectedLanguage.nativeName}</p>
-                    </div>
-                  </div>
-                  <div className="text-sm text-neutral-600 space-y-1">
-                    <p>Region: {selectedLanguage.region}</p>
-                    <p>Speakers: {selectedLanguage.speakerCount.toLocaleString()}</p>
-                  </div>
-                </div>
-              )}
-
-              {checkoutData.amount > 0 && (
-                <div className="border-t pt-4">
-                  <div className="flex justify-between items-center mb-2">
-                    <span className="font-medium">
-                      {checkoutData.isRecurring ? 'Monthly' : 'One-time'} Contribution:
-                    </span>
-                    <span className="text-2xl font-bold text-[#1226AA]">
-                      {formatCurrency(checkoutData.amount, checkoutData.currency)}
-                    </span>
-                  </div>
-                  <p className="text-sm text-neutral-500">
-                    {checkoutData.isRecurring ? 'Recurring monthly subscription' : 'One-time donation'}
-                  </p>
-                </div>
-              )}
-
-              <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-                <div className="flex items-center">
-                  <Check className="h-5 w-5 text-green-600 mr-2" />
-                  <span className="font-medium text-green-800">Secure & Trusted</span>
-                </div>
-                <p className="text-sm text-green-700 mt-1">
-                  Your payment is processed securely by Stripe with bank-level encryption.
-                </p>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Main Content - Right Column */}
-        <div className="lg:col-span-2 order-1 lg:order-2">
+      {campaignType === 'GENERAL_DONATION' ? (
+        // Full width layout for general donations
+        <div className="max-w-2xl mx-auto">
           {renderStep()}
         </div>
-      </div>
+      ) : (
+        // Two-column layout with order summary for specific campaigns
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          {/* Order Summary - Left Column */}
+          <div className="lg:col-span-1 order-2 lg:order-1">
+            <Card className="sticky top-8">
+              <CardContent className="p-6 space-y-6">
+                <div className="flex items-center space-x-3">
+                  {getCampaignIcon()}
+                  <div>
+                    <h3 className="font-semibold text-lg">{getCampaignTitle()}</h3>
+                    <p className="text-sm text-neutral-600">Order Summary</p>
+                  </div>
+                </div>
+
+                {selectedLanguage && (
+                  <div className="border rounded-lg p-4 bg-neutral-50">
+                    <div className="flex items-center space-x-3 mb-3">
+                      <img
+                        src={selectedLanguage.flagUrl}
+                        alt={`${selectedLanguage.name} flag`}
+                        className="w-8 h-6 rounded object-cover"
+                        onError={(e) => {
+                          e.currentTarget.style.display = 'none';
+                        }}
+                      />
+                      <div>
+                        <h4 className="font-semibold">{selectedLanguage.name}</h4>
+                        <p className="text-sm text-neutral-500">{selectedLanguage.nativeName}</p>
+                      </div>
+                    </div>
+                    <div className="text-sm text-neutral-600 space-y-1">
+                      <p>Region: {selectedLanguage.region}</p>
+                      <p>Speakers: {selectedLanguage.speakerCount.toLocaleString()}</p>
+                    </div>
+                  </div>
+                )}
+
+                {checkoutData.amount > 0 && (
+                  <div className="border-t pt-4">
+                    <div className="flex justify-between items-center mb-2">
+                      <span className="font-medium">
+                        {checkoutData.isRecurring ? 'Monthly' : 'One-time'} Contribution:
+                      </span>
+                      <span className="text-2xl font-bold text-[#1226AA]">
+                        {formatCurrency(checkoutData.amount, checkoutData.currency)}
+                      </span>
+                    </div>
+                    <p className="text-sm text-neutral-500">
+                      {checkoutData.isRecurring ? 'Recurring monthly subscription' : 'One-time donation'}
+                    </p>
+                  </div>
+                )}
+
+                <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                  <div className="flex items-center">
+                    <Check className="h-5 w-5 text-green-600 mr-2" />
+                    <span className="font-medium text-green-800">Secure & Trusted</span>
+                  </div>
+                  <p className="text-sm text-green-700 mt-1">
+                    Your payment is processed securely by Stripe with bank-level encryption.
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Main Content - Right Column */}
+          <div className="lg:col-span-2 order-1 lg:order-2">
+            {renderStep()}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

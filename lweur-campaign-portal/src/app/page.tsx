@@ -31,8 +31,8 @@ export default function HomePage() {
             </h1>
             <p className="mt-6 text-lg leading-8 text-primary-100">
               Join Loveworld Europe&apos;s mission to broadcast inspiring, faith-filled content in 60+ languages across Europe.
-We're reaching over <strong>750 million people</strong> with the Gospel — one language at a time. 
-<strong> Sponsor a Translation</strong> or <strong>Adopt a Language</strong> for just <strong>£150/month</strong> and help us transform nations.
+We&apos;re reaching over <strong>750 million people</strong> with the Gospel — one language at a time. 
+<strong> Sponsor a Translation</strong>, <strong>Adopt a Language</strong> for just <strong>£150/month</strong> and help us transform nations.
 
             </p>
             <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">

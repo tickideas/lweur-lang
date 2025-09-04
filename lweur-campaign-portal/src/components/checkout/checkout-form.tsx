@@ -215,59 +215,62 @@ export function CheckoutForm({
         </div>
         
         <h2 className="text-2xl font-bold text-gray-900 mb-4">
-          Thank You for Your Support!
+          {campaignType === 'GENERAL_DONATION' ? 'Thank You for Your Giving!' : 'Thank You for Your Support!'}
         </h2>
         
-        <p className="text-lg text-gray-600 mb-6">
-          Your {campaignType === 'ADOPT_LANGUAGE' ? 'language adoption' : 'translation sponsorship'} has been successfully set up.
-          {selectedLanguage && (
-            <span className="block mt-2 font-medium">
-              Supporting: {selectedLanguage.name} ({selectedLanguage.nativeName})
-            </span>
-          )}
-        </p>
-        
-        <div className="bg-gray-50 rounded-lg p-6 mb-8">
-          <h3 className="font-semibold mb-4">What happens next?</h3>
-          <div className="space-y-3 text-left">
-            <div className="flex items-start">
-              <Heart className="h-5 w-5 text-red-500 mr-3 mt-0.5" />
-              <div>
-                <p className="font-medium">Immediate Impact</p>
-                <p className="text-sm text-gray-600">
-                  Your sponsorship becomes active immediately, enabling broadcasts in your chosen language.
-                </p>
-              </div>
-            </div>
+        {campaignType === 'GENERAL_DONATION' ? (
+          <p className="text-lg text-gray-600 mb-6">
+            God bless you
+          </p>
+        ) : (
+          <>
+            <p className="text-lg text-gray-600 mb-6">
+              Your {campaignType === 'ADOPT_LANGUAGE' ? 'language adoption' : 'translation sponsorship'} has been successfully set up.
+              {selectedLanguage && (
+                <span className="block mt-2 font-medium">
+                  Supporting: {selectedLanguage.name} ({selectedLanguage.nativeName})
+                </span>
+              )}
+            </p>
             
-            <div className="flex items-start">
-              <Mail className="h-5 w-5 text-blue-500 mr-3 mt-0.5" />
-              <div>
-                <p className="font-medium">Welcome Email</p>
-                <p className="text-sm text-gray-600">
-                  You&apos;ll receive a welcome email with details about your sponsorship and how to track impact.
-                </p>
+            <div className="bg-gray-50 rounded-lg p-6 mb-8">
+              <h3 className="font-semibold mb-4">What happens next?</h3>
+              <div className="space-y-3 text-left">
+                <div className="flex items-start">
+                  <Heart className="h-5 w-5 text-red-500 mr-3 mt-0.5" />
+                  <div>
+                    <p className="font-medium">Immediate Impact</p>
+                    <p className="text-sm text-gray-600">
+                      Your sponsorship becomes active immediately, enabling broadcasts in your chosen language.
+                    </p>
+                  </div>
+                </div>
+                
+                <div className="flex items-start">
+                  <Mail className="h-5 w-5 text-blue-500 mr-3 mt-0.5" />
+                  <div>
+                    <p className="font-medium">Welcome Email</p>
+                    <p className="text-sm text-gray-600">
+                      You&apos;ll receive a welcome email with details about your sponsorship and how to track impact.
+                    </p>
+                  </div>
+                </div>
+                
+                <div className="flex items-start">
+                  <Globe className="h-5 w-5 text-green-500 mr-3 mt-0.5" />
+                  <div>
+                    <p className="font-medium">Monthly Updates</p>
+                    <p className="text-sm text-gray-600">
+                      Receive regular reports showing the impact of your support across Europe.
+                    </p>
+                  </div>
+                </div>
               </div>
             </div>
-            
-            <div className="flex items-start">
-              <Globe className="h-5 w-5 text-green-500 mr-3 mt-0.5" />
-              <div>
-                <p className="font-medium">Monthly Updates</p>
-                <p className="text-sm text-gray-600">
-                  Receive regular reports showing the impact of your support across Europe.
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
+          </>
+        )}
         
         <div className="space-y-4">
-          <Button size="lg" className="w-full sm:w-auto">
-            <Heart className="mr-2 h-5 w-5" />
-            View Your Impact Dashboard
-          </Button>
-          
           <div>
             <Link
               href="/"

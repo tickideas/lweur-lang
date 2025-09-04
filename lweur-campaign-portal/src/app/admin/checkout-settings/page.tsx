@@ -5,8 +5,8 @@
 
 'use client';
 
-import { useState, useEffect, useMemo, useCallback } from 'react';
-import { useForm, useFieldArray, Control, FieldPath } from 'react-hook-form';
+import { useState, useEffect } from 'react';
+import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { AdminLayout } from '@/components/admin/admin-layout';
@@ -25,7 +25,8 @@ import {
   RefreshCw,
   Image,
   Eye,
-  EyeOff
+  EyeOff,
+  Heart
 } from 'lucide-react';
 import { formatCurrency } from '@/utils';
 import { sanitizeCheckoutSettings } from '@/lib/sanitization';
@@ -43,6 +44,10 @@ const checkoutSettingsSchema = z.object({
   sponsorTranslationPresetAmounts: z.array(z.number()).min(1, 'At least one preset amount required'),
   sponsorTranslationMinAmount: z.number().min(1, 'Minimum £1'),
   sponsorTranslationMaxAmount: z.number().min(10, 'Maximum must be at least £10'),
+  generalDonationDefaultAmount: z.number().min(1, 'Minimum £1'),
+  generalDonationPresetAmounts: z.array(z.number()).min(1, 'At least one preset amount required'),
+  generalDonationMinAmount: z.number().min(1, 'Minimum £1'),
+  generalDonationMaxAmount: z.number().min(10, 'Maximum must be at least £10'),
   showOneTimeOption: z.boolean(),
   requirePhone: z.boolean(),
   requireOrganization: z.boolean(),
@@ -95,6 +100,10 @@ export default function CheckoutSettingsPage() {
       sponsorTranslationPresetAmounts: [20, 35, 50, 150],
       sponsorTranslationMinAmount: 10,
       sponsorTranslationMaxAmount: 1000,
+      generalDonationDefaultAmount: 50,
+      generalDonationPresetAmounts: [25, 50, 100, 150, 250],
+      generalDonationMinAmount: 5,
+      generalDonationMaxAmount: 5000,
       showOneTimeOption: true,
       requirePhone: false,
       requireOrganization: false,
@@ -121,6 +130,12 @@ export default function CheckoutSettingsPage() {
     append: appendSponsorPreset,
     remove: removeSponsorPreset
   } = useCheckoutSettingsFieldArray(control, 'sponsorTranslationPresetAmounts');
+
+  const {
+    fields: generalPresetFields,
+    append: appendGeneralPreset,
+    remove: removeGeneralPreset
+  } = useCheckoutSettingsFieldArray(control, 'generalDonationPresetAmounts');
 
   const {
     fields: hearFromUsFields,
@@ -168,6 +183,10 @@ export default function CheckoutSettingsPage() {
             sponsorTranslationPresetAmounts: data.settings.sponsorTranslationPresetAmounts.map((amount: number) => amount / 100),
             sponsorTranslationMinAmount: data.settings.sponsorTranslationMinAmount / 100,
             sponsorTranslationMaxAmount: data.settings.sponsorTranslationMaxAmount / 100,
+            generalDonationDefaultAmount: data.settings.generalDonationDefaultAmount / 100,
+            generalDonationPresetAmounts: data.settings.generalDonationPresetAmounts.map((amount: number) => amount / 100),
+            generalDonationMinAmount: data.settings.generalDonationMinAmount / 100,
+            generalDonationMaxAmount: data.settings.generalDonationMaxAmount / 100,
           };
           reset(settingsInPounds);
         }
@@ -198,6 +217,10 @@ export default function CheckoutSettingsPage() {
         sponsorTranslationPresetAmounts: data.sponsorTranslationPresetAmounts.map(amount => Math.round(amount * 100)),
         sponsorTranslationMinAmount: Math.round(data.sponsorTranslationMinAmount * 100),
         sponsorTranslationMaxAmount: Math.round(data.sponsorTranslationMaxAmount * 100),
+        generalDonationDefaultAmount: Math.round(data.generalDonationDefaultAmount * 100),
+        generalDonationPresetAmounts: data.generalDonationPresetAmounts.map(amount => Math.round(amount * 100)),
+        generalDonationMinAmount: Math.round(data.generalDonationMinAmount * 100),
+        generalDonationMaxAmount: Math.round(data.generalDonationMaxAmount * 100),
       };
       
       // Sanitize data before sending to API
@@ -535,6 +558,103 @@ export default function CheckoutSettingsPage() {
                         size="sm"
                         onClick={() => removeSponsorPreset(index)}
                         disabled={sponsorPresetFields.length <= 1}
+                      >
+                        <Minus className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* General Donation Amount Configuration */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center">
+                <Heart className="mr-2 h-5 w-5" />
+                General Donation - Amount Settings
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div>
+                  <Label htmlFor="generalDonationDefaultAmount">Default Amount (£)</Label>
+                  <Input
+                    {...register('generalDonationDefaultAmount', { valueAsNumber: true })}
+                    type="number"
+                    step="0.01"
+                    className="mt-1"
+                  />
+                  <p className="text-xs text-neutral-500 mt-1">
+                    {formatCurrency((watch('generalDonationDefaultAmount') || 0) * 100, defaultCurrency)}
+                  </p>
+                  {errors.generalDonationDefaultAmount && (
+                    <p className="text-red-600 text-sm mt-1">{errors.generalDonationDefaultAmount.message}</p>
+                  )}
+                </div>
+
+                <div>
+                  <Label htmlFor="generalDonationMinAmount">Minimum Amount (£)</Label>
+                  <Input
+                    {...register('generalDonationMinAmount', { valueAsNumber: true })}
+                    type="number"
+                    step="0.01"
+                    className="mt-1"
+                  />
+                  <p className="text-xs text-neutral-500 mt-1">
+                    {formatCurrency((watch('generalDonationMinAmount') || 0) * 100, defaultCurrency)}
+                  </p>
+                  {errors.generalDonationMinAmount && (
+                    <p className="text-red-600 text-sm mt-1">{errors.generalDonationMinAmount.message}</p>
+                  )}
+                </div>
+
+                <div>
+                  <Label htmlFor="generalDonationMaxAmount">Maximum Amount (£)</Label>
+                  <Input
+                    {...register('generalDonationMaxAmount', { valueAsNumber: true })}
+                    type="number"
+                    step="0.01"
+                    className="mt-1"
+                  />
+                  <p className="text-xs text-neutral-500 mt-1">
+                    {formatCurrency((watch('generalDonationMaxAmount') || 0) * 100, defaultCurrency)}
+                  </p>
+                  {errors.generalDonationMaxAmount && (
+                    <p className="text-red-600 text-sm mt-1">{errors.generalDonationMaxAmount.message}</p>
+                  )}
+                </div>
+              </div>
+
+              <div>
+                <div className="flex items-center justify-between mb-2">
+                  <Label>Preset Amounts</Label>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => appendGeneralPreset(25 as number)}
+                  >
+                    <Plus className="h-4 w-4 mr-1" />
+                    Add Amount
+                  </Button>
+                </div>
+                <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+                  {generalPresetFields.map((field, index) => (
+                    <div key={field.id} className="flex items-center space-x-2">
+                      <Input
+                        {...register(`generalDonationPresetAmounts.${index}`, { valueAsNumber: true })}
+                        type="number"
+                        step="0.01"
+                        className="flex-1"
+                      />
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => removeGeneralPreset(index)}
+                        disabled={generalPresetFields.length <= 1}
                       >
                         <Minus className="h-4 w-4" />
                       </Button>

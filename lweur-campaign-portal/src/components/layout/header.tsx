@@ -61,8 +61,8 @@ export function Header() {
         </div>
         
         <div className="hidden lg:flex lg:flex-1 lg:justify-end">
-          <Link href="/adopt-language">
-            <Button variant="primary">Start Now</Button>
+          <Link href="/donate">
+            <Button variant="primary">Give Now</Button>
           </Link>
         </div>
       </nav>
@@ -113,9 +113,9 @@ export function Header() {
                 ))}
               </div>
               <div className="py-6">
-                <Link href="/adopt-language" onClick={() => setMobileMenuOpen(false)}>
+                <Link href="/donate" onClick={() => setMobileMenuOpen(false)}>
                   <Button variant="primary" className="w-full">
-                    Start Supporting
+                    Donate Now
                   </Button>
                 </Link>
               </div>

@@ -188,6 +188,10 @@ export interface CheckoutSettingsInput {
   sponsorTranslationPresetAmounts?: unknown;
   sponsorTranslationMinAmount?: unknown;
   sponsorTranslationMaxAmount?: unknown;
+  generalDonationDefaultAmount?: unknown;
+  generalDonationPresetAmounts?: unknown;
+  generalDonationMinAmount?: unknown;
+  generalDonationMaxAmount?: unknown;
   showOneTimeOption?: unknown;
   requirePhone?: unknown;
   requireOrganization?: unknown;
@@ -246,6 +250,17 @@ export function sanitizeCheckoutSettings(input: CheckoutSettingsInput) {
     ),
     sponsorTranslationMinAmount: sanitizeNumber(input.sponsorTranslationMinAmount, 100, 100000),
     sponsorTranslationMaxAmount: sanitizeNumber(input.sponsorTranslationMaxAmount, 1000, 10000000),
+    generalDonationDefaultAmount: sanitizeNumber(input.generalDonationDefaultAmount, 100, 1000000),
+    generalDonationPresetAmounts: sanitizeArray(
+      input.generalDonationPresetAmounts,
+      (item) => {
+        const num = sanitizeNumber(item, 100, 1000000);
+        return num >= 100 ? num : null;
+      },
+      1
+    ),
+    generalDonationMinAmount: sanitizeNumber(input.generalDonationMinAmount, 100, 100000),
+    generalDonationMaxAmount: sanitizeNumber(input.generalDonationMaxAmount, 1000, 10000000),
     showOneTimeOption: sanitizeBoolean(input.showOneTimeOption),
     requirePhone: sanitizeBoolean(input.requirePhone),
     requireOrganization: sanitizeBoolean(input.requireOrganization),
