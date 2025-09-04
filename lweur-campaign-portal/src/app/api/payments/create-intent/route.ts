@@ -49,10 +49,10 @@ export async function POST(req: NextRequest) {
 
     const { campaignType, languageId, amount, currency, isRecurring, partnerInfo, billingAddress } = validatedData;
 
-    // Currently only support recurring subscriptions
-    if (!isRecurring) {
+    // Validate business rules for campaign types and payment types
+    if (campaignType === 'ADOPT_LANGUAGE' && !isRecurring) {
       return NextResponse.json(
-        { error: 'One-time donations are not currently supported. Please select a monthly recurring option.' },
+        { error: 'Language adoption requires a monthly recurring subscription. Please select the monthly option.' },
         { status: 400 }
       );
     }
@@ -135,41 +135,68 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    // Create product and price for this specific campaign
-    const productName = campaignType === 'ADOPT_LANGUAGE' 
-      ? 'Language Adoption' 
-      : 'Translation Sponsorship';
-    
-    // Create product and price for this campaign
-    const product = await stripe.products.create({
-      name: productName,
-      description: campaignType === 'ADOPT_LANGUAGE'
-        ? 'Monthly language channel adoption for Loveworld Europe'
-        : 'Monthly translation sponsorship for Passacris program',
-    });
+    let paymentIntentClientSecret: string;
+    let stripeSubscriptionId: string | null = null;
+    let nextBillingDate: Date;
 
-    const price = await stripe.prices.create({
-      product: product.id,
-      unit_amount: amount,
-      currency: currency.toLowerCase(),
-      recurring: {
-        interval: 'month',
-      },
-    });
+    if (isRecurring) {
+      // Handle recurring payments (subscriptions)
+      const productName = campaignType === 'ADOPT_LANGUAGE' 
+        ? 'Language Adoption' 
+        : 'Translation Sponsorship';
+      
+      const product = await stripe.products.create({
+        name: productName,
+        description: campaignType === 'ADOPT_LANGUAGE'
+          ? 'Monthly language channel adoption for Loveworld Europe'
+          : 'Monthly translation sponsorship for Passacris program',
+      });
 
-    // Create subscription
-    const subscription = await stripe.subscriptions.create({
-      customer: customer.id,
-      items: [{ price: price.id }],
-      payment_behavior: 'default_incomplete',
-      payment_settings: { save_default_payment_method: 'on_subscription' },
-      expand: ['latest_invoice.payment_intent'],
-      metadata: {
-        campaignType,
-        languageId,
-        partnerId: partner.id,
-      },
-    });
+      const price = await stripe.prices.create({
+        product: product.id,
+        unit_amount: amount,
+        currency: currency.toLowerCase(),
+        recurring: {
+          interval: 'month',
+        },
+      });
+
+      const subscription = await stripe.subscriptions.create({
+        customer: customer.id,
+        items: [{ price: price.id }],
+        payment_behavior: 'default_incomplete',
+        payment_settings: { save_default_payment_method: 'on_subscription' },
+        expand: ['latest_invoice.payment_intent'],
+        metadata: {
+          campaignType,
+          languageId,
+          partnerId: partner.id,
+        },
+      });
+
+      stripeSubscriptionId = subscription.id;
+      nextBillingDate = new Date((subscription as any).current_period_end * 1000);
+      
+      const invoice = subscription.latest_invoice as any;
+      paymentIntentClientSecret = invoice.payment_intent.client_secret;
+    } else {
+      // Handle one-time payments
+      const paymentIntent = await stripe.paymentIntents.create({
+        amount,
+        currency: currency.toLowerCase(),
+        customer: customer.id,
+        setup_future_usage: 'on_session',
+        metadata: {
+          campaignType,
+          languageId,
+          partnerId: partner.id,
+          isOneTime: 'true',
+        },
+      });
+
+      paymentIntentClientSecret = paymentIntent.client_secret!;
+      nextBillingDate = new Date(); // For one-time, set to current date
+    }
 
     // Create campaign in database
     const campaign = await prisma.campaign.create({
@@ -179,9 +206,9 @@ export async function POST(req: NextRequest) {
         languageId,
         monthlyAmount: amount,
         currency: currency.toUpperCase(),
-        stripeSubscriptionId: subscription.id,
+        stripeSubscriptionId,
         status: 'ACTIVE',
-        nextBillingDate: new Date(subscription.current_period_end * 1000),
+        nextBillingDate,
       },
       include: {
         partner: true,
@@ -200,7 +227,12 @@ export async function POST(req: NextRequest) {
     // Send welcome email to new partner (optional - don't fail if email service is not configured)
     try {
       if (process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASS) {
-        await emailService.sendWelcomeEmail(campaign.partner);
+        await emailService.sendWelcomeEmail({
+          ...partner,
+          phoneNumber: partner.phoneNumber || undefined,
+          organization: partner.organization || undefined,
+          stripeCustomerId: partner.stripeCustomerId || undefined
+        });
 
         // Log email communication
         await prisma.communication.create({
@@ -221,14 +253,12 @@ export async function POST(req: NextRequest) {
       // Don't fail the entire process if email fails
     }
 
-    const invoice = subscription.latest_invoice as any;
-    const paymentIntent = invoice.payment_intent;
-
     return NextResponse.json({
-      subscriptionId: subscription.id,
+      subscriptionId: stripeSubscriptionId,
       campaignId: campaign.id,
-      clientSecret: paymentIntent.client_secret,
+      clientSecret: paymentIntentClientSecret,
       customerId: customer.id,
+      isRecurring: isRecurring,
     });
 
   } catch (error) {
@@ -241,7 +271,7 @@ export async function POST(req: NextRequest) {
     
     if (error instanceof z.ZodError) {
       return NextResponse.json(
-        { error: 'Invalid request data', details: error.errors },
+        { error: 'Invalid request data', details: error.issues },
         { status: 400 }
       );
     }

@@ -735,15 +735,14 @@ const EUROPEAN_LANGUAGES = [
 async function main() {
   console.log('🌍 Seeding 60 European languages for production...');
 
-  // Only clear language table
-  await prisma.language.deleteMany({});
-
-  // Seed languages only
+  // Seed languages only (using upsert to handle existing languages)
   for (const language of EUROPEAN_LANGUAGES) {
-    await prisma.language.create({
-      data: language,
+    await prisma.language.upsert({
+      where: { iso639Code: language.iso639Code },
+      update: language,
+      create: language,
     });
-    console.log(`✅ Added ${language.name} (${language.nativeName})`);
+    console.log(`✅ Added/Updated ${language.name} (${language.nativeName})`);
   }
 
   console.log('🎉 Language seeding completed successfully!');
