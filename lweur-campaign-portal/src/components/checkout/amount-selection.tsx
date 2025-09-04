@@ -231,14 +231,14 @@ export function AmountSelection({
             {getCampaignTitle()}
           </h2>
         </div>
-        <p className="text-neutral-600 max-w-md mx-auto">
-          {campaignType === 'ADOPT_LANGUAGE' 
-            ? 'Your contribution of £150 or more can bring the gospel to thousands of people every day'
-            : campaignType === 'SPONSOR_TRANSLATION'
+        {campaignType !== 'GENERAL_DONATION' && (
+          <p className="text-neutral-600 max-w-md mx-auto">
+            {campaignType === 'ADOPT_LANGUAGE' 
               ? 'Your contribution of £150 or more can bring the gospel to thousands of people every day'
-              : 'Your generous donation supports Loveworld Europe\'s mission to reach all of Europe with the Gospel'
-          }
-        </p>
+              : 'Your contribution of £150 or more can bring the gospel to thousands of people every day'
+            }
+          </p>
+        )}
       </div>
 
       {/* Amount Selection */}

@@ -14,39 +14,71 @@ import { Card, CardContent } from '@/components/ui/card';
 import {
   Zap,
   Languages,
-  ArrowRight,
-  BookOpen,
-  Radio
+  ArrowRight
 } from 'lucide-react';
 import Link from 'next/link';
 import { Language } from '@/types';
 
+interface Statistics {
+  languagesSupported: number;
+  peopleReached: number;
+  broadcasting: string;
+  activeCampaigns: number;
+  adoptedLanguages: number;
+}
+
 export default function DonatePage() {
   const [generalMinistryLanguage, setGeneralMinistryLanguage] = useState<Language | null>(null);
+  const [statistics, setStatistics] = useState<Statistics | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetchGeneralMinistryLanguage();
+    fetchData();
   }, []);
 
-  const fetchGeneralMinistryLanguage = async () => {
+  const fetchData = async () => {
     try {
-      const response = await fetch('/api/languages');
-      const data = await response.json();
+      // Fetch both languages and statistics in parallel
+      const [languagesResponse, statisticsResponse] = await Promise.all([
+        fetch('/api/languages'),
+        fetch('/api/statistics')
+      ]);
+
+      const languagesData = await languagesResponse.json();
+      const statisticsData = await statisticsResponse.json();
       
       // Find the "General Ministry" language we created
-      const generalLanguage = data.data?.find((l: Language) => 
+      const generalLanguage = languagesData.data?.find((l: Language) => 
         l.iso639Code === 'general' || l.name === 'General Ministry'
       );
       
       if (generalLanguage) {
         setGeneralMinistryLanguage(generalLanguage);
       }
+
+      // Set statistics data
+      if (statisticsData.success && statisticsData.data) {
+        setStatistics(statisticsData.data);
+      }
     } catch (error) {
-      console.error('Error fetching general ministry language:', error);
+      console.error('Error fetching data:', error);
     } finally {
       setLoading(false);
     }
+  };
+
+  // Helper function to format large numbers
+  const formatNumber = (num: number): string => {
+    if (num >= 1000000000) {
+      return (num / 1000000000).toFixed(1) + 'B';
+    }
+    if (num >= 1000000) {
+      return (num / 1000000).toFixed(0) + 'M';
+    }
+    if (num >= 1000) {
+      return (num / 1000).toFixed(0) + 'K';
+    }
+    return num.toString();
   };
 
   if (loading) {
@@ -113,30 +145,37 @@ export default function DonatePage() {
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center">
             <h1 className="font-display text-4xl font-bold mb-4">
-              Support Our Ministry
+              Partner with Us
             </h1>
             <div className="text-xl text-primary-100 mb-8 max-w-4xl mx-auto space-y-4">
               <p className="font-bold text-lg">
-                Your generous donation supports Loveworld Europe&apos;s mission to reach all of Europe with the Gospel.
+                Your generous giving fuels Loveworld Europe&apos;s mission to reach every corner of the continent with the Gospel.
+               
               </p>
               <p className="text-base">
-                From £5 to £5,000+, every contribution helps us broadcast life-transforming messages, provide educational Christian programming, and support our growing network of language channels across Europe.
+               Every contribution helps us broadcast life-transforming messages from the Man of God, Pastor Chris, and other ministers, deliver uplifting Christian programming, and expand our network of language channels across Europe.
               </p>
               <p className="text-base font-medium">
-                Choose your amount and make an impact today — whether one-time or monthly.
+                Give and make an impact today — whether one-time or monthly.
               </p>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-3xl mx-auto">
               <div className="bg-white/10 rounded-lg p-4">
-                <div className="text-2xl font-bold">60+</div>
+                <div className="text-2xl font-bold">
+                  {statistics ? `${statistics.languagesSupported}+` : '60+'}
+                </div>
                 <div className="text-primary-200">Languages Supported</div>
               </div>
               <div className="bg-white/10 rounded-lg p-4">
-                <div className="text-2xl font-bold">750M</div>
-                <div className="text-primary-200">People Reached</div>
+                <div className="text-2xl font-bold">
+                  {statistics ? formatNumber(statistics.peopleReached) : '1.8B'}
+                </div>
+                <div className="text-primary-200">Potential Reach</div>
               </div>
               <div className="bg-white/10 rounded-lg p-4">
-                <div className="text-2xl font-bold">24/7</div>
+                <div className="text-2xl font-bold">
+                  {statistics ? statistics.broadcasting : '24/7'}
+                </div>
                 <div className="text-primary-200">Broadcasting</div>
               </div>
             </div>
@@ -144,65 +183,12 @@ export default function DonatePage() {
         </div>
       </section>
 
-      {/* Impact Areas */}
-      <section className="bg-white py-12">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold text-gray-900 mb-4">
-              Your Donation Supports
-            </h2>
-            <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-              Every donation directly funds these vital areas of our European ministry
-            </p>
-          </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <Card className="text-center">
-              <CardContent className="p-6">
-                <div className="bg-primary-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <Radio className="h-8 w-8 text-primary-600" />
-                </div>
-                <h3 className="text-xl font-semibold mb-2">Broadcasting Infrastructure</h3>
-                <p className="text-gray-600">
-                  Satellite time, transmission equipment, and technical support to ensure continuous broadcasting across Europe.
-                </p>
-              </CardContent>
-            </Card>
-
-            <Card className="text-center">
-              <CardContent className="p-6">
-                <div className="bg-secondary-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <Languages className="h-8 w-8 text-secondary-600" />
-                </div>
-                <h3 className="text-xl font-semibold mb-2">Translation Services</h3>
-                <p className="text-gray-600">
-                  Professional translation and localization of content into European languages, making the Gospel accessible to all.
-                </p>
-              </CardContent>
-            </Card>
-
-            <Card className="text-center">
-              <CardContent className="p-6">
-                <div className="bg-green-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <BookOpen className="h-8 w-8 text-green-600" />
-                </div>
-                <h3 className="text-xl font-semibold mb-2">Content Production</h3>
-                <p className="text-gray-600">
-                  Creating educational Christian programming, children&apos;s content, and inspirational material for European audiences.
-                </p>
-              </CardContent>
-            </Card>
-          </div>
-        </div>
-      </section>
 
       {/* Donation Form */}
       <section className="bg-neutral-50 py-12">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-8">
-            <h2 className="text-3xl font-bold text-gray-900 mb-4">
-              Make Your Donation
-            </h2>
+            
             <p className="text-lg text-gray-600">
               Choose your amount and donation frequency below
             </p>
