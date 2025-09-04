@@ -1,7 +1,7 @@
 // Database model types based on Prisma schema
 
 export type AdoptionStatus = 'AVAILABLE' | 'ADOPTED' | 'PENDING' | 'WAITLIST';
-export type CampaignType = 'ADOPT_LANGUAGE' | 'SPONSOR_TRANSLATION';
+export type CampaignType = 'ADOPT_LANGUAGE' | 'SPONSOR_TRANSLATION' | 'GENERAL_DONATION';
 export type CampaignStatus = 'ACTIVE' | 'PAUSED' | 'CANCELLED' | 'COMPLETED';
 export type PaymentStatus = 'PENDING' | 'SUCCEEDED' | 'FAILED' | 'REFUNDED';
 export type AdminRole = 'SUPER_ADMIN' | 'CAMPAIGN_MANAGER' | 'FINANCE' | 'VIEWER';

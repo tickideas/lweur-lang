@@ -5,7 +5,7 @@ import { EmailService } from '@/lib/email';
 import { z } from 'zod';
 
 const createPaymentIntentSchema = z.object({
-  campaignType: z.enum(['ADOPT_LANGUAGE', 'SPONSOR_TRANSLATION']),
+  campaignType: z.enum(['ADOPT_LANGUAGE', 'SPONSOR_TRANSLATION', 'GENERAL_DONATION']),
   languageId: z.string(),
   amount: z.number().positive(),
   currency: z.string().min(3).max(3),
@@ -79,6 +79,18 @@ export async function POST(req: NextRequest) {
           { status: 400 }
         );
       }
+    } else {
+      // For general donations and sponsor translations, just verify language exists
+      const language = await prisma.language.findUnique({
+        where: { id: languageId }
+      });
+
+      if (!language) {
+        return NextResponse.json(
+          { error: 'Language not found' },
+          { status: 404 }
+        );
+      }
     }
 
     // Create or find customer
@@ -138,13 +150,17 @@ export async function POST(req: NextRequest) {
       // Handle recurring payments (subscriptions)
       const productName = campaignType === 'ADOPT_LANGUAGE' 
         ? 'Language Adoption' 
-        : 'Translation Sponsorship';
+        : campaignType === 'SPONSOR_TRANSLATION'
+          ? 'Translation Sponsorship'
+          : 'General Donation';
       
       const product = await stripe.products.create({
         name: productName,
         description: campaignType === 'ADOPT_LANGUAGE'
           ? 'Monthly language channel adoption for Loveworld Europe'
-          : 'Monthly translation sponsorship for Passacris program',
+          : campaignType === 'SPONSOR_TRANSLATION'
+            ? 'Monthly translation sponsorship for Passacris program'
+            : 'Monthly general donation to support Loveworld Europe\'s ministry',
       });
 
       const price = await stripe.prices.create({
@@ -194,7 +210,7 @@ export async function POST(req: NextRequest) {
       if (campaignType === 'ADOPT_LANGUAGE') {
         nextBillingDate = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000); // 30 days from now
       } else {
-        nextBillingDate = new Date(); // For one-time translation sponsorship, no expiry needed
+        nextBillingDate = new Date(); // For one-time donations, no expiry needed
       }
     }
 
@@ -239,7 +255,13 @@ export async function POST(req: NextRequest) {
           data: {
             partnerId: partner.id,
             type: 'EMAIL',
-            subject: `Welcome to Loveworld Europe - ${campaignType === 'ADOPT_LANGUAGE' ? 'Language Adoption' : 'Translation Sponsorship'} Partnership`,
+            subject: `Welcome to Loveworld Europe - ${
+              campaignType === 'ADOPT_LANGUAGE' 
+                ? 'Language Adoption' 
+                : campaignType === 'SPONSOR_TRANSLATION' 
+                  ? 'Translation Sponsorship'
+                  : 'General Donation'
+            } Partnership`,
             content: 'Welcome email sent to new partner',
             sentAt: new Date(),
             status: 'SENT',

@@ -5,6 +5,18 @@ const prisma = new PrismaClient();
 // European languages data for Loveworld Europe
 const EUROPEAN_LANGUAGES = [
   {
+    name: 'General Ministry',
+    nativeName: 'General Ministry',
+    iso639Code: 'general',
+    region: 'All Europe',
+    countries: ['GB', 'FR', 'DE', 'ES', 'IT', 'PL', 'RO', 'NL', 'GR', 'PT', 'CZ', 'HU', 'SE', 'BG', 'HR', 'FI', 'SK', 'DK', 'NO', 'LT', 'SI', 'LV', 'EE', 'UA', 'RU'],
+    speakerCount: 750000000,
+    flagUrl: '/flags/eu.svg',
+    adoptionStatus: 'ADOPTED' as const,
+    priority: 0,
+    description: 'Supporting Loveworld Europe\'s general ministry across all European languages and regions.'
+  },
+  {
     name: 'English',
     nativeName: 'English',
     iso639Code: 'en',
@@ -416,6 +428,10 @@ async function main() {
       sponsorTranslationPresetAmounts: [2000, 3500, 5000, 15000, 25000], // £20, £35, £50, £150, £250
       sponsorTranslationMinAmount: 1000, // £10
       sponsorTranslationMaxAmount: 100000, // £1000
+      generalDonationDefaultAmount: 5000, // £50
+      generalDonationPresetAmounts: [2500, 5000, 10000, 15000, 25000], // £25, £50, £100, £150, £250
+      generalDonationMinAmount: 500, // £5
+      generalDonationMaxAmount: 500000, // £5000
       showOneTimeOption: false, // Currently monthly only
       requirePhone: false,
       requireOrganization: false,

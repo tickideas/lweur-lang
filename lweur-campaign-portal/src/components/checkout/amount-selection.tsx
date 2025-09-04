@@ -32,6 +32,10 @@ interface CheckoutSettings {
   sponsorTranslationPresetAmounts: number[];
   sponsorTranslationMinAmount: number;
   sponsorTranslationMaxAmount: number;
+  generalDonationDefaultAmount: number;
+  generalDonationPresetAmounts: number[];
+  generalDonationMinAmount: number;
+  generalDonationMaxAmount: number;
   enableGiftAid: boolean;
   showOneTimeOption: boolean;
 }
@@ -67,6 +71,10 @@ export function AmountSelection({
     sponsorTranslationPresetAmounts: [15000, 25000],
     sponsorTranslationMinAmount: 15000,
     sponsorTranslationMaxAmount: 100000,
+    generalDonationDefaultAmount: 5000,
+    generalDonationPresetAmounts: [2500, 5000, 10000, 15000, 25000],
+    generalDonationMinAmount: 500,
+    generalDonationMaxAmount: 500000,
     enableGiftAid: true,
     showOneTimeOption: true
   };
@@ -101,9 +109,16 @@ export function AmountSelection({
     const activeSettings = settings || checkoutSettings;
     if (activeSettings) {
       setSelectedCurrency(activeSettings.defaultCurrency);
-      const defaultAmount = campaignType === 'ADOPT_LANGUAGE' 
-        ? activeSettings.adoptLanguageDefaultAmount
-        : activeSettings.sponsorTranslationDefaultAmount;
+      let defaultAmount;
+      
+      if (campaignType === 'ADOPT_LANGUAGE') {
+        defaultAmount = activeSettings.adoptLanguageDefaultAmount || 15000;
+      } else if (campaignType === 'SPONSOR_TRANSLATION') {
+        defaultAmount = activeSettings.sponsorTranslationDefaultAmount || 15000;
+      } else {
+        defaultAmount = activeSettings.generalDonationDefaultAmount || 5000;
+      }
+      
       setSelectedAmount(defaultAmount);
     }
   }, [campaignType, checkoutSettings, settings]);
@@ -111,25 +126,40 @@ export function AmountSelection({
   const getPresetAmounts = () => {
     const activeSettings = settings || checkoutSettings;
     if (!activeSettings) return [];
-    return campaignType === 'ADOPT_LANGUAGE' 
-      ? activeSettings.adoptLanguagePresetAmounts
-      : activeSettings.sponsorTranslationPresetAmounts;
+    
+    if (campaignType === 'ADOPT_LANGUAGE') {
+      return activeSettings.adoptLanguagePresetAmounts || [];
+    } else if (campaignType === 'SPONSOR_TRANSLATION') {
+      return activeSettings.sponsorTranslationPresetAmounts || [];
+    } else {
+      return activeSettings.generalDonationPresetAmounts || [2500, 5000, 10000, 15000, 25000];
+    }
   };
 
   const getMinAmount = () => {
     const activeSettings = settings || checkoutSettings;
     if (!activeSettings) return 1000;
-    return campaignType === 'ADOPT_LANGUAGE' 
-      ? activeSettings.adoptLanguageMinAmount
-      : activeSettings.sponsorTranslationMinAmount;
+    
+    if (campaignType === 'ADOPT_LANGUAGE') {
+      return activeSettings.adoptLanguageMinAmount || 1000;
+    } else if (campaignType === 'SPONSOR_TRANSLATION') {
+      return activeSettings.sponsorTranslationMinAmount || 1000;
+    } else {
+      return activeSettings.generalDonationMinAmount || 500;
+    }
   };
 
   const getMaxAmount = () => {
     const activeSettings = settings || checkoutSettings;
     if (!activeSettings) return 100000;
-    return campaignType === 'ADOPT_LANGUAGE' 
-      ? activeSettings.adoptLanguageMaxAmount
-      : activeSettings.sponsorTranslationMaxAmount;
+    
+    if (campaignType === 'ADOPT_LANGUAGE') {
+      return activeSettings.adoptLanguageMaxAmount || 100000;
+    } else if (campaignType === 'SPONSOR_TRANSLATION') {
+      return activeSettings.sponsorTranslationMaxAmount || 100000;
+    } else {
+      return activeSettings.generalDonationMaxAmount || 500000;
+    }
   };
 
   const handlePresetAmountSelect = (amount: number) => {
@@ -160,13 +190,17 @@ export function AmountSelection({
   const getCampaignIcon = () => {
     return campaignType === 'ADOPT_LANGUAGE' 
       ? <Languages className="h-5 w-5" />
-      : <Zap className="h-5 w-5" />;
+      : campaignType === 'SPONSOR_TRANSLATION'
+        ? <Zap className="h-5 w-5" />
+        : <Heart className="h-5 w-5" />;
   };
 
   const getCampaignTitle = () => {
     return campaignType === 'ADOPT_LANGUAGE' 
       ? 'Adopt a Language Channel'
-      : 'Sponsor Live Translation';
+      : campaignType === 'SPONSOR_TRANSLATION'
+        ? 'Sponsor Live Translation'
+        : 'General Donation';
   };
 
   const isValidAmount = () => {
@@ -198,7 +232,12 @@ export function AmountSelection({
           </h2>
         </div>
         <p className="text-neutral-600 max-w-md mx-auto">
-          Your contribution of £150 or more can bring the gospel to thousands of people every day
+          {campaignType === 'ADOPT_LANGUAGE' 
+            ? 'Your contribution of £150 or more can bring the gospel to thousands of people every day'
+            : campaignType === 'SPONSOR_TRANSLATION'
+              ? 'Your contribution of £150 or more can bring the gospel to thousands of people every day'
+              : 'Your generous donation supports Loveworld Europe\'s mission to reach all of Europe with the Gospel'
+          }
         </p>
       </div>
 
@@ -325,7 +364,9 @@ export function AmountSelection({
                   Your {isRecurring ? 'monthly' : 'one-time'} donation will directly support 
                   {campaignType === 'ADOPT_LANGUAGE' 
                     ? ' your chosen language channel, reaching thousands daily'
-                    : ' live translation services, breaking language barriers'
+                    : campaignType === 'SPONSOR_TRANSLATION'
+                      ? ' live translation services, breaking language barriers'
+                      : ' Loveworld Europe\'s ministry across all European languages and regions'
                   }.
                 </p>
               </div>

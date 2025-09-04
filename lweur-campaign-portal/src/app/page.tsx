@@ -32,7 +32,7 @@ export default function HomePage() {
             <p className="mt-6 text-lg leading-8 text-primary-100">
               Join Loveworld Europe&apos;s mission to broadcast inspiring, faith-filled content in 60+ languages across Europe.
 We're reaching over <strong>750 million people</strong> with the Gospel — one language at a time. 
-<strong> Sponsor a Translation</strong> or <strong>Adopt a Language</strong> for just <strong>£150/month</strong> and help us transform nations.
+<strong> Sponsor a Translation</strong>, <strong>Adopt a Language</strong> for just <strong>£150/month</strong>, or <strong>Donate</strong> any amount to help us transform nations.
 
             </p>
             <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">
@@ -46,6 +46,12 @@ We're reaching over <strong>750 million people</strong> with the Gospel — one 
                 <Button size="lg" variant="outline" className="bg-white text-[#1226AA] border-white hover:bg-[#1226AA] hover:text-white">
                   <Languages className="mr-2 h-5 w-5" />
                   Adopt a Language
+                </Button>
+              </Link>
+              <Link href="/donate">
+                <Button size="lg" variant="outline" className="bg-transparent text-white border-white hover:bg-white hover:text-[#1226AA]">
+                  <Heart className="mr-2 h-5 w-5" />
+                  Donate Now
                 </Button>
               </Link>
             </div>
