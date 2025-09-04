@@ -38,7 +38,7 @@ export default function SponsorTranslationPage() {
   const fetchLanguages = async () => {
     try {
       setLoading(true);
-      const response = await fetch('/api/languages?limit=100');
+      const response = await fetch('/api/languages?limit=100&excludeGeneral=true');
       const data = await response.json();
       // Filter languages that need translation sponsorship
       const translationLanguages = data.data?.filter((lang: LanguageWithStats) => 

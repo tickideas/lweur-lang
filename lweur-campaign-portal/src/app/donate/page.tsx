@@ -149,7 +149,7 @@ export default function DonatePage() {
             </h1>
             <div className="text-xl text-primary-100 mb-8 max-w-4xl mx-auto space-y-4">
               <p className="font-bold text-lg">
-                Your generous giving fuels Loveworld Europe&apos;s mission to reach every corner of the continent with the Gospel.
+                Your generous giving fuels our mission to reach every corner of the continent with the Gospel.
                
               </p>
               <p className="text-base">

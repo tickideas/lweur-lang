@@ -53,7 +53,7 @@ export default function AdoptLanguagePage() {
   const fetchLanguages = async () => {
     try {
       setLoading(true);
-      const response = await fetch('/api/languages?limit=100');
+      const response = await fetch('/api/languages?limit=100&excludeGeneral=true');
       const data = await response.json();
       setLanguages(data.data || []);
     } catch (error) {
@@ -239,14 +239,14 @@ export default function AdoptLanguagePage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {filteredLanguages.map((language) => (
-              <Card key={language.id} className="language-card relative">
-                <CardHeader className="pb-4">
-                  <div className="flex items-start justify-between">
+              <Card key={language.id} className="language-card relative hover:shadow-lg transition-shadow">
+                <CardContent className="p-2">
+                  <div className="flex items-start justify-between mb-3">
                     <div className="flex items-center space-x-3">
                       <img
                         src={language.flagUrl}
                         alt={`${language.name} flag`}
-                        className="language-flag"
+                        className="w-8 h-6 rounded object-cover"
                         onError={(e) => {
                           const img = e.currentTarget as HTMLImageElement;
                           img.style.display = 'none';
@@ -254,20 +254,18 @@ export default function AdoptLanguagePage() {
                           if (fallback) fallback.style.display = 'block';
                         }}
                       />
-                      <div className="text-2xl" style={{ display: 'none' }}>
+                      <div className="text-xl" style={{ display: 'none' }}>
                         {language.countries[0] ? getCountryFlag(language.countries[0]) : '🌍'}
                       </div>
                       <div>
-                        <CardTitle className="text-lg">{language.name}</CardTitle>
+                        <h3 className="font-semibold text-lg">{language.name}</h3>
                         <p className="text-sm text-gray-500">{language.nativeName}</p>
                       </div>
                     </div>
                     {getStatusBadge(language.adoptionStatus)}
                   </div>
-                </CardHeader>
-                
-                <CardContent>
-                  <div className="space-y-3">
+                  
+                  <div className="space-y-2 mb-4">
                     <div className="flex items-center text-sm text-gray-600">
                       <MapPin className="h-4 w-4 mr-2" />
                       <span>{language.region}</span>
@@ -288,29 +286,26 @@ export default function AdoptLanguagePage() {
                         {language.description}
                       </p>
                     )}
-                    
                   </div>
                   
-                  <div className="mt-6">
-                    {language.adoptionStatus === 'AVAILABLE' ? (
-                      <Link href={`/checkout?type=ADOPT_LANGUAGE&language=${language.id}`}>
-                        <Button className="w-full">
-                          Adopt for £150/month
-                          <ArrowRight className="ml-2 h-4 w-4" />
-                        </Button>
-                      </Link>
-                    ) : language.adoptionStatus === 'ADOPTED' ? (
-                      <Button className="w-full" variant="outline" disabled>
-                        Already Adopted
-                        <CheckCircle className="ml-2 h-4 w-4" />
+                  {language.adoptionStatus === 'AVAILABLE' ? (
+                    <Link href={`/checkout?type=ADOPT_LANGUAGE&language=${language.id}`}>
+                      <Button className="w-full">
+                        Adopt for £150/month
+                        <ArrowRight className="ml-2 h-4 w-4" />
                       </Button>
-                    ) : (
-                      <Button className="w-full" variant="outline" disabled>
-                        Processing
-                        <Clock className="ml-2 h-4 w-4" />
-                      </Button>
-                    )}
-                  </div>
+                    </Link>
+                  ) : language.adoptionStatus === 'ADOPTED' ? (
+                    <Button className="w-full" variant="outline" disabled>
+                      Already Adopted
+                      <CheckCircle className="ml-2 h-4 w-4" />
+                    </Button>
+                  ) : (
+                    <Button className="w-full" variant="outline" disabled>
+                      Processing
+                      <Clock className="ml-2 h-4 w-4" />
+                    </Button>
+                  )}
                 </CardContent>
               </Card>
             ))}

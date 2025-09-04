@@ -9,6 +9,7 @@ const querySchema = z.object({
   priority: z.coerce.number().optional(),
   page: z.coerce.number().default(1),
   limit: z.coerce.number().default(50),
+  excludeGeneral: z.coerce.boolean().default(false),
 });
 
 export async function GET(req: NextRequest) {
@@ -16,13 +17,20 @@ export async function GET(req: NextRequest) {
     const { searchParams } = new URL(req.url);
     const query = querySchema.parse(Object.fromEntries(searchParams));
 
-    const { region, status, search, priority, page, limit } = query;
+    const { region, status, search, priority, page, limit, excludeGeneral } = query;
     const skip = (page - 1) * limit;
 
     // Build where clause
     const where: any = {
       isActive: true,
     };
+
+    // Exclude General Ministry for sponsorship pages
+    if (excludeGeneral) {
+      where.iso639Code = {
+        not: 'general'
+      };
+    }
 
     if (region) {
       where.region = region;
