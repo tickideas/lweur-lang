@@ -108,7 +108,7 @@ export async function GET(req: NextRequest) {
       iso639Code: language.iso639Code,
       region: language.region,
       countries: language.countries,
-      speakerCount: language.speakerCount,
+      speakerCount: Number(language.speakerCount),
       flagUrl: language.flagUrl,
       adoptionStatus: language.adoptionStatus,
       translationNeedsSponsorship: language.translationNeedsSponsorship,

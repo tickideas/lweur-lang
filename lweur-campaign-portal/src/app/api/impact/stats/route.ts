@@ -19,7 +19,7 @@ export async function GET() {
 
     // Calculate statistics
     const totalLanguages = languages.length;
-    const totalSpeakers = languages.reduce((sum, lang) => sum + lang.speakerCount, 0);
+    const totalSpeakers = languages.reduce((sum, lang) => sum + Number(lang.speakerCount), 0);
     
     // Get unique countries from all languages
     const allCountries = new Set<string>();

@@ -27,7 +27,7 @@ export async function GET(_req: NextRequest, { params }: { params: { id: string 
         iso639Code: lang.iso639Code,
         region: lang.region,
         countries: lang.countries,
-        speakerCount: lang.speakerCount,
+        speakerCount: Number(lang.speakerCount),
         flagUrl: lang.flagUrl,
         isActive: lang.isActive,
         adoptionStatus: lang.adoptionStatus,

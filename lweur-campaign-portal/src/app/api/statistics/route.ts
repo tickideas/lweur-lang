@@ -24,7 +24,7 @@ export async function GET() {
 
     // Calculate total people reached (sum of all speaker counts)
     const totalPeopleReached = languages.reduce(
-      (total, language) => total + language.speakerCount, 
+      (total, language) => total + Number(language.speakerCount), 
       0
     );
 
