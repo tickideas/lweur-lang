@@ -22,8 +22,8 @@ export function AdminFooter() {
           <div className="flex flex-col md:flex-row md:items-center md:justify-between space-y-4 md:space-y-0">
             {/* Left side - Copyright and branding */}
             <div className="flex items-center space-x-4">
-              <div className="h-8 w-8 bg-[#1226AA] rounded-lg flex items-center justify-center flex-shrink-0">
-                <span className="text-white font-bold text-sm">LWE</span>
+              <div className="h-8 w-8 rounded-lg flex items-center justify-center flex-shrink-0">
+                <img src="/lweur_icon.png" alt="LWE Logo" className="h-8 w-8" />
               </div>
               <div>
                 <p className="text-sm text-neutral-600">

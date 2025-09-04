@@ -365,9 +365,12 @@ export default function PartnersPage() {
                         {partner.campaigns.map((campaign) => (
                           <div key={campaign.id} className="flex items-center justify-between">
                             <div className="text-sm">
-                              <span className="font-medium">{campaign.language.name}</span>
+                              <span className="font-medium">
+                                {campaign.language.name === 'General Ministry' ? 'General' : campaign.language.name}
+                              </span>
                               <span className="text-gray-500 ml-2">
-                                ({campaign.type === 'ADOPT_LANGUAGE' ? 'Adoption' : 'Translation'})
+                                ({campaign.language.name === 'General Ministry' ? 'Donation' : 
+                                  campaign.type === 'ADOPT_LANGUAGE' ? 'Adoption' : 'Translation'})
                               </span>
                             </div>
                             <span className={getStatusBadge(campaign.status)}>

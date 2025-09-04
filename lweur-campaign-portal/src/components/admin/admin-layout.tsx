@@ -110,8 +110,8 @@ export function AdminLayout({ children }: AdminLayoutProps) {
           <div className="flex justify-between items-center py-6">
             <div className="flex items-center space-x-4">
               <Link href="/admin" className="flex items-center space-x-4">
-                <div className="h-10 w-10 bg-[#1226AA] rounded-lg flex items-center justify-center">
-                  <span className="text-white font-bold">LWE</span>
+                <div className="h-10 w-10 rounded-lg flex items-center justify-center">
+                  <img src="/lweur_icon.png" alt="LWE Logo" className="h-10 w-10" />
                 </div>
                 <div>
                   <h1 className="text-2xl font-bold text-neutral-900">Admin Dashboard</h1>
