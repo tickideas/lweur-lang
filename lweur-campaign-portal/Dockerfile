@@ -3,8 +3,8 @@
 # Optimized for production deployment on Coolify with proper caching and security
 # RELEVANT FILES: package.json, next.config.mjs, prisma/schema.prisma, src/app/layout.tsx
 
-# Use official Node.js 18 LTS image
-FROM node:18-alpine AS base
+# Use official Node.js 22 LTS image (required for Prisma 7+ and Next.js 16+)
+FROM node:22-alpine AS base
 
 # Install dependencies only when needed
 FROM base AS deps
