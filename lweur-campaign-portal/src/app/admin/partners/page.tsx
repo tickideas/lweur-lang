@@ -1,9 +1,10 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useSession } from 'next-auth/react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { 
+import {
   Users,
   Search,
   Download,
@@ -14,6 +15,8 @@ import {
   Calendar,
   DollarSign,
   Eye,
+  RefreshCw,
+  Trash2,
 } from 'lucide-react';
 import Link from 'next/link';
 import { AdminLayout } from '@/components/admin/admin-layout';
@@ -45,6 +48,7 @@ interface Partner {
 
 export default function PartnersPage() {
   const router = useRouter();
+  const { data: session } = useSession();
   const [partners, setPartners] = useState<Partner[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
@@ -94,6 +98,81 @@ export default function PartnersPage() {
       console.error('Error fetching partners:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleResetFinances = async (partner: Partner) => {
+    const confirmMsg = `Reset all financial givings for ${partner.firstName} ${partner.lastName}?
+
+This will:
+- Delete all payment records (${formatCurrency(partner.totalContributions)} total)
+- Cancel all active Stripe subscriptions
+- Set all campaigns to CANCELLED status
+- Keep partner account intact
+
+⚠️ This action CANNOT be undone. Continue?`;
+
+    if (!confirm(confirmMsg)) return;
+
+    try {
+      const res = await fetch(`/api/admin/partners/${partner.id}/reset-finances`, {
+        method: 'POST'
+      });
+
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.error || 'Failed to reset finances');
+      }
+
+      const data = await res.json();
+      alert(`✓ Success: ${data.message}${data.warnings ? '\n\nWarnings:\n' + data.warnings.join('\n') : ''}`);
+      fetchPartners(); // Refresh list
+    } catch (err: any) {
+      alert(`✗ Error: ${err.message}`);
+    }
+  };
+
+  const handleDeletePartner = async (partner: Partner) => {
+    const activeCampaigns = partner.campaigns.filter(c => c.status === 'ACTIVE').length;
+
+    const confirmMsg = `⚠️ DELETE partner ${partner.firstName} ${partner.lastName} completely?
+
+This will PERMANENTLY delete:
+- Partner account
+- ${partner.campaigns.length} campaign(s) (${activeCampaigns} active)
+- All payment records (${formatCurrency(partner.totalContributions)} total)
+- All communication history
+- Stripe customer data
+
+⚠️ This action CANNOT be undone and CANNOT be recovered.
+
+Are you absolutely sure?`;
+
+    if (!confirm(confirmMsg)) return;
+
+    // Double confirmation for extra safety
+    const lastName = partner.lastName.toUpperCase();
+    const doubleConfirm = prompt(`Type "${lastName}" to confirm deletion:`);
+    if (doubleConfirm !== lastName) {
+      alert('Deletion cancelled - confirmation did not match');
+      return;
+    }
+
+    try {
+      const res = await fetch(`/api/admin/partners/${partner.id}`, {
+        method: 'DELETE'
+      });
+
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.error || 'Failed to delete partner');
+      }
+
+      const data = await res.json();
+      alert(`✓ Success: ${data.message}${data.warnings ? '\n\nWarnings:\n' + data.warnings.join('\n') : ''}`);
+      fetchPartners(); // Refresh list
+    } catch (err: any) {
+      alert(`✗ Error: ${err.message}`);
     }
   };
 
@@ -411,6 +490,28 @@ export default function PartnersPage() {
                         >
                           {copiedId === partner.id ? 'Copied' : 'Copy Email'}
                         </Button>
+                        {session?.user?.role === 'SUPER_ADMIN' && (
+                          <>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => handleResetFinances(partner)}
+                              className="border-yellow-500 text-yellow-700 hover:bg-yellow-50"
+                            >
+                              <RefreshCw className="h-3 w-3 mr-1" />
+                              Reset Finances
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => handleDeletePartner(partner)}
+                              className="border-red-500 text-red-700 hover:bg-red-50"
+                            >
+                              <Trash2 className="h-3 w-3 mr-1" />
+                              Delete
+                            </Button>
+                          </>
+                        )}
                       </div>
                     </td>
                   </tr>

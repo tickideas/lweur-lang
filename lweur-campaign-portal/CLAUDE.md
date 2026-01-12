@@ -2,9 +2,28 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## CRITICAL: Next.js 15+ Async Params (PRODUCTION BUG FIX)
+
+**In Next.js 15+, `params` in API routes and dynamic pages is a Promise and MUST be awaited:**
+
+```typescript
+// ✅ CORRECT
+export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
+  // use id...
+}
+
+// ❌ WRONG - params.id will be undefined in production!
+export async function GET(req: NextRequest, { params }: { params: { id: string } }) {
+  const id = params.id; // undefined!
+}
+```
+
+This applies to ALL dynamic routes: `[id]`, `[slug]`, `[...path]`, etc.
+
 ## Project Overview
 
-The Loveworld Europe Campaign Portal is a Next.js 15 application supporting Christian content broadcasting across 60 European languages. It handles two main campaign types:
+The Loveworld Europe Campaign Portal is a Next.js 16.1.1 application supporting Christian content broadcasting across 60 European languages. It handles two main campaign types:
 - **Adopt a Language** - £150/month recurring sponsorship for exclusive language channel adoption
 - **Sponsor Translation** - £150/month recurring sponsorship for live Passacris program translation
 
@@ -50,13 +69,13 @@ This is a CRITICAL step that must NEVER be skipped when working on any code-rela
 ## Architecture
 
 ### Tech Stack
-- **Frontend**: Next.js 15, TypeScript, Tailwind CSS v4
-- **Backend**: Next.js API Routes with Prisma ORM
+- **Frontend**: Next.js 16.1.1, React 19, TypeScript, Tailwind CSS v4
+- **Backend**: Next.js API Routes with Prisma 7.2.0 ORM
 - **Database**: PostgreSQL
 - **Payments**: Stripe (recurring subscriptions)
-- **Authentication**: JWT-based admin system with role-based access
+- **Authentication**: NextAuth with JWT-based admin system and role-based access
 - **Email**: Nodemailer with Brevo SMTP
-- **Testing**: Jest with React Testing Library
+- **Testing**: Jest 30 with React Testing Library
 
 ### Core Models (Prisma Schema)
 - **Partner**: Donor/supporter information with Stripe customer integration
@@ -68,10 +87,14 @@ This is a CRITICAL step that must NEVER be skipped when working on any code-rela
 - **CheckoutSettings**: Admin-configurable checkout flow, currencies, and amounts
 
 ### Directory Structure
-- `src/app/` - Next.js 15 App Router pages and API routes
+- `src/app/` - Next.js App Router pages and API routes
+- `src/app/api/` - API routes (admin/, auth/, payments/, webhooks/, etc.)
+- `src/app/admin/` - Admin dashboard pages
 - `src/components/` - Reusable React components with ui/ subfolder for design system
 - `src/lib/` - Core utilities (auth.ts, prisma.ts, stripe.ts, email.ts, utils.ts)
 - `src/types/` - TypeScript type definitions
+- `src/hooks/` - Custom React hooks
+- `src/utils/` - Utility functions
 - `prisma/` - Database schema and migrations
 
 ## Common Development Commands
@@ -138,6 +161,20 @@ npm run lint           # ESLint checking
   - Automatic conversion between pounds (UI) and pence (API/database)
   - Real-time preview of formatted currency amounts
   - Separate preset amounts for "Adopt Language" vs "Sponsor Translation" campaigns
+
+### Partner Management (SUPER_ADMIN Only)
+- **Reset Financial Givings** (`/admin/partners` page)
+  - Deletes all payment records for a partner
+  - Cancels all Stripe subscriptions
+  - Sets all campaigns to CANCELLED status
+  - Preserves partner account for future re-engagement
+  - Single confirmation with detailed consequences
+
+- **Delete Partner** (`/admin/partners` page)
+  - Permanently removes partner and ALL related data
+  - Cancels Stripe subscriptions and deletes Stripe customer
+  - Uses database CASCADE to delete campaigns, payments, communications
+  - Double confirmation required (confirm dialog + type partner's last name)
 
 ## Development Guidelines
 

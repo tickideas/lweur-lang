@@ -82,3 +82,40 @@ export const formatAmountFromDisplay = (amount: string): number => {
   const cleanAmount = amount.replace(/[£$€,\\s]/g, '');
   return Math.round(parseFloat(cleanAmount) * 100);
 };
+
+// Cancel a Stripe subscription
+export const cancelSubscription = async (subscriptionId: string) => {
+  try {
+    return await getStripe().subscriptions.cancel(subscriptionId);
+  } catch (error) {
+    console.error(`Failed to cancel subscription ${subscriptionId}:`, error);
+    throw error;
+  }
+};
+
+// Delete a Stripe customer
+export const deleteCustomer = async (customerId: string) => {
+  try {
+    return await getStripe().customers.del(customerId);
+  } catch (error) {
+    console.error(`Failed to delete customer ${customerId}:`, error);
+    throw error;
+  }
+};
+
+// Bulk cancel subscriptions with error handling
+export const cancelSubscriptions = async (subscriptionIds: string[]) => {
+  const results = await Promise.allSettled(
+    subscriptionIds.map(id => cancelSubscription(id))
+  );
+
+  const errors = results
+    .filter((r): r is PromiseRejectedResult => r.status === 'rejected')
+    .map(r => r.reason);
+
+  return {
+    cancelled: results.filter(r => r.status === 'fulfilled').length,
+    failed: errors.length,
+    errors
+  };
+};

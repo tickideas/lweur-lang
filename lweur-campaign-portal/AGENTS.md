@@ -1,3 +1,71 @@
+# LWEUR Campaign Portal - Agent Guidelines
+
+## Critical: Next.js 15 Breaking Changes
+
+**ALWAYS use async params in API routes and pages with dynamic segments:**
+```typescript
+// CORRECT - Next.js 15+
+export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
+  // ...
+}
+
+// WRONG - causes undefined params in production
+export async function GET(req: NextRequest, { params }: { params: { id: string } }) {
+  const id = params.id; // Will be undefined!
+}
+```
+
+## Build & Verification Commands
+
+```bash
+npm run build          # ALWAYS run before deploying - catches type errors
+npm run lint           # ESLint checking
+npm test               # Run Jest tests
+npm run db:generate    # After Prisma schema changes
+npm run db:migrate     # Run database migrations
+```
+
+## Tech Stack
+
+- **Next.js 16.1.1** (App Router) with **React 19**
+- **Prisma 7.2.0** with PostgreSQL
+- **Tailwind CSS v4**
+- **Stripe** for payments
+- **NextAuth** for authentication
+
+## Key API Routes
+
+- `/api/admin/partners/[id]` - Partner details + DELETE for partner deletion (requires async params)
+- `/api/admin/partners/[id]/reset-finances` - POST to reset partner financial givings
+- `/api/admin/partners` - Partner list
+- `/api/payments/create-intent` - Stripe payment intent creation
+- `/api/webhooks/stripe` - Stripe webhook handler
+
+## Partner Management (SUPER_ADMIN Only)
+
+Two critical operations are available for SUPER_ADMIN users:
+
+### Reset Financial Givings
+- **Endpoint**: `POST /api/admin/partners/[id]/reset-finances`
+- **Action**: Deletes all payment records, cancels Stripe subscriptions, sets campaigns to CANCELLED
+- **Preserves**: Partner account and campaign records (status changed to CANCELLED)
+
+### Delete Partner
+- **Endpoint**: `DELETE /api/admin/partners/[id]`
+- **Action**: Permanently removes partner and all related data (CASCADE delete)
+- **Stripe Cleanup**: Cancels subscriptions and deletes Stripe customer
+
+## Directory Structure
+
+- `src/app/api/` - API routes
+- `src/app/admin/` - Admin dashboard pages
+- `src/components/` - React components
+- `src/lib/` - Core utilities (auth, prisma, stripe, email)
+- `prisma/` - Database schema and migrations
+
+---
+
 [byterover-mcp]
 
 # Byterover MCP Server Tools Reference
