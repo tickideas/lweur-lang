@@ -22,6 +22,11 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
         payments: {
           orderBy: { paymentDate: 'desc' },
           take: 50,
+          include: {
+            campaign: {
+              select: { stripeSubscriptionId: true },
+            },
+          },
         },
       },
     });
@@ -76,6 +81,8 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
           status: p.status,
           paymentDate: p.paymentDate,
           stripePaymentIntentId: p.stripePaymentIntentId,
+          stripeInvoiceId: p.stripeInvoiceId,
+          isRecurring: !!(p.stripeInvoiceId || p.campaign?.stripeSubscriptionId),
         })),
       },
     });

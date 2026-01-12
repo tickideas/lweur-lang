@@ -221,7 +221,7 @@ async function generateLanguagesReport() {
   return languages.map(language => ({
     id: language.id,
     name: language.name,
-    code: language.code,
+    code: language.iso639Code,
     region: language.region,
     speakerCount: language.speakerCount,
     adoptionStatus: language.adoptionStatus,
