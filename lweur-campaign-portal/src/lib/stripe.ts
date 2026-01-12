@@ -1,12 +1,24 @@
 import Stripe from 'stripe';
 
-if (!process.env.STRIPE_SECRET_KEY) {
-  throw new Error('STRIPE_SECRET_KEY is not set in environment variables');
-}
+let stripeInstance: Stripe | null = null;
 
-export const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
-  apiVersion: '2024-06-20',
-  typescript: true,
+const getStripe = (): Stripe => {
+  if (!stripeInstance) {
+    if (!process.env.STRIPE_SECRET_KEY) {
+      throw new Error('STRIPE_SECRET_KEY is not set in environment variables');
+    }
+    stripeInstance = new Stripe(process.env.STRIPE_SECRET_KEY, {
+      apiVersion: '2024-06-20',
+      typescript: true,
+    });
+  }
+  return stripeInstance;
+};
+
+export const stripe = new Proxy({} as Stripe, {
+  get(_, prop) {
+    return getStripe()[prop as keyof Stripe];
+  },
 });
 
 // Stripe configuration constants
@@ -26,7 +38,7 @@ export const createCustomer = async (partnerData: {
   name: string;
   phone?: string;
 }) => {
-  return await stripe.customers.create({
+  return await getStripe().customers.create({
     email: partnerData.email,
     name: partnerData.name,
     phone: partnerData.phone,
@@ -37,7 +49,7 @@ export const createCustomer = async (partnerData: {
 };
 
 export const createSubscription = async (customerId: string, priceId: string) => {
-  return await stripe.subscriptions.create({
+  return await getStripe().subscriptions.create({
     customer: customerId,
     items: [{ price: priceId }],
     payment_behavior: 'default_incomplete',
@@ -47,7 +59,7 @@ export const createSubscription = async (customerId: string, priceId: string) =>
 };
 
 export const createPaymentIntent = async (amount: number, currency: string = 'gbp') => {
-  return await stripe.paymentIntents.create({
+  return await getStripe().paymentIntents.create({
     amount,
     currency,
     automatic_payment_methods: {

@@ -60,7 +60,7 @@ export default function TranslationsPage() {
 
   // Filter and sort items based on user selections
   const filteredItems = useMemo(() => {
-    let filtered = items.filter(item => {
+    const filtered = items.filter(item => {
       const matchesSearch = !debouncedSearch || 
         item.name.toLowerCase().includes(debouncedSearch.toLowerCase()) ||
         item.nativeName.toLowerCase().includes(debouncedSearch.toLowerCase()) ||

@@ -5,7 +5,6 @@ import { prisma } from '@/lib/prisma';
 import bcrypt from 'bcryptjs';
 import { AdminRole } from '@/types';
 import { NextRequest } from 'next/server';
-import jwt from 'jsonwebtoken';
 import { getToken } from 'next-auth/jwt';
 
 declare module 'next-auth' {

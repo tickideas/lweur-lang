@@ -2,6 +2,7 @@
 // Input sanitization utilities for user-provided text fields
 // Prevents XSS attacks and ensures clean data storage
 // RELEVANT FILES: checkout-settings/page.tsx, utils/index.ts, api/admin/checkout-settings/route.ts, auth.ts
+/* eslint-disable no-control-regex, no-useless-escape */
 
 /**
  * Sanitizes HTML strings by removing potentially dangerous elements and attributes
