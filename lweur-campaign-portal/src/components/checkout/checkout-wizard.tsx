@@ -1,11 +1,11 @@
 // src/components/checkout/checkout-wizard.tsx
 // Main checkout wizard component orchestrating the 4-step CBN Europe-style flow
-// Manages step navigation, data collection, and payment processing
-// RELEVANT FILES: amount-selection.tsx, checkout-form.tsx, checkout/page.tsx, layout.tsx
+// Manages step navigation, data collection, and payment processing with anti-bot protection
+// RELEVANT FILES: amount-selection.tsx, checkout-form.tsx, checkout/page.tsx, src/lib/anti-bot.ts
 
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { AmountSelection } from './amount-selection';
 import { PersonalDetailsForm } from './personal-details-form';
 import { CheckoutForm } from './checkout-form';
@@ -13,7 +13,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { loadStripe } from '@stripe/stripe-js';
 import { Elements } from '@stripe/react-stripe-js';
-import { 
+import {
   ArrowLeft,
   Check,
   Languages,
@@ -24,6 +24,12 @@ import { Language, CampaignType } from '@/types';
 import { formatCurrency } from '@/utils';
 
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!);
+
+// Anti-bot token state
+interface SecurityToken {
+  token: string;
+  timestamp: number;
+}
 
 interface CheckoutWizardProps {
   campaignType: CampaignType;
@@ -72,6 +78,26 @@ export function CheckoutWizard({ campaignType, selectedLanguage }: CheckoutWizar
   });
   const [clientSecret, setClientSecret] = useState<string>('');
   const [campaignId, setCampaignId] = useState<string>('');
+  const [securityToken, setSecurityToken] = useState<SecurityToken | null>(null);
+  const [honeypot, setHoneypot] = useState<string>('');
+  const [error, setError] = useState<string>('');
+
+  // Fetch security token on component mount
+  const fetchSecurityToken = useCallback(async () => {
+    try {
+      const response = await fetch('/api/payments/token');
+      if (response.ok) {
+        const data = await response.json();
+        setSecurityToken({ token: data.token, timestamp: data.timestamp });
+      }
+    } catch (err) {
+      console.warn('Failed to fetch security token:', err);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchSecurityToken();
+  }, [fetchSecurityToken]);
 
 
   const getCampaignIcon = () => {
@@ -109,11 +135,17 @@ export function CheckoutWizard({ campaignType, selectedLanguage }: CheckoutWizar
       partnerInfo
     };
     setCheckoutData(updatedData);
+    setError('');
 
     // Create payment intent
     if (!campaignType || !selectedLanguage) {
       console.error('Missing campaign type or language');
       return;
+    }
+
+    // Refresh security token if expired (older than 9 minutes)
+    if (!securityToken || Date.now() - securityToken.timestamp > 9 * 60 * 1000) {
+      await fetchSecurityToken();
     }
 
     try {
@@ -135,29 +167,35 @@ export function CheckoutWizard({ campaignType, selectedLanguage }: CheckoutWizar
             postalCode: partnerInfo.postalCode || 'Postcode to be collected',
             country: partnerInfo.country,
           },
+          // Anti-bot fields
+          honeypot,
+          token: securityToken?.token,
+          timestamp: securityToken?.timestamp,
         }),
       });
 
       const result = await response.json();
 
       if (!response.ok) {
-        throw new Error(result.error || 'Failed to create payment');
+        // Handle rate limiting
+        if (response.status === 429) {
+          setError(result.error || 'Too many payment attempts. Please try again later.');
+          return;
+        }
+        throw new Error(result.error || result.message || 'Failed to create payment');
       }
 
       handlePaymentReady(result.clientSecret, result.campaignId);
       setCurrentStep('payment');
     } catch (error: any) {
       console.error('Error creating payment intent:', error);
-      
+      setError(error.message);
+
       // Show a more user-friendly error if it's a configuration issue
       if (error.message && error.message.includes('Payment service not configured')) {
-        alert('Payment service is not configured. Please check your Stripe configuration in the .env file.');
+        setError('Payment service is not configured. Please check your Stripe configuration.');
         return;
       }
-      
-      // For other errors, show generic message but still continue to payment step for testing
-      console.warn('Payment intent creation failed, continuing to payment step for testing purposes');
-      setCurrentStep('payment');
     }
   };
 
@@ -243,6 +281,13 @@ export function CheckoutWizard({ campaignType, selectedLanguage }: CheckoutWizar
       case 'details':
         return (
           <div className="space-y-6">
+            {/* Error Display */}
+            {error && (
+              <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+                <p className="text-red-700 text-sm">{error}</p>
+              </div>
+            )}
+
             <div className="flex items-center justify-between">
               <Button
                 variant="outline"
@@ -253,7 +298,19 @@ export function CheckoutWizard({ campaignType, selectedLanguage }: CheckoutWizar
                 Back
               </Button>
             </div>
-            
+
+            {/* Hidden honeypot field - bots will fill this */}
+            <input
+              type="text"
+              name="website_url"
+              value={honeypot}
+              onChange={(e) => setHoneypot(e.target.value)}
+              style={{ position: 'absolute', left: '-9999px', opacity: 0 }}
+              tabIndex={-1}
+              autoComplete="off"
+              aria-hidden="true"
+            />
+
             <PersonalDetailsForm onComplete={handleDetailsComplete} />
           </div>
         );

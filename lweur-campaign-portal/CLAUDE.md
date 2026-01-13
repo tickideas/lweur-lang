@@ -91,7 +91,7 @@ This is a CRITICAL step that must NEVER be skipped when working on any code-rela
 - `src/app/api/` - API routes (admin/, auth/, payments/, webhooks/, etc.)
 - `src/app/admin/` - Admin dashboard pages
 - `src/components/` - Reusable React components with ui/ subfolder for design system
-- `src/lib/` - Core utilities (auth.ts, prisma.ts, stripe.ts, email.ts, utils.ts)
+- `src/lib/` - Core utilities (auth.ts, prisma.ts, stripe.ts, email.ts, rate-limit.ts, anti-bot.ts)
 - `src/types/` - TypeScript type definitions
 - `src/hooks/` - Custom React hooks
 - `src/utils/` - Utility functions
@@ -133,11 +133,33 @@ npm run lint           # ESLint checking
 - Brevo email settings: `BREVO_SMTP_HOST`, `BREVO_SMTP_PORT`, `BREVO_SMTP_USER`, `BREVO_SMTP_KEY`
 
 ### Payment Flow Architecture
-1. Frontend creates payment intent via `/api/payments/create-intent`
-2. Stripe Elements handles secure card collection
-3. Stripe webhooks update payment status via `/api/webhooks/stripe`
-4. Subscription management tracks recurring £150 monthly payments
-5. Campaign status updates based on payment success/failure
+1. Frontend fetches security token via `/api/payments/token`
+2. Frontend creates payment intent via `/api/payments/create-intent` with anti-bot fields
+3. Server validates: amount limits, rate limits, anti-bot token
+4. Stripe Elements handles secure card collection
+5. Stripe webhooks update payment status via `/api/webhooks/stripe`
+6. Subscription management tracks recurring £150 monthly payments
+7. Campaign status updates based on payment success/failure
+
+### Payment Security (Anti-Bot & Anti-Fraud)
+The payment system includes multiple layers of protection against bots and fraud:
+
+**Server-Side Validation** (`src/lib/rate-limit.ts`, `src/lib/anti-bot.ts`):
+- **Amount validation**: Validates payment amounts against `CheckoutSettings` min/max ranges
+- **IP rate limiting**: 5 payment attempts per IP per hour
+- **Email rate limiting**: 10 payment attempts per email per day
+- **HMAC token validation**: 10-minute expiration, prevents replay attacks
+- **Honeypot detection**: Rejects submissions where hidden field is filled
+
+**Frontend Integration** (`checkout-wizard.tsx`, `checkout-form.tsx`):
+- Fetches security token on component mount via `/api/payments/token`
+- Includes hidden honeypot field (invisible to humans, filled by bots)
+- Refreshes token if older than 9 minutes before submission
+- Handles 429 rate limit responses gracefully with user-friendly errors
+
+**Security Responses**:
+- `400 Bad Request` - Invalid amount, honeypot filled, or invalid token
+- `429 Too Many Requests` - Rate limit exceeded (includes retry guidance)
 
 ### Admin Authentication System
 - JWT tokens for session management
@@ -231,5 +253,9 @@ npm run db:generate && npm run db:migrate
 - Stripe webhook signature verification
 - JWT token validation for admin routes
 - Environment variables never exposed to frontend (except NEXT_PUBLIC_*)
+- **Payment amount validation** against CheckoutSettings min/max ranges
+- **Rate limiting** on payment endpoints (IP and email-based)
+- **Anti-bot protection** with honeypot fields and HMAC tokens
+- Security violations logged with `[SECURITY]` prefix for monitoring
 
 This is a production-ready application handling real financial transactions. Always test payment flows thoroughly and follow security best practices when making changes.

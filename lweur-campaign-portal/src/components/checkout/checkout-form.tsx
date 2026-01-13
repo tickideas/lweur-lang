@@ -1,6 +1,11 @@
+// src/components/checkout/checkout-form.tsx
+// Checkout form component for partner details and payment processing
+// Handles multi-step checkout with Stripe integration and anti-bot protection
+// RELEVANT FILES: checkout-wizard.tsx, amount-selection.tsx, checkout/page.tsx, src/lib/anti-bot.ts
+
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -27,6 +32,12 @@ import {
 import { Language, CampaignType } from '@/types';
 import { EUROPEAN_COUNTRIES } from '@/utils';
 import Link from 'next/link';
+
+// Anti-bot token state
+interface SecurityToken {
+  token: string;
+  timestamp: number;
+}
 
 const partnerInfoSchema = z.object({
   firstName: z.string().min(1, 'First name is required'),
@@ -87,6 +98,25 @@ export function CheckoutForm({
   const elements = useElements();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string>('');
+  const [securityToken, setSecurityToken] = useState<SecurityToken | null>(null);
+  const [honeypot, setHoneypot] = useState<string>('');
+
+  // Fetch security token on component mount
+  const fetchSecurityToken = useCallback(async () => {
+    try {
+      const response = await fetch('/api/payments/token');
+      if (response.ok) {
+        const data = await response.json();
+        setSecurityToken({ token: data.token, timestamp: data.timestamp });
+      }
+    } catch (err) {
+      console.warn('Failed to fetch security token:', err);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchSecurityToken();
+  }, [fetchSecurityToken]);
 
   const {
     register,
@@ -117,6 +147,11 @@ export function CheckoutForm({
     setLoading(true);
     setError('');
 
+    // Refresh security token if expired (older than 9 minutes)
+    if (!securityToken || Date.now() - securityToken.timestamp > 9 * 60 * 1000) {
+      await fetchSecurityToken();
+    }
+
     try {
       const response = await fetch('/api/payments/create-intent', {
         method: 'POST',
@@ -133,13 +168,21 @@ export function CheckoutForm({
           billingAddress: {
             country: data.country,
           },
+          // Anti-bot fields
+          honeypot,
+          token: securityToken?.token,
+          timestamp: securityToken?.timestamp,
         }),
       });
 
       const result = await response.json();
 
       if (!response.ok) {
-        throw new Error(result.error || 'Failed to create payment');
+        // Handle rate limiting
+        if (response.status === 429) {
+          throw new Error(result.error || 'Too many payment attempts. Please try again later.');
+        }
+        throw new Error(result.error || result.message || 'Failed to create payment');
       }
 
       onPaymentReady?.(result.clientSecret, result.campaignId);
@@ -375,6 +418,18 @@ export function CheckoutForm({
             <p className="text-red-700 text-sm">{error}</p>
           </div>
         )}
+
+        {/* Hidden honeypot field - bots will fill this */}
+        <input
+          type="text"
+          name="website_url"
+          value={honeypot}
+          onChange={(e) => setHoneypot(e.target.value)}
+          style={{ position: 'absolute', left: '-9999px', opacity: 0 }}
+          tabIndex={-1}
+          autoComplete="off"
+          aria-hidden="true"
+        />
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div>

@@ -1,9 +1,17 @@
+// src/app/api/payments/create-intent/route.ts
+// API endpoint for creating Stripe payment intents and subscriptions
+// Handles both one-time and recurring payments with security validation
+// RELEVANT FILES: src/lib/rate-limit.ts, src/lib/anti-bot.ts, src/lib/stripe.ts, prisma/schema.prisma
+
 import { NextRequest, NextResponse } from 'next/server';
-import { stripe, STRIPE_CONFIG } from '@/lib/stripe';
+import { stripe } from '@/lib/stripe';
 import { prisma } from '@/lib/prisma';
 import { EmailService } from '@/lib/email';
 import { z } from 'zod';
+import { checkPaymentRateLimit, getClientIP } from '@/lib/rate-limit';
+import { validateAntiBot, optionalAntiBotSchema } from '@/lib/anti-bot';
 
+// Schema for payment intent creation with anti-bot fields
 const createPaymentIntentSchema = z.object({
   campaignType: z.enum(['ADOPT_LANGUAGE', 'SPONSOR_TRANSLATION', 'GENERAL_DONATION']),
   languageId: z.string(),
@@ -27,9 +35,47 @@ const createPaymentIntentSchema = z.object({
     postalCode: z.string().optional(),
     country: z.string(),
   }),
-});
+}).merge(optionalAntiBotSchema);
 
 const emailService = new EmailService();
+
+/**
+ * Get amount limits from checkout settings for a specific campaign type
+ */
+async function getAmountLimits(campaignType: 'ADOPT_LANGUAGE' | 'SPONSOR_TRANSLATION' | 'GENERAL_DONATION') {
+  const settings = await prisma.checkoutSettings.findFirst({
+    orderBy: { createdAt: 'desc' },
+  });
+
+  // Default limits if no settings found
+  const defaults = {
+    ADOPT_LANGUAGE: { min: 1000, max: 100000 },      // £10 - £1000
+    SPONSOR_TRANSLATION: { min: 1000, max: 100000 }, // £10 - £1000
+    GENERAL_DONATION: { min: 500, max: 500000 },     // £5 - £5000
+  };
+
+  if (!settings) {
+    return defaults[campaignType];
+  }
+
+  switch (campaignType) {
+    case 'ADOPT_LANGUAGE':
+      return {
+        min: settings.adoptLanguageMinAmount,
+        max: settings.adoptLanguageMaxAmount,
+      };
+    case 'SPONSOR_TRANSLATION':
+      return {
+        min: settings.sponsorTranslationMinAmount,
+        max: settings.sponsorTranslationMaxAmount,
+      };
+    case 'GENERAL_DONATION':
+      return {
+        min: settings.generalDonationMinAmount,
+        max: settings.generalDonationMaxAmount,
+      };
+  }
+}
 
 export async function POST(req: NextRequest) {
   try {
@@ -43,14 +89,72 @@ export async function POST(req: NextRequest) {
     }
 
     const body = await req.json();
-    console.log('Received payment intent request:', JSON.stringify(body, null, 2));
-    
+
+    // Parse and validate request data
     const validatedData = createPaymentIntentSchema.parse(body);
+    const {
+      campaignType,
+      languageId,
+      amount,
+      currency,
+      isRecurring,
+      partnerInfo,
+      billingAddress,
+      honeypot,
+      token,
+      timestamp,
+    } = validatedData;
 
-    const { campaignType, languageId, amount, currency, isRecurring, partnerInfo, billingAddress } = validatedData;
+    // ========================================
+    // SECURITY CHECK 1: Anti-Bot Validation
+    // ========================================
+    if (token && timestamp) {
+      const antiBotResult = validateAntiBot({ honeypot, token, timestamp });
+      if (!antiBotResult.valid) {
+        console.warn(`[SECURITY] Anti-bot validation failed from IP ${getClientIP(req)}: ${antiBotResult.error}`);
+        return NextResponse.json(
+          { error: antiBotResult.error },
+          { status: 400 }
+        );
+      }
+    } else if (honeypot && honeypot !== '') {
+      // Honeypot field was filled - likely a bot
+      console.warn(`[SECURITY] Honeypot triggered from IP ${getClientIP(req)}`);
+      return NextResponse.json(
+        { error: 'Invalid submission detected' },
+        { status: 400 }
+      );
+    }
 
-    // Validate business rules for campaign types and payment types
-    // Note: Both campaign types now support one-time and recurring payments
+    // ========================================
+    // SECURITY CHECK 2: Rate Limiting
+    // ========================================
+    const rateLimitResult = checkPaymentRateLimit(req, partnerInfo.email);
+    if (!rateLimitResult.allowed) {
+      console.warn(`[SECURITY] Rate limit exceeded for IP ${getClientIP(req)}, email: ${partnerInfo.email}`);
+      return NextResponse.json(
+        { error: rateLimitResult.reason || 'Too many requests. Please try again later.' },
+        { status: 429 }
+      );
+    }
+
+    // ========================================
+    // SECURITY CHECK 3: Amount Validation
+    // ========================================
+    const limits = await getAmountLimits(campaignType);
+    if (amount < limits.min || amount > limits.max) {
+      console.warn(`[SECURITY] Invalid amount ${amount} for ${campaignType}. Limits: ${limits.min}-${limits.max}. IP: ${getClientIP(req)}`);
+      return NextResponse.json(
+        {
+          error: 'Invalid amount',
+          message: `Amount must be between £${(limits.min / 100).toFixed(2)} and £${(limits.max / 100).toFixed(2)}`
+        },
+        { status: 400 }
+      );
+    }
+
+    // Log validated payment attempt (for monitoring)
+    console.log(`[PAYMENT] Processing ${campaignType} for ${amount / 100} ${currency} from ${partnerInfo.email}`);
 
     // Check if language is available for adoption (if it's an adoption campaign)
     if (campaignType === 'ADOPT_LANGUAGE') {
@@ -148,12 +252,12 @@ export async function POST(req: NextRequest) {
 
     if (isRecurring) {
       // Handle recurring payments (subscriptions)
-      const productName = campaignType === 'ADOPT_LANGUAGE' 
-        ? 'Language Adoption' 
+      const productName = campaignType === 'ADOPT_LANGUAGE'
+        ? 'Language Adoption'
         : campaignType === 'SPONSOR_TRANSLATION'
           ? 'Translation Sponsorship'
           : 'General Donation';
-      
+
       const product = await stripe.products.create({
         name: productName,
         description: campaignType === 'ADOPT_LANGUAGE'
@@ -187,7 +291,7 @@ export async function POST(req: NextRequest) {
 
       stripeSubscriptionId = subscription.id;
       nextBillingDate = new Date((subscription as any).current_period_end * 1000);
-      
+
       const invoice = subscription.latest_invoice as any;
       paymentIntentClientSecret = invoice.payment_intent.client_secret;
     } else {
@@ -256,9 +360,9 @@ export async function POST(req: NextRequest) {
             partnerId: partner.id,
             type: 'EMAIL',
             subject: `Welcome to Loveworld Europe - ${
-              campaignType === 'ADOPT_LANGUAGE' 
-                ? 'Language Adoption' 
-                : campaignType === 'SPONSOR_TRANSLATION' 
+              campaignType === 'ADOPT_LANGUAGE'
+                ? 'Language Adoption'
+                : campaignType === 'SPONSOR_TRANSLATION'
                   ? 'Translation Sponsorship'
                   : 'General Donation'
             } Partnership`,
@@ -275,13 +379,18 @@ export async function POST(req: NextRequest) {
       // Don't fail the entire process if email fails
     }
 
-    return NextResponse.json({
+    // Create response with rate limit headers
+    const response = NextResponse.json({
       subscriptionId: stripeSubscriptionId,
       campaignId: campaign.id,
       clientSecret: paymentIntentClientSecret,
       customerId: customer.id,
       isRecurring: isRecurring,
     });
+
+    response.headers.set('X-RateLimit-Remaining', rateLimitResult.remaining.toString());
+
+    return response;
 
   } catch (error) {
     console.error('Error creating payment intent:', error);
@@ -290,7 +399,7 @@ export async function POST(req: NextRequest) {
       stack: error instanceof Error ? error.stack : undefined,
       error: error
     });
-    
+
     if (error instanceof z.ZodError) {
       return NextResponse.json(
         { error: 'Invalid request data', details: error.issues },
@@ -299,9 +408,9 @@ export async function POST(req: NextRequest) {
     }
 
     return NextResponse.json(
-      { 
-        error: 'Internal server error', 
-        details: error instanceof Error ? error.message : 'Unknown error' 
+      {
+        error: 'Internal server error',
+        details: error instanceof Error ? error.message : 'Unknown error'
       },
       { status: 500 }
     );
