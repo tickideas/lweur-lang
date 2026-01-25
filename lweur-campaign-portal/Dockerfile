@@ -43,15 +43,15 @@ RUN adduser --system --uid 1001 nextjs
 # Copy necessary files
 COPY --from=builder /app/public ./public
 COPY --from=builder /app/prisma ./prisma
+COPY --from=builder /app/prisma.config.ts ./prisma.config.ts
 COPY --from=builder /app/package.json ./package.json
+COPY --from=builder /app/package-lock.json ./package-lock.json
 COPY --from=builder /app/migrate-and-start.sh ./migrate-and-start.sh
+COPY --from=builder /app/node_modules ./node_modules
 
 # Copy built application
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
-
-# Optionally prune dev dependencies to reduce image size (keep only prod deps referenced in standalone output)
-RUN npm prune --production
 
 # Make migration script executable
 RUN chmod +x ./migrate-and-start.sh
