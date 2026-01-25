@@ -26,11 +26,11 @@ const updateImpactStorySchema = z.object({
   message: "At least one field must be provided for update"
 });
 
-interface RouteParams {
-  params: { id: string };
+interface RouteContext {
+  params: Promise<{ id: string }>;
 }
 
-export async function GET(request: NextRequest, { params }: RouteParams) {
+export async function GET(request: NextRequest, { params }: RouteContext) {
   try {
     const session = await getServerSession(authOptions);
     
@@ -38,8 +38,9 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
+    const { id } = await params;
     const impactStory = await prisma.impactStory.findUnique({
-      where: { id: params.id }
+      where: { id }
     });
 
     if (!impactStory) {
@@ -53,7 +54,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
   }
 }
 
-export async function PUT(request: NextRequest, { params }: RouteParams) {
+export async function PUT(request: NextRequest, { params }: RouteContext) {
   try {
     const session = await getServerSession(authOptions);
     
@@ -65,6 +66,7 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
       return NextResponse.json({ error: 'Insufficient permissions' }, { status: 403 });
     }
 
+    const { id } = await params;
     const body = await request.json();
     const validatedData = updateImpactStorySchema.parse(body);
 
@@ -73,7 +75,7 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
       await prisma.impactStory.updateMany({
         where: { 
           isFeatured: true,
-          NOT: { id: params.id }
+          NOT: { id }
         },
         data: { isFeatured: false }
       });
@@ -87,14 +89,14 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
     };
 
     const impactStory = await prisma.impactStory.update({
-      where: { id: params.id },
+      where: { id },
       data: updateData
     });
 
     return NextResponse.json(impactStory);
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return NextResponse.json({ error: 'Validation error', details: error.errors }, { status: 400 });
+      return NextResponse.json({ error: 'Validation error', details: error.issues }, { status: 400 });
     }
     
     console.error('Error updating impact story:', error);
@@ -102,7 +104,7 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
   }
 }
 
-export async function DELETE(request: NextRequest, { params }: RouteParams) {
+export async function DELETE(request: NextRequest, { params }: RouteContext) {
   try {
     const session = await getServerSession(authOptions);
     
@@ -114,8 +116,9 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
       return NextResponse.json({ error: 'Insufficient permissions' }, { status: 403 });
     }
 
+    const { id } = await params;
     await prisma.impactStory.delete({
-      where: { id: params.id }
+      where: { id }
     });
 
     return NextResponse.json({ message: 'Impact story deleted successfully' });

@@ -333,7 +333,7 @@ export function AmountSelection({
           </div>
 
           {/* Currency Selector */}
-          {(settings || checkoutSettings)?.availableCurrencies.length > 1 && (
+          {((settings || checkoutSettings)?.availableCurrencies?.length ?? 0) > 1 && (
             <div className="space-y-2">
               <Label className="text-sm font-medium text-neutral-700">
                 Currency

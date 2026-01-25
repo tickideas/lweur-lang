@@ -126,7 +126,7 @@ export default function AdoptLanguagePage() {
 
   const availableCount = languages.filter(l => l.adoptionStatus === 'AVAILABLE').length;
   const adoptedCount = languages.filter(l => l.adoptionStatus === 'ADOPTED').length;
-  const totalSpeakers = languages.reduce((sum, lang) => sum + lang.speakerCount, 0);
+  const totalSpeakers = languages.reduce((sum, lang) => sum + Number(lang.speakerCount), 0);
 
   if (loading) {
     return (
@@ -273,7 +273,7 @@ export default function AdoptLanguagePage() {
                     
                     <div className="flex items-center text-sm text-gray-600">
                       <Users className="h-4 w-4 mr-2" />
-                      <span>{formatNumber(language.speakerCount)} speakers</span>
+                      <span>{formatNumber(Number(language.speakerCount))} speakers</span>
                     </div>
                     
                     <div className="flex items-center text-sm text-gray-600">

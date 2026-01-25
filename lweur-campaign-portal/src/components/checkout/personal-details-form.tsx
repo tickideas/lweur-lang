@@ -29,12 +29,22 @@ const partnerInfoSchema = z.object({
   phoneNumber: z.string().optional(),
   organization: z.string().optional(),
   country: z.string().min(1, 'Country is required'),
-  preferredLanguage: z.string().default('en'),
-  marketingConsent: z.boolean().default(true),
-  termsConsent: z.boolean().default(true),
+  preferredLanguage: z.string().optional().default('en'),
+  marketingConsent: z.boolean().optional().default(true),
+  termsConsent: z.boolean().optional().default(true),
 });
 
-type PartnerInfoForm = z.infer<typeof partnerInfoSchema>;
+type PartnerInfoForm = {
+  firstName: string;
+  lastName: string;
+  email: string;
+  phoneNumber?: string;
+  organization?: string;
+  country: string;
+  preferredLanguage: string;
+  marketingConsent: boolean;
+  termsConsent: boolean;
+};
 
 interface PersonalDetailsFormProps {
   onComplete: (data: PartnerInfoForm) => void;
@@ -48,7 +58,7 @@ export function PersonalDetailsForm({ onComplete }: PersonalDetailsFormProps) {
     handleSubmit,
     formState: { errors },
   } = useForm<PartnerInfoForm>({
-    resolver: zodResolver(partnerInfoSchema),
+    resolver: zodResolver(partnerInfoSchema) as never,
     defaultValues: {
       preferredLanguage: 'en',
       country: 'GB',

@@ -3,9 +3,21 @@
 // Seeds the 30 European languages with detailed metadata for Loveworld Europe
 // RELEVANT FILES: prisma/schema.prisma, package.json, prisma/seed.ts
 
-import { PrismaClient } from '@prisma/client';
+import { Pool } from 'pg';
+import { PrismaPg } from '@prisma/adapter-pg';
+import { PrismaClient } from '../src/generated/prisma/client';
 
-const prisma = new PrismaClient();
+function createPrismaClient(): PrismaClient {
+  const connectionString = process.env.DATABASE_URL;
+  if (!connectionString) {
+    throw new Error('DATABASE_URL environment variable is not set');
+  }
+  const pool = new Pool({ connectionString });
+  const adapter = new PrismaPg(pool);
+  return new PrismaClient({ adapter });
+}
+
+const prisma = createPrismaClient();
 
 // European languages data for Loveworld Europe
 const EUROPEAN_LANGUAGES = [

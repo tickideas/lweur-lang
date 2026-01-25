@@ -4,7 +4,30 @@ import { stripe } from '@/lib/stripe'
 import { prisma } from '@/lib/prisma'
 
 // Mock dependencies
-jest.mock('@/lib/stripe')
+jest.mock('@/lib/stripe', () => ({
+  stripe: {
+    webhooks: {
+      constructEvent: jest.fn(),
+    },
+  },
+}))
+
+jest.mock('@/lib/email', () => ({
+  EmailService: jest.fn().mockImplementation(() => ({
+    sendPaymentConfirmation: jest.fn().mockResolvedValue({ success: true }),
+    sendPaymentFailed: jest.fn().mockResolvedValue({ success: true }),
+  })),
+}))
+
+jest.mock('next/headers', () => {
+  return {
+    __esModule: true,
+    headers: jest.fn<() => Promise<Headers>, []>(() => {
+      return Promise.resolve(new Headers([['stripe-signature', 'test_webhook_signature']]));
+    }),
+  };
+});
+
 jest.mock('@/lib/prisma', () => ({
   prisma: {
     campaign: {
@@ -17,20 +40,10 @@ jest.mock('@/lib/prisma', () => ({
     communication: {
       create: jest.fn(),
     },
+    processedWebhookEvent: {
+      create: jest.fn(),
+    },
   },
-}))
-
-jest.mock('@/lib/email', () => ({
-  EmailService: jest.fn().mockImplementation(() => ({
-    sendPaymentConfirmation: jest.fn().mockResolvedValue({ success: true }),
-    sendPaymentFailed: jest.fn().mockResolvedValue({ success: true }),
-  })),
-}))
-
-jest.mock('next/headers', () => ({
-  headers: () => ({
-    get: jest.fn().mockReturnValue('test_webhook_signature'),
-  }),
 }))
 
 const mockStripe = stripe as jest.Mocked<typeof stripe>
@@ -90,12 +103,15 @@ describe('/api/webhooks/stripe', () => {
       // Mock communication logging
       mockPrisma.communication.create.mockResolvedValue({} as any)
 
+      // Mock webhook event processing (success)
+      mockPrisma.processedWebhookEvent.create.mockResolvedValue({} as any)
+
       const request = new NextRequest('http://localhost:3000/api/webhooks/stripe', {
         method: 'POST',
         body: JSON.stringify(mockEvent),
       })
 
-      const response = await POST(request)
+      const response = await POST(request);
       const responseData = await response.json()
 
       expect(response.status).toBe(200)
@@ -179,12 +195,15 @@ describe('/api/webhooks/stripe', () => {
       // Mock communication logging
       mockPrisma.communication.create.mockResolvedValue({} as any)
 
+      // Mock webhook event processing (success)
+      mockPrisma.processedWebhookEvent.create.mockResolvedValue({} as any)
+
       const request = new NextRequest('http://localhost:3000/api/webhooks/stripe', {
         method: 'POST',
         body: JSON.stringify(mockEvent),
       })
 
-      const response = await POST(request)
+      const response = await POST(request);
       const responseData = await response.json()
 
       expect(response.status).toBe(200)
@@ -249,7 +268,7 @@ describe('/api/webhooks/stripe', () => {
         body: JSON.stringify(mockEvent),
       })
 
-      const response = await POST(request)
+      const response = await POST(request);
       const responseData = await response.json()
 
       expect(response.status).toBe(200)
@@ -295,7 +314,7 @@ describe('/api/webhooks/stripe', () => {
         body: JSON.stringify(mockEvent),
       })
 
-      const response = await POST(request)
+      const response = await POST(request);
       const responseData = await response.json()
 
       expect(response.status).toBe(200)
@@ -322,7 +341,7 @@ describe('/api/webhooks/stripe', () => {
         body: JSON.stringify({ type: 'test.event' }),
       })
 
-      const response = await POST(request)
+      const response = await POST(request);
       const responseData = await response.json()
 
       expect(response.status).toBe(400)
@@ -332,7 +351,11 @@ describe('/api/webhooks/stripe', () => {
     it('should handle campaign not found scenario gracefully', async () => {
       const mockInvoice = {
         id: 'in_test123',
-        subscription: 'sub_nonexistent',
+        parent: {
+          subscription_details: {
+            subscription: { id: 'sub_nonexistent' }
+          }
+        },
         amount_paid: 15000,
         currency: 'gbp',
         payment_intent: 'pi_test123',
@@ -352,6 +375,9 @@ describe('/api/webhooks/stripe', () => {
       // Mock campaign not found
       mockPrisma.campaign.findFirst.mockResolvedValue(null)
 
+      // Mock webhook event processing (success)
+      mockPrisma.processedWebhookEvent.create.mockResolvedValue({} as any)
+
       const consoleSpy = jest.spyOn(console, 'error').mockImplementation()
 
       const request = new NextRequest('http://localhost:3000/api/webhooks/stripe', {
@@ -359,7 +385,7 @@ describe('/api/webhooks/stripe', () => {
         body: JSON.stringify(mockEvent),
       })
 
-      const response = await POST(request)
+      const response = await POST(request);
       const responseData = await response.json()
 
       expect(response.status).toBe(200)
@@ -396,7 +422,7 @@ describe('/api/webhooks/stripe', () => {
         body: JSON.stringify(mockEvent),
       })
 
-      const response = await POST(request)
+      const response = await POST(request);
       const responseData = await response.json()
 
       expect(response.status).toBe(200)
@@ -408,6 +434,44 @@ describe('/api/webhooks/stripe', () => {
       )
 
       consoleSpy.mockRestore()
+    })
+
+    it('should return duplicate response for duplicate events', async () => {
+      const mockInvoice = {
+        id: 'in_test123',
+        subscription: 'sub_test123',
+        amount_paid: 15000,
+        currency: 'gbp',
+        created: Math.floor(Date.now() / 1000),
+      }
+
+      const mockEvent = {
+        id: 'evt_duplicate',
+        type: 'invoice.payment_succeeded',
+        data: {
+          object: mockInvoice,
+        },
+      }
+
+      // Mock webhook signature verification
+      mockStripe.webhooks.constructEvent.mockReturnValue(mockEvent as any)
+
+      // Mock duplicate event creation (P2002 error)
+      const prismaError = new Error('Unique constraint violation') as any;
+      prismaError.code = 'P2002';
+      mockPrisma.processedWebhookEvent.create.mockRejectedValueOnce(prismaError);
+
+      const request = new NextRequest('http://localhost:3000/api/webhooks/stripe', {
+        method: 'POST',
+        body: JSON.stringify(mockEvent),
+      })
+
+      const response = await POST(request);
+      const responseData = await response.json()
+
+      expect(response.status).toBe(200)
+      expect(responseData.duplicate).toBe(true)
+      expect(responseData.received).toBe(true)
     })
   })
 })

@@ -128,7 +128,7 @@ export async function DELETE(_req: NextRequest, { params }: { params: Promise<{ 
       .map(c => c.stripeSubscriptionId)
       .filter((id): id is string => id !== null);
 
-    let stripeWarnings: string[] = [];
+    const stripeWarnings: string[] = [];
     if (subscriptionIds.length > 0) {
       const stripeResult = await cancelSubscriptions(subscriptionIds);
       if (stripeResult.failed > 0) {

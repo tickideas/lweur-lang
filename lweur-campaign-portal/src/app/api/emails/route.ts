@@ -20,8 +20,11 @@ export async function POST(request: NextRequest) {
     const partner = await prisma.partner.findUnique({
       where: { id: partnerId },
       include: {
-        language: true,
-        campaign: true,
+        campaigns: {
+          include: {
+            language: true,
+          },
+        },
       },
     });
 
@@ -50,13 +53,7 @@ export async function POST(request: NextRequest) {
         break;
 
       case 'payment_failed':
-        if (!data?.amount || !data?.currency) {
-          return NextResponse.json(
-            { error: 'Payment amount and currency required for payment failed notification' },
-            { status: 400 }
-          );
-        }
-        result = await emailService.sendPaymentFailed(partner, data.amount, data.currency);
+        result = await emailService.sendPaymentFailed(partner);
         break;
 
       case 'monthly_impact':
@@ -90,7 +87,6 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({
       success: result.success,
-      message: result.message,
       messageId: result.messageId,
     });
 
@@ -118,47 +114,9 @@ function getEmailSubject(type: string, partner: any): string {
   }
 }
 
-// GET endpoint for email templates preview (admin only)
-export async function GET(request: NextRequest) {
-  try {
-    const { searchParams } = new URL(request.url);
-    const template = searchParams.get('template');
-    const partnerId = searchParams.get('partnerId');
-
-    if (!template) {
-      return NextResponse.json(
-        { error: 'Template parameter required' },
-        { status: 400 }
-      );
-    }
-
-    // This would be used by admins to preview email templates
-    // For security, you might want to add authentication check here
-    
-    let sampleData;
-    if (partnerId) {
-      sampleData = await prisma.partner.findUnique({
-        where: { id: partnerId },
-        include: {
-          language: true,
-          campaign: true,
-        },
-      });
-    }
-
-    const emailService = new EmailService();
-    const templateContent = emailService.getEmailTemplate(template, sampleData);
-
-    return NextResponse.json({
-      template: template,
-      content: templateContent,
-    });
-
-  } catch (error) {
-    console.error('Email template preview error:', error);
-    return NextResponse.json(
-      { error: 'Failed to generate template preview' },
-      { status: 500 }
-    );
-  }
+// GET endpoint for email templates list
+export async function GET() {
+  return NextResponse.json({
+    templates: ['welcome', 'payment_confirmation', 'payment_failed', 'monthly_impact'],
+  });
 }

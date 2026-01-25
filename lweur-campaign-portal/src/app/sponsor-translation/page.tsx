@@ -162,7 +162,8 @@ export default function SponsorTranslationPage() {
                       className="language-flag"
                       onError={(e) => {
                         e.currentTarget.style.display = 'none';
-                        e.currentTarget.nextElementSibling!.style.display = 'block';
+                        const nextSibling = e.currentTarget.nextElementSibling as HTMLElement | null;
+                        if (nextSibling) nextSibling.style.display = 'block';
                       }}
                     />
                     <div className="text-2xl" style={{ display: 'none' }}>
@@ -184,7 +185,7 @@ export default function SponsorTranslationPage() {
                     
                     <div className="flex items-center text-sm text-gray-600">
                       <Users className="h-4 w-4 mr-2" />
-                      <span>{formatNumber(language.speakerCount)} speakers</span>
+                      <span>{formatNumber(Number(language.speakerCount))} speakers</span>
                     </div>
                     
                     <div className="flex items-center text-sm text-gray-600">
@@ -238,7 +239,8 @@ export default function SponsorTranslationPage() {
                         className="w-8 h-6 rounded object-cover"
                         onError={(e) => {
                           e.currentTarget.style.display = 'none';
-                          e.currentTarget.nextElementSibling!.style.display = 'block';
+                          const nextSibling = e.currentTarget.nextElementSibling as HTMLElement | null;
+                          if (nextSibling) nextSibling.style.display = 'block';
                         }}
                       />
                       <div className="text-xl" style={{ display: 'none' }}>
@@ -247,7 +249,7 @@ export default function SponsorTranslationPage() {
                       <div>
                         <h3 className="font-semibold">{language.name}</h3>
                         <p className="text-xs text-gray-500">
-                          {formatNumber(language.speakerCount)} speakers
+                          {formatNumber(Number(language.speakerCount))} speakers
                         </p>
                       </div>
                     </div>

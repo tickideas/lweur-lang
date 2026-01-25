@@ -3,9 +3,21 @@
 // Creates testimonials matching the design shown in the user's image
 // RELEVANT FILES: prisma/schema.prisma, src/app/api/admin/impact/route.ts, src/types/impact.ts
 
-import { PrismaClient } from '@prisma/client';
+import { Pool } from 'pg';
+import { PrismaPg } from '@prisma/adapter-pg';
+import { PrismaClient } from '../src/generated/prisma/client';
 
-const prisma = new PrismaClient();
+function createPrismaClient(): PrismaClient {
+  const connectionString = process.env.DATABASE_URL;
+  if (!connectionString) {
+    throw new Error('DATABASE_URL environment variable is not set');
+  }
+  const pool = new Pool({ connectionString });
+  const adapter = new PrismaPg(pool);
+  return new PrismaClient({ adapter });
+}
+
+const prisma = createPrismaClient();
 
 async function seedImpactStories() {
   console.log('🌱 Seeding impact stories...');

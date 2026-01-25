@@ -277,3 +277,12 @@ model CheckoutSettings {
   
   @@map("checkout_settings")
 }
+
+model ProcessedWebhookEvent {
+  id        String   @id @default(cuid())
+  eventId   String   @unique
+  createdAt DateTime @default(now())
+
+  @@map("processed_webhook_events")
+  @@index([eventId])
+}

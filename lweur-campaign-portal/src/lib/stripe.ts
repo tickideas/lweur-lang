@@ -1,3 +1,4 @@
+import 'server-only';
 import Stripe from 'stripe';
 
 let stripeInstance: Stripe | null = null;
@@ -8,8 +9,7 @@ const getStripe = (): Stripe => {
       throw new Error('STRIPE_SECRET_KEY is not set in environment variables');
     }
     stripeInstance = new Stripe(process.env.STRIPE_SECRET_KEY, {
-      apiVersion: '2024-06-20',
-      typescript: true,
+      // apiVersion: Defaults to the latest supported version, ensuring type compatibility
     });
   }
   return stripeInstance;

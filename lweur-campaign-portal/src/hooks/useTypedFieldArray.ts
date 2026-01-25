@@ -3,17 +3,17 @@
 // Provides better type safety and IntelliSense for form field arrays
 // RELEVANT FILES: checkout-settings/page.tsx, react-hook-form types
 
-import { useFieldArray, Control, FieldPath, FieldValues } from 'react-hook-form';
+import { useFieldArray, Control, ArrayPath, FieldValues, FieldArray } from 'react-hook-form';
 
 /**
  * Typed wrapper around useFieldArray that provides better type inference
  * @param control - Form control object
- * @param name - Field name (must be a valid field path)
+ * @param name - Field name (must be a valid array path)
  * @returns Properly typed field array functions
  */
 export function useTypedFieldArray<
   TFieldValues extends FieldValues,
-  TFieldArrayName extends FieldPath<TFieldValues> = FieldPath<TFieldValues>,
+  TFieldArrayName extends ArrayPath<TFieldValues> = ArrayPath<TFieldValues>,
   TKeyName extends string = 'id'
 >({
   control,
@@ -28,7 +28,7 @@ export function useTypedFieldArray<
     control,
     name,
     keyName
-  });
+  } as Parameters<typeof useFieldArray<TFieldValues, TFieldArrayName, TKeyName>>[0]);
 }
 
 /**
@@ -45,6 +45,10 @@ export type CheckoutSettingsFormType = {
   sponsorTranslationPresetAmounts: number[];
   sponsorTranslationMinAmount: number;
   sponsorTranslationMaxAmount: number;
+  generalDonationDefaultAmount: number;
+  generalDonationPresetAmounts: number[];
+  generalDonationMinAmount: number;
+  generalDonationMaxAmount: number;
   showOneTimeOption: boolean;
   requirePhone: boolean;
   requireOrganization: boolean;
@@ -61,7 +65,7 @@ export type CheckoutSettingsFormType = {
 export function useCheckoutSettingsFieldArray<
   TFieldArrayName extends keyof Pick<
     CheckoutSettingsFormType, 
-    'adoptLanguagePresetAmounts' | 'sponsorTranslationPresetAmounts' | 'hearFromUsOptions'
+    'adoptLanguagePresetAmounts' | 'sponsorTranslationPresetAmounts' | 'generalDonationPresetAmounts' | 'hearFromUsOptions'
   >
 >(
   control: Control<CheckoutSettingsFormType>,
@@ -69,6 +73,6 @@ export function useCheckoutSettingsFieldArray<
 ) {
   return useFieldArray({
     control,
-    name
+    name: name as never
   });
 }

@@ -279,18 +279,27 @@ async function generateDashboardReport() {
   };
 }
 
-function convertToCSV(data: any[]): string {
-  if (!data || data.length === 0) {
+function convertToCSV(inputData: unknown): string {
+  if (!inputData) {
     return '';
   }
 
-  // Handle nested objects like dashboard report
-  if (!Array.isArray(data)) {
-    if (data.overview) {
-      data = [data.overview];
+  // Normalize data to array format
+  let data: Record<string, unknown>[];
+  
+  if (Array.isArray(inputData)) {
+    if (inputData.length === 0) return '';
+    data = inputData as Record<string, unknown>[];
+  } else if (typeof inputData === 'object') {
+    const obj = inputData as Record<string, unknown>;
+    // Handle nested objects like dashboard report
+    if ('overview' in obj && typeof obj.overview === 'object') {
+      data = [obj.overview as Record<string, unknown>];
     } else {
-      data = [data];
+      data = [obj];
     }
+  } else {
+    return '';
   }
 
   const headers = Object.keys(data[0]);
@@ -302,7 +311,7 @@ function convertToCSV(data: any[]): string {
         if (typeof value === 'string' && (value.includes(',') || value.includes('"') || value.includes('\n'))) {
           return `"${value.replace(/"/g, '""')}"`;
         }
-        return value || '';
+        return value ?? '';
       }).join(',')
     ),
   ].join('\n');

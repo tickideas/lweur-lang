@@ -524,7 +524,7 @@ export default function LanguagesPage() {
                       <div className="flex items-center gap-2">
                         <Users className="h-4 w-4 text-neutral-400" />
                         <span className="text-sm">
-                          <span className="font-semibold">{formatNumber(language.speakerCount)}</span> speakers
+                          <span className="font-semibold">{formatNumber(Number(language.speakerCount))}</span> speakers
                         </span>
                       </div>
                       

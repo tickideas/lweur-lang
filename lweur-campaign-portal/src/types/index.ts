@@ -13,13 +13,13 @@ export interface Partner {
   email: string;
   firstName: string;
   lastName: string;
-  phoneNumber?: string;
-  organization?: string;
+  phoneNumber?: string | null;
+  organization?: string | null;
   country: string;
   preferredLanguage: string;
   createdAt: Date;
   updatedAt: Date;
-  stripeCustomerId?: string;
+  stripeCustomerId?: string | null;
   isActive: boolean;
   campaigns?: Campaign[];
   payments?: Payment[];
@@ -33,13 +33,13 @@ export interface Language {
   iso639Code: string;
   region: string;
   countries: string[];
-  speakerCount: number;
+  speakerCount: number | bigint;
   flagUrl: string;
   isActive: boolean;
   adoptionStatus: AdoptionStatus;
   translationNeedsSponsorship: boolean;
   priority: number;
-  description?: string;
+  description?: string | null;
   createdAt: Date;
   updatedAt: Date;
   campaigns?: Campaign[];
@@ -53,11 +53,11 @@ export interface Campaign {
   monthlyAmount: number; // Amount in pence (£150 = 15000)
   currency: string;
   startDate: Date;
-  endDate?: Date;
+  endDate?: Date | null;
   status: CampaignStatus;
-  stripeSubscriptionId?: string;
-  nextBillingDate?: Date;
-  notes?: string;
+  stripeSubscriptionId?: string | null;
+  nextBillingDate?: Date | null;
+  notes?: string | null;
   createdAt: Date;
   updatedAt: Date;
   partner?: Partner;

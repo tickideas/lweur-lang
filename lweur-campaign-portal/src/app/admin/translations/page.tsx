@@ -325,7 +325,8 @@ export default function TranslationsPage() {
                           className="w-10 h-7 rounded object-cover border border-neutral-200"
                           onError={(e) => {
                             e.currentTarget.style.display = 'none';
-                            e.currentTarget.nextElementSibling!.style.display = 'block';
+                            const nextSibling = e.currentTarget.nextElementSibling as HTMLElement | null;
+                            if (nextSibling) nextSibling.style.display = 'block';
                           }}
                         />
                       ) : null}
@@ -362,7 +363,7 @@ export default function TranslationsPage() {
                   <div className="grid grid-cols-2 gap-4 text-sm">
                     <div className="flex items-center text-neutral-600">
                       <Users className="h-4 w-4 mr-2 flex-shrink-0" />
-                      <span>{formatNumber(item.speakerCount)} speakers</span>
+                      <span>{formatNumber(Number(item.speakerCount))} speakers</span>
                     </div>
                     <div className="flex items-center text-neutral-600">
                       <Zap className="h-4 w-4 mr-2 flex-shrink-0" />

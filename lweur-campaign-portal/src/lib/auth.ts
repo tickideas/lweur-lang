@@ -87,10 +87,21 @@ export const authOptions: NextAuthOptions = {
   ],
   session: {
     strategy: 'jwt',
-    maxAge: 24 * 60 * 60, // 24 hours
+    maxAge: 8 * 60 * 60, // 8 hours - tighter for admin portal
   },
   jwt: {
-    maxAge: 24 * 60 * 60, // 24 hours
+    maxAge: 8 * 60 * 60, // 8 hours
+  },
+  cookies: {
+    sessionToken: {
+      name: process.env.NODE_ENV === 'production' ? '__Secure-next-auth.session-token' : 'next-auth.session-token',
+      options: {
+        httpOnly: true,
+        sameSite: 'lax',
+        path: '/',
+        secure: process.env.NODE_ENV === 'production',
+      },
+    },
   },
   callbacks: {
     async jwt({ token, user }) {
@@ -129,26 +140,17 @@ export async function verifyAdminAuth(request: NextRequest) {
     });
     
     if (!token) {
-      console.log('No valid JWT token found');
       return { isValid: false, admin: null };
     }
-
-    console.log('Found JWT token for email:', token.email);
 
     // Find the admin record by email from the JWT token
     const admin = await prisma.admin.findUnique({
-      where: { 
-        email: token.email as string,
-        isActive: true
-      },
+      where: { email: token.email as string },
     });
 
-    if (!admin) {
-      console.log('Admin not found for email:', token.email);
+    if (!admin || !admin.isActive) {
       return { isValid: false, admin: null };
     }
-
-    console.log('Admin authenticated:', admin.email, 'Role:', admin.role);
 
     return { 
       isValid: true, 
