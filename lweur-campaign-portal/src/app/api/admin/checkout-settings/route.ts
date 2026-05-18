@@ -3,27 +3,39 @@
 // Handles creating, reading, and updating checkout configuration for admin users
 // RELEVANT FILES: checkout-settings/page.tsx, prisma/schema.prisma, admin/reports/route.ts, auth.ts
 
+import { revalidatePath } from 'next/cache';
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { verifyAdminAuth } from '@/lib/auth';
 import { sanitizeCheckoutSettings } from '@/lib/sanitization';
 import { z } from 'zod';
 
+function revalidatePublicCheckoutSettings() {
+  try {
+    revalidatePath('/api/checkout-settings');
+    revalidatePath('/api/hero-settings');
+  } catch (error) {
+    if (process.env.NODE_ENV !== 'test') {
+      throw error;
+    }
+  }
+}
+
 const checkoutSettingsSchema = z.object({
   availableCurrencies: z.array(z.string()).min(1),
   defaultCurrency: z.string().min(1),
-  adoptLanguageDefaultAmount: z.number().min(100),
-  adoptLanguagePresetAmounts: z.array(z.number()).min(1),
-  adoptLanguageMinAmount: z.number().min(100),
-  adoptLanguageMaxAmount: z.number().min(1000),
-  sponsorTranslationDefaultAmount: z.number().min(100),
-  sponsorTranslationPresetAmounts: z.array(z.number()).min(1),
-  sponsorTranslationMinAmount: z.number().min(100),
-  sponsorTranslationMaxAmount: z.number().min(1000),
-  generalDonationDefaultAmount: z.number().min(100),
-  generalDonationPresetAmounts: z.array(z.number()).min(1),
-  generalDonationMinAmount: z.number().min(100),
-  generalDonationMaxAmount: z.number().min(1000),
+  adoptLanguageDefaultAmount: z.number().min(100).max(1000000),
+  adoptLanguagePresetAmounts: z.array(z.number().min(100).max(1000000)).min(1).max(20),
+  adoptLanguageMinAmount: z.number().min(100).max(100000),
+  adoptLanguageMaxAmount: z.number().min(1000).max(10000000),
+  sponsorTranslationDefaultAmount: z.number().min(100).max(1000000),
+  sponsorTranslationPresetAmounts: z.array(z.number().min(100).max(1000000)).min(1).max(20),
+  sponsorTranslationMinAmount: z.number().min(100).max(100000),
+  sponsorTranslationMaxAmount: z.number().min(1000).max(10000000),
+  generalDonationDefaultAmount: z.number().min(100).max(1000000),
+  generalDonationPresetAmounts: z.array(z.number().min(100).max(1000000)).min(1).max(20),
+  generalDonationMinAmount: z.number().min(100).max(100000),
+  generalDonationMaxAmount: z.number().min(1000).max(10000000),
   showOneTimeOption: z.boolean(),
   requirePhone: z.boolean(),
   requireOrganization: z.boolean(),
@@ -252,6 +264,8 @@ export async function POST(request: NextRequest) {
         },
       });
     }
+
+    revalidatePublicCheckoutSettings();
 
     return NextResponse.json({
       success: true,

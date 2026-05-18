@@ -37,6 +37,10 @@ const validCheckoutSettings = {
   sponsorTranslationPresetAmounts: [2000, 3500, 5000, 15000],
   sponsorTranslationMinAmount: 1000,
   sponsorTranslationMaxAmount: 100000,
+  generalDonationDefaultAmount: 5000,
+  generalDonationPresetAmounts: [2500, 5000, 10000, 15000, 25000],
+  generalDonationMinAmount: 500,
+  generalDonationMaxAmount: 500000,
   showOneTimeOption: false,
   requirePhone: false,
   requireOrganization: false,
@@ -45,7 +49,7 @@ const validCheckoutSettings = {
   checkoutSubtitle: 'Support our mission',
   // Hero section settings
   heroEnabled: true,
-  heroTitle: "YOU'RE A\nWORLD\nCHANGER",
+  heroTitle: "YOU'RE A WORLD CHANGER",
   heroSubtitle: "Your generosity is transforming lives across Europe",
   heroBackgroundColor: "from-[#1226AA] to-blue-800",
   heroTextColor: "text-white"
@@ -398,7 +402,7 @@ describe('/api/admin/checkout-settings', () => {
       });
       const response = await POST(request);
 
-      expect(response.status).toBe(500);
+      expect(response.status).toBe(400);
     });
 
     test('allows CAMPAIGN_MANAGER to save settings', async () => {

@@ -229,39 +229,39 @@ export function sanitizeCheckoutSettings(input: CheckoutSettingsInput) {
       }
       return 'GBP';
     })(),
-    adoptLanguageDefaultAmount: sanitizeNumber(input.adoptLanguageDefaultAmount, 100, 1000000),
+    adoptLanguageDefaultAmount: sanitizeNumber(input.adoptLanguageDefaultAmount),
     adoptLanguagePresetAmounts: sanitizeArray(
       input.adoptLanguagePresetAmounts,
       (item) => {
-        const num = sanitizeNumber(item, 100, 1000000);
+        const num = sanitizeNumber(item);
         return num >= 100 ? num : null;
       },
       1
-    ),
-    adoptLanguageMinAmount: sanitizeNumber(input.adoptLanguageMinAmount, 100, 100000),
-    adoptLanguageMaxAmount: sanitizeNumber(input.adoptLanguageMaxAmount, 1000, 10000000),
-    sponsorTranslationDefaultAmount: sanitizeNumber(input.sponsorTranslationDefaultAmount, 100, 1000000),
+    ).slice(0, 20),
+    adoptLanguageMinAmount: sanitizeNumber(input.adoptLanguageMinAmount),
+    adoptLanguageMaxAmount: sanitizeNumber(input.adoptLanguageMaxAmount),
+    sponsorTranslationDefaultAmount: sanitizeNumber(input.sponsorTranslationDefaultAmount),
     sponsorTranslationPresetAmounts: sanitizeArray(
       input.sponsorTranslationPresetAmounts,
       (item) => {
-        const num = sanitizeNumber(item, 100, 1000000);
+        const num = sanitizeNumber(item);
         return num >= 100 ? num : null;
       },
       1
-    ),
-    sponsorTranslationMinAmount: sanitizeNumber(input.sponsorTranslationMinAmount, 100, 100000),
-    sponsorTranslationMaxAmount: sanitizeNumber(input.sponsorTranslationMaxAmount, 1000, 10000000),
-    generalDonationDefaultAmount: sanitizeNumber(input.generalDonationDefaultAmount, 100, 1000000),
+    ).slice(0, 20),
+    sponsorTranslationMinAmount: sanitizeNumber(input.sponsorTranslationMinAmount),
+    sponsorTranslationMaxAmount: sanitizeNumber(input.sponsorTranslationMaxAmount),
+    generalDonationDefaultAmount: sanitizeNumber(input.generalDonationDefaultAmount),
     generalDonationPresetAmounts: sanitizeArray(
       input.generalDonationPresetAmounts,
       (item) => {
-        const num = sanitizeNumber(item, 100, 1000000);
+        const num = sanitizeNumber(item);
         return num >= 100 ? num : null;
       },
       1
-    ),
-    generalDonationMinAmount: sanitizeNumber(input.generalDonationMinAmount, 100, 100000),
-    generalDonationMaxAmount: sanitizeNumber(input.generalDonationMaxAmount, 1000, 10000000),
+    ).slice(0, 20),
+    generalDonationMinAmount: sanitizeNumber(input.generalDonationMinAmount),
+    generalDonationMaxAmount: sanitizeNumber(input.generalDonationMaxAmount),
     showOneTimeOption: sanitizeBoolean(input.showOneTimeOption),
     requirePhone: sanitizeBoolean(input.requirePhone),
     requireOrganization: sanitizeBoolean(input.requireOrganization),
@@ -276,12 +276,12 @@ export function sanitizeCheckoutSettings(input: CheckoutSettingsInput) {
       },
       1
     ),
-    checkoutTitle: sanitizeText(String(input.checkoutTitle || '')).substring(0, 200),
-    checkoutSubtitle: sanitizeText(String(input.checkoutSubtitle || '')).substring(0, 500),
+    checkoutTitle: sanitizeText(String(input.checkoutTitle || '')),
+    checkoutSubtitle: sanitizeText(String(input.checkoutSubtitle || '')),
     heroEnabled: sanitizeBoolean(input.heroEnabled),
-    heroTitle: sanitizeText(String(input.heroTitle || '')).substring(0, 100),
-    heroSubtitle: sanitizeText(String(input.heroSubtitle || '')).substring(0, 200),
-    heroBackgroundColor: sanitizeCssClass(String(input.heroBackgroundColor || '')).substring(0, 100),
-    heroTextColor: sanitizeCssClass(String(input.heroTextColor || '')).substring(0, 50),
+    heroTitle: sanitizeText(String(input.heroTitle || '')),
+    heroSubtitle: sanitizeText(String(input.heroSubtitle || '')),
+    heroBackgroundColor: sanitizeCssClass(String(input.heroBackgroundColor || '')),
+    heroTextColor: sanitizeCssClass(String(input.heroTextColor || '')),
   };
 }

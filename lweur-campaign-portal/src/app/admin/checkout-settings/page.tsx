@@ -358,6 +358,7 @@ export default function CheckoutSettingsPage() {
               <div>
                 <Label htmlFor="defaultCurrency">Default Currency</Label>
                 <select
+                  id="defaultCurrency"
                   {...register('defaultCurrency')}
                   className="w-full p-3 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-[#1226AA] focus:border-transparent mt-1"
                 >
@@ -387,6 +388,7 @@ export default function CheckoutSettingsPage() {
                 <div>
                   <Label htmlFor="adoptLanguageDefaultAmount">Default Amount (£)</Label>
                   <Input
+                    id="adoptLanguageDefaultAmount"
                     {...register('adoptLanguageDefaultAmount', { valueAsNumber: true })}
                     type="number"
                     step="0.01"
@@ -403,6 +405,7 @@ export default function CheckoutSettingsPage() {
                 <div>
                   <Label htmlFor="adoptLanguageMinAmount">Minimum Amount (£)</Label>
                   <Input
+                    id="adoptLanguageMinAmount"
                     {...register('adoptLanguageMinAmount', { valueAsNumber: true })}
                     type="number"
                     step="0.01"
@@ -419,6 +422,7 @@ export default function CheckoutSettingsPage() {
                 <div>
                   <Label htmlFor="adoptLanguageMaxAmount">Maximum Amount (£)</Label>
                   <Input
+                    id="adoptLanguageMaxAmount"
                     {...register('adoptLanguageMaxAmount', { valueAsNumber: true })}
                     type="number"
                     step="0.01"
@@ -461,6 +465,7 @@ export default function CheckoutSettingsPage() {
                         size="sm"
                         onClick={() => removeAdoptPreset(index)}
                         disabled={adoptPresetFields.length <= 1}
+                        aria-label="Remove adopt language preset amount"
                       >
                         <Minus className="h-4 w-4" />
                       </Button>
@@ -484,6 +489,7 @@ export default function CheckoutSettingsPage() {
                 <div>
                   <Label htmlFor="sponsorTranslationDefaultAmount">Default Amount (£)</Label>
                   <Input
+                    id="sponsorTranslationDefaultAmount"
                     {...register('sponsorTranslationDefaultAmount', { valueAsNumber: true })}
                     type="number"
                     step="0.01"
@@ -500,6 +506,7 @@ export default function CheckoutSettingsPage() {
                 <div>
                   <Label htmlFor="sponsorTranslationMinAmount">Minimum Amount (£)</Label>
                   <Input
+                    id="sponsorTranslationMinAmount"
                     {...register('sponsorTranslationMinAmount', { valueAsNumber: true })}
                     type="number"
                     step="0.01"
@@ -516,6 +523,7 @@ export default function CheckoutSettingsPage() {
                 <div>
                   <Label htmlFor="sponsorTranslationMaxAmount">Maximum Amount (£)</Label>
                   <Input
+                    id="sponsorTranslationMaxAmount"
                     {...register('sponsorTranslationMaxAmount', { valueAsNumber: true })}
                     type="number"
                     step="0.01"
@@ -558,6 +566,7 @@ export default function CheckoutSettingsPage() {
                         size="sm"
                         onClick={() => removeSponsorPreset(index)}
                         disabled={sponsorPresetFields.length <= 1}
+                        aria-label="Remove sponsor translation preset amount"
                       >
                         <Minus className="h-4 w-4" />
                       </Button>
@@ -581,6 +590,7 @@ export default function CheckoutSettingsPage() {
                 <div>
                   <Label htmlFor="generalDonationDefaultAmount">Default Amount (£)</Label>
                   <Input
+                    id="generalDonationDefaultAmount"
                     {...register('generalDonationDefaultAmount', { valueAsNumber: true })}
                     type="number"
                     step="0.01"
@@ -597,6 +607,7 @@ export default function CheckoutSettingsPage() {
                 <div>
                   <Label htmlFor="generalDonationMinAmount">Minimum Amount (£)</Label>
                   <Input
+                    id="generalDonationMinAmount"
                     {...register('generalDonationMinAmount', { valueAsNumber: true })}
                     type="number"
                     step="0.01"
@@ -613,6 +624,7 @@ export default function CheckoutSettingsPage() {
                 <div>
                   <Label htmlFor="generalDonationMaxAmount">Maximum Amount (£)</Label>
                   <Input
+                    id="generalDonationMaxAmount"
                     {...register('generalDonationMaxAmount', { valueAsNumber: true })}
                     type="number"
                     step="0.01"
@@ -655,6 +667,7 @@ export default function CheckoutSettingsPage() {
                         size="sm"
                         onClick={() => removeGeneralPreset(index)}
                         disabled={generalPresetFields.length <= 1}
+                        aria-label="Remove general donation preset amount"
                       >
                         <Minus className="h-4 w-4" />
                       </Button>
@@ -678,6 +691,7 @@ export default function CheckoutSettingsPage() {
                 <label className="flex items-center space-x-2">
                   <input
                     type="checkbox"
+                    id="showOneTimeOption"
                     {...register('showOneTimeOption')}
                     className="rounded border-neutral-300"
                   />
@@ -687,6 +701,7 @@ export default function CheckoutSettingsPage() {
                 <label className="flex items-center space-x-2">
                   <input
                     type="checkbox"
+                    id="requirePhone"
                     {...register('requirePhone')}
                     className="rounded border-neutral-300"
                   />
@@ -696,6 +711,7 @@ export default function CheckoutSettingsPage() {
                 <label className="flex items-center space-x-2">
                   <input
                     type="checkbox"
+                    id="requireOrganization"
                     {...register('requireOrganization')}
                     className="rounded border-neutral-300"
                   />
@@ -717,6 +733,7 @@ export default function CheckoutSettingsPage() {
               <div>
                 <Label htmlFor="checkoutTitle">Checkout Page Title</Label>
                 <Input
+                  id="checkoutTitle"
                   {...register('checkoutTitle')}
                   className="mt-1"
                 />
@@ -728,6 +745,7 @@ export default function CheckoutSettingsPage() {
               <div>
                 <Label htmlFor="checkoutSubtitle">Checkout Page Subtitle</Label>
                 <Input
+                  id="checkoutSubtitle"
                   {...register('checkoutSubtitle')}
                   className="mt-1"
                 />
@@ -785,6 +803,7 @@ export default function CheckoutSettingsPage() {
                 <label className="flex items-center space-x-2">
                   <input
                     type="checkbox"
+                    id="heroEnabled"
                     {...register('heroEnabled')}
                     className="rounded border-neutral-300"
                   />
@@ -809,6 +828,7 @@ export default function CheckoutSettingsPage() {
                   <div>
                     <Label htmlFor="heroTitle">Hero Title</Label>
                     <textarea
+                      id="heroTitle"
                       {...register('heroTitle')}
                       className="w-full p-3 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-[#1226AA] focus:border-transparent mt-1"
                       rows={3}
@@ -825,6 +845,7 @@ export default function CheckoutSettingsPage() {
                   <div>
                     <Label htmlFor="heroSubtitle">Hero Subtitle</Label>
                     <Input
+                      id="heroSubtitle"
                       {...register('heroSubtitle')}
                       className="mt-1"
                       placeholder="Your generosity is transforming lives across Europe"
@@ -838,6 +859,7 @@ export default function CheckoutSettingsPage() {
                     <div>
                       <Label htmlFor="heroBackgroundColor">Background Color (Tailwind CSS)</Label>
                       <Input
+                        id="heroBackgroundColor"
                         {...register('heroBackgroundColor')}
                         className="mt-1"
                         placeholder="from-[#1226AA] to-blue-800"
@@ -853,6 +875,7 @@ export default function CheckoutSettingsPage() {
                     <div>
                       <Label htmlFor="heroTextColor">Text Color (Tailwind CSS)</Label>
                       <Input
+                        id="heroTextColor"
                         {...register('heroTextColor')}
                         className="mt-1"
                         placeholder="text-white"

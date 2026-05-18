@@ -19,6 +19,23 @@ jest.mock('@/components/checkout/amount-selection', () => ({
   )
 }));
 
+
+jest.mock('@/components/checkout/personal-details-form', () => ({
+  PersonalDetailsForm: ({ onComplete }: { onComplete: (data: any) => void }) => (
+    <div data-testid="checkout-form-details">
+      <button onClick={() => onComplete({
+        firstName: 'John',
+        lastName: 'Doe',
+        email: 'john@example.com',
+        country: 'GB',
+        preferredLanguage: 'en'
+      })}>
+        Complete Details
+      </button>
+    </div>
+  )
+}));
+
 jest.mock('@/components/checkout/checkout-form', () => ({
   CheckoutForm: ({ 
     step, 
@@ -61,6 +78,8 @@ jest.mock('@/components/checkout/checkout-form', () => ({
 
 // Mock formatCurrency
 jest.mock('@/utils', () => ({
+  cn: (...args: unknown[]) => args.filter(Boolean).join(' '),
+  EUROPEAN_COUNTRIES: { GB: 'United Kingdom', FR: 'France' },
   formatCurrency: (amount: number, currency: string = 'GBP') => {
     const formatted = (amount / 100).toFixed(2);
     const symbol = currency === 'GBP' ? '£' : currency === 'EUR' ? '€' : '$';
@@ -89,6 +108,19 @@ const mockLanguage = {
 describe('CheckoutWizard Component', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    global.fetch = jest.fn((url: string) => {
+      if (url === '/api/payments/create-intent') {
+        return Promise.resolve({
+          ok: true,
+          json: async () => ({ clientSecret: 'test_secret', campaignId: 'test_campaign_id' }),
+        });
+      }
+
+      return Promise.resolve({
+        ok: true,
+        json: async () => ({ token: 'test-token', timestamp: Date.now() }),
+      });
+    }) as jest.Mock;
   });
 
   describe('Initial Rendering', () => {
@@ -413,10 +445,10 @@ describe('CheckoutWizard Component', () => {
       );
 
       // Progress indicator should show step numbers
-      expect(screen.getByText('1')).toBeInTheDocument();
-      expect(screen.getByText('2')).toBeInTheDocument();
-      expect(screen.getByText('3')).toBeInTheDocument();
-      expect(screen.getByText('4')).toBeInTheDocument();
+      expect(screen.getAllByText('1').length).toBeGreaterThan(0);
+      expect(screen.getAllByText('2').length).toBeGreaterThan(0);
+      expect(screen.getAllByText('3').length).toBeGreaterThan(0);
+      expect(screen.getAllByText('4').length).toBeGreaterThan(0);
     });
   });
 

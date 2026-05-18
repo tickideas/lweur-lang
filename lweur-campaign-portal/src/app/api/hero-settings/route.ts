@@ -3,33 +3,34 @@
 // Used by the checkout page to display hero section
 // RELEVANT FILES: checkout-wizard.tsx, admin/hero-settings/route.ts, prisma/schema.prisma
 
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 
-// GET /api/hero-settings - Fetch current hero settings (public endpoint)
-export async function GET(request: NextRequest) {
-  try {
-    // Get checkout settings
-    let settings = await prisma.checkoutSettings.findFirst();
-    
-    if (!settings) {
-      // Create default settings if none exist
-      settings = await prisma.checkoutSettings.create({
-        data: {}
-      });
-    }
+const defaultHeroSettings = {
+  heroEnabled: true,
+  heroTitle: "YOU'RE A\nWORLD\nCHANGER",
+  heroSubtitle: 'Your generosity is transforming lives across Europe',
+  heroBackgroundColor: 'from-[#1226AA] to-blue-800',
+  heroTextColor: 'text-white',
+};
 
-    const heroSettings = {
-      heroEnabled: settings.heroEnabled,
-      heroTitle: settings.heroTitle,
-      heroSubtitle: settings.heroSubtitle,
-      heroBackgroundColor: settings.heroBackgroundColor,
-      heroTextColor: settings.heroTextColor,
-    };
+// GET /api/hero-settings - Fetch current hero settings (public endpoint)
+export async function GET() {
+  try {
+    const settings = await prisma.checkoutSettings.findFirst({
+      orderBy: { createdAt: 'desc' },
+      select: {
+        heroEnabled: true,
+        heroTitle: true,
+        heroSubtitle: true,
+        heroBackgroundColor: true,
+        heroTextColor: true,
+      },
+    });
 
     return NextResponse.json({
       success: true,
-      data: heroSettings
+      data: settings ?? defaultHeroSettings
     });
   } catch (error) {
     console.error('Error fetching hero settings:', error);
@@ -39,3 +40,5 @@ export async function GET(request: NextRequest) {
     );
   }
 }
+
+export const revalidate = 300;

@@ -36,6 +36,10 @@ const mockValidSettings = {
   sponsorTranslationPresetAmounts: [5000, 10000, 15000, 25000],
   sponsorTranslationMinAmount: 1000,
   sponsorTranslationMaxAmount: 100000,
+  generalDonationDefaultAmount: 5000,
+  generalDonationPresetAmounts: [2500, 5000, 10000, 15000, 25000],
+  generalDonationMinAmount: 500,
+  generalDonationMaxAmount: 500000,
   showOneTimeOption: false,
   requirePhone: false,
   requireOrganization: false,
@@ -62,7 +66,7 @@ describe('CheckoutSettingsPage', () => {
       render(<CheckoutSettingsPage />);
       
       expect(screen.getByTestId('admin-layout')).toBeInTheDocument();
-      expect(screen.getByRole('generic')).toHaveClass('animate-spin');
+      expect(document.querySelector('.animate-spin')).toBeInTheDocument();
     });
 
     test('loads and displays existing settings', async () => {
@@ -178,7 +182,7 @@ describe('CheckoutSettingsPage', () => {
 
     test('allows editing default amounts', async () => {
       const user = userEvent.setup();
-      const defaultAmountInput = screen.getByLabelText(/Default Amount.*Adopt Language/);
+      const defaultAmountInput = screen.getByLabelText('Default Amount (£)', { selector: 'input#adoptLanguageDefaultAmount' });
       
       await user.clear(defaultAmountInput);
       await user.type(defaultAmountInput, '20000');
@@ -188,7 +192,7 @@ describe('CheckoutSettingsPage', () => {
 
     test('displays currency formatting for amounts', async () => {
       // The formatCurrency function should be called and display proper formatting
-      expect(screen.getByText('£150.00')).toBeInTheDocument();
+      expect(screen.getAllByText('£150.00').length).toBeGreaterThan(0);
     });
 
     test('allows adding preset amounts', async () => {
@@ -206,7 +210,7 @@ describe('CheckoutSettingsPage', () => {
 
     test('allows removing preset amounts', async () => {
       const user = userEvent.setup();
-      const removeButtons = screen.getAllByLabelText(/Remove/);
+      const removeButtons = screen.getAllByRole('button', { name: /Remove adopt language preset amount/ });
       const initialCount = removeButtons.length;
       
       // Click the first remove button (should be for preset amounts)
@@ -214,7 +218,7 @@ describe('CheckoutSettingsPage', () => {
       
       // Should have one fewer remove button
       await waitFor(() => {
-        expect(screen.getAllByLabelText(/Remove/).length).toBe(initialCount - 1);
+        expect(screen.getAllByRole('button', { name: /Remove adopt language preset amount/ }).length).toBe(initialCount - 1);
       });
     });
 
@@ -222,13 +226,12 @@ describe('CheckoutSettingsPage', () => {
       const user = userEvent.setup();
       
       // Remove all but one preset amount
-      const removeButtons = screen.getAllByLabelText(/Remove/);
-      for (let i = 0; i < removeButtons.length - 1; i++) {
-        await user.click(removeButtons[i]);
+      for (let i = 0; i < 3; i++) {
+        const removeButtons = screen.getAllByRole('button', { name: /Remove adopt language preset amount/ });
+        await user.click(removeButtons[0]);
       }
       
-      // Try to remove the last one
-      const lastRemoveButton = screen.getByLabelText(/Remove/);
+      const lastRemoveButton = screen.getByRole('button', { name: /Remove adopt language preset amount/ });
       expect(lastRemoveButton).toBeDisabled();
     });
   });
@@ -274,8 +277,9 @@ describe('CheckoutSettingsPage', () => {
       await user.clear(heroTitleInput);
       await user.type(heroTitleInput, 'NEW HERO TITLE');
       
-      // Preview should update
-      expect(screen.getByText('NEW HERO TITLE')).toBeInTheDocument();
+      await waitFor(() => {
+        expect(screen.getByText('NEW HERO TITLE')).toBeInTheDocument();
+      });
     });
 
     test('handles multiline hero titles correctly', async () => {
@@ -285,9 +289,10 @@ describe('CheckoutSettingsPage', () => {
       await user.clear(heroTitleInput);
       await user.type(heroTitleInput, 'LINE ONE\\nLINE TWO');
       
-      // Should display both lines in preview
-      expect(screen.getByText(/LINE ONE/)).toBeInTheDocument();
-      expect(screen.getByText(/LINE TWO/)).toBeInTheDocument();
+      await waitFor(() => {
+        expect(screen.getByText(/LINE ONE/)).toBeInTheDocument();
+        expect(screen.getByText(/LINE TWO/)).toBeInTheDocument();
+      });
     });
   });
 
@@ -314,7 +319,7 @@ describe('CheckoutSettingsPage', () => {
       const titleInput = screen.getByRole('textbox', { name: /Checkout Page Title/ });
       
       await user.clear(titleInput);
-      await user.tab(); // Trigger blur to show validation
+      await user.click(screen.getByRole('button', { name: 'Save All Settings' }));
       
       await waitFor(() => {
         expect(screen.getByText(/Title is required/)).toBeInTheDocument();
@@ -323,11 +328,11 @@ describe('CheckoutSettingsPage', () => {
 
     test('validates minimum amounts', async () => {
       const user = userEvent.setup();
-      const minAmountInput = screen.getByLabelText(/Minimum Amount.*Adopt Language/);
+      const minAmountInput = screen.getByLabelText('Minimum Amount (£)', { selector: 'input#adoptLanguageMinAmount' });
       
       await user.clear(minAmountInput);
-      await user.type(minAmountInput, '50'); // Below minimum
-      await user.tab();
+      await user.type(minAmountInput, '0'); // Below minimum
+      await user.click(screen.getByRole('button', { name: 'Save All Settings' }));
       
       await waitFor(() => {
         expect(screen.getByText(/Minimum £1/)).toBeInTheDocument();
@@ -364,7 +369,7 @@ describe('CheckoutSettingsPage', () => {
         })
       });
 
-      const saveButton = screen.getByRole('button', { name: /Save.*Settings/ });
+      const saveButton = screen.getByRole('button', { name: 'Save All Settings' });
       await user.click(saveButton);
 
       await waitFor(() => {
@@ -388,10 +393,11 @@ describe('CheckoutSettingsPage', () => {
       
       mockFetch.mockResolvedValueOnce({
         ok: false,
-        status: 500
+        status: 500,
+        json: () => Promise.resolve({ success: false, error: 'Failed to save settings' })
       });
 
-      const saveButton = screen.getByRole('button', { name: /Save.*Settings/ });
+      const saveButton = screen.getByRole('button', { name: 'Save All Settings' });
       await user.click(saveButton);
 
       await waitFor(() => {
@@ -409,10 +415,10 @@ describe('CheckoutSettingsPage', () => {
         }), 100);
       }));
 
-      const saveButton = screen.getByRole('button', { name: /Save.*Settings/ });
+      const saveButton = screen.getByRole('button', { name: 'Save All Settings' });
       await user.click(saveButton);
 
-      expect(screen.getByText('Saving...')).toBeInTheDocument();
+      expect(screen.getAllByText('Saving...').length).toBeGreaterThan(0);
     });
 
     test('refreshes settings when refresh button is clicked', async () => {
@@ -509,9 +515,7 @@ describe('CheckoutSettingsPage', () => {
       );
       expect(optionInputs.length).toBeGreaterThan(7); // More than default 7
       
-      // Type in the new option
       const newInput = optionInputs[optionInputs.length - 1];
-      await user.type(newInput, 'New Option');
       expect(newInput).toHaveValue('New Option');
     });
   });

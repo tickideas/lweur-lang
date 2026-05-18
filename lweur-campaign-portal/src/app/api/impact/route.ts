@@ -27,7 +27,8 @@ export async function GET() {
         isFeatured: true,
         imageUrl: true,
         createdAt: true
-      }
+      },
+      take: 50,
     });
 
     return NextResponse.json(impactStories);
@@ -36,3 +37,5 @@ export async function GET() {
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
+
+export const revalidate = 300;

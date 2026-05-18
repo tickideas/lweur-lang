@@ -33,6 +33,10 @@ const mockSettings = {
   sponsorTranslationPresetAmounts: [2000, 3500, 5000, 15000],
   sponsorTranslationMinAmount: 1000,
   sponsorTranslationMaxAmount: 100000,
+  generalDonationDefaultAmount: 5000,
+  generalDonationPresetAmounts: [2500, 5000, 10000, 15000, 25000],
+  generalDonationMinAmount: 500,
+  generalDonationMaxAmount: 500000,
   showOneTimeOption: true,
   requirePhone: false,
   requireOrganization: false,
@@ -120,10 +124,8 @@ describe('AmountSelection Component', () => {
         />
       );
 
-      await waitFor(() => {
-        const presetButton = screen.getByText('£35.00');
-        fireEvent.click(presetButton);
-      });
+      const presetButton = await screen.findByText('£35.00');
+      fireEvent.click(presetButton.closest('button') ?? presetButton);
 
       const nextButton = screen.getByText('Next');
       fireEvent.click(nextButton);
@@ -216,10 +218,9 @@ describe('AmountSelection Component', () => {
         />
       );
 
-      await waitFor(() => {
-        const currencySelect = screen.getByRole('combobox');
-        fireEvent.change(currencySelect, { target: { value: 'EUR' } });
-      });
+      await screen.findByRole('combobox');
+      const currencySelect = screen.getByRole('combobox');
+      fireEvent.change(currencySelect, { target: { value: 'EUR' } });
 
       const nextButton = screen.getByText('Next');
       fireEvent.click(nextButton);
@@ -253,8 +254,7 @@ describe('AmountSelection Component', () => {
       );
 
       await waitFor(() => {
-        // Should still render with default settings
-        expect(screen.getByText('Adopt a Language Channel')).toBeInTheDocument();
+        expect(screen.getByText('Checkout is temporarily unavailable')).toBeInTheDocument();
       });
     });
 

@@ -8,44 +8,34 @@ import { prisma } from '@/lib/prisma';
 
 export async function GET() {
   try {
-    // Fetch all languages with their speaker counts and countries
-    const languages = await prisma.language.findMany({
-      select: {
-        speakerCount: true,
-        countries: true,
-        adoptionStatus: true,
-      },
-    });
+    const [languageStats, countryRows, adoptedLanguages, availableLanguages] = await Promise.all([
+      prisma.language.aggregate({
+        where: { isActive: true },
+        _count: { _all: true },
+        _sum: { speakerCount: true },
+      }),
+      prisma.language.findMany({
+        where: { isActive: true },
+        select: { countries: true },
+      }),
+      prisma.language.count({ where: { isActive: true, adoptionStatus: 'ADOPTED' } }),
+      prisma.language.count({ where: { isActive: true, adoptionStatus: 'AVAILABLE' } }),
+    ]);
 
-    // Calculate statistics
-    const totalLanguages = languages.length;
-    const totalSpeakers = languages.reduce((sum, lang) => sum + Number(lang.speakerCount), 0);
-    
-    // Get unique countries from all languages
-    const allCountries = new Set<string>();
-    languages.forEach(lang => {
-      lang.countries.forEach(country => allCountries.add(country));
-    });
-    const totalCountries = allCountries.size;
+    const totalSpeakers = Number(languageStats._sum.speakerCount ?? 0);
+    const totalCountries = new Set(countryRows.flatMap((lang) => lang.countries)).size;
 
-    // Additional statistics
-    const adoptedLanguages = languages.filter(lang => lang.adoptionStatus === 'ADOPTED').length;
-    const availableLanguages = languages.filter(lang => lang.adoptionStatus === 'AVAILABLE').length;
-
-    const stats = {
-      totalLanguages,
+    return NextResponse.json({
+      totalLanguages: languageStats._count._all,
       totalSpeakers,
       totalCountries,
       adoptedLanguages,
       availableLanguages,
-      // Format for display
       formattedSpeakers: new Intl.NumberFormat('en-GB', {
         notation: 'compact',
         maximumFractionDigits: 1
       }).format(totalSpeakers),
-    };
-
-    return NextResponse.json(stats);
+    });
   } catch (error) {
     console.error('Error fetching impact stats:', error);
     return NextResponse.json(
@@ -54,3 +44,5 @@ export async function GET() {
     );
   }
 }
+
+export const revalidate = 300;

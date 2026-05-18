@@ -36,7 +36,6 @@ interface CheckoutSettings {
   generalDonationPresetAmounts: number[];
   generalDonationMinAmount: number;
   generalDonationMaxAmount: number;
-  enableGiftAid: boolean;
   showOneTimeOption: boolean;
 }
 
@@ -58,40 +57,21 @@ export function AmountSelection({
   const [isCustomSelected, setIsCustomSelected] = useState<boolean>(false);
   const [checkoutSettings, setCheckoutSettings] = useState<CheckoutSettings | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
-
-  const defaultSettings: CheckoutSettings = {
-    id: 'default',
-    availableCurrencies: ['GBP', 'EUR', 'USD'],
-    defaultCurrency: 'GBP',
-    adoptLanguageDefaultAmount: 15000,
-    adoptLanguagePresetAmounts: [15000, 25000],
-    adoptLanguageMinAmount: 15000,
-    adoptLanguageMaxAmount: 100000,
-    sponsorTranslationDefaultAmount: 15000,
-    sponsorTranslationPresetAmounts: [15000, 25000],
-    sponsorTranslationMinAmount: 15000,
-    sponsorTranslationMaxAmount: 100000,
-    generalDonationDefaultAmount: 5000,
-    generalDonationPresetAmounts: [2500, 5000, 10000, 15000, 25000],
-    generalDonationMinAmount: 500,
-    generalDonationMaxAmount: 500000,
-    enableGiftAid: true,
-    showOneTimeOption: true
-  };
+  const [settingsUnavailable, setSettingsUnavailable] = useState<boolean>(false);
 
   useEffect(() => {
     const fetchSettings = async () => {
       try {
         const response = await fetch('/api/checkout-settings');
-        if (response.ok) {
-          const data = await response.json();
-          setCheckoutSettings(data.settings);
-        } else {
-          setCheckoutSettings(defaultSettings);
+        if (!response.ok) {
+          throw new Error('Checkout settings request failed');
         }
+
+        const data = await response.json();
+        setCheckoutSettings(data.settings);
       } catch (error) {
         console.error('Error fetching checkout settings:', error);
-        setCheckoutSettings(defaultSettings);
+        setSettingsUnavailable(true);
       } finally {
         setLoading(false);
       }
@@ -101,6 +81,7 @@ export function AmountSelection({
       fetchSettings();
     } else {
       setCheckoutSettings(settings);
+      setSettingsUnavailable(false);
       setLoading(false);
     }
   }, []);
@@ -217,6 +198,17 @@ export function AmountSelection({
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#1226AA] mx-auto"></div>
           <p className="mt-4 text-neutral-600">Loading checkout options...</p>
         </div>
+      </div>
+    );
+  }
+
+  if (settingsUnavailable) {
+    return (
+      <div className="rounded-lg border border-red-200 bg-red-50 p-6 text-center">
+        <h2 className="text-lg font-semibold text-red-900">Checkout is temporarily unavailable</h2>
+        <p className="mt-2 text-sm text-red-700">
+          We could not load the current checkout settings. Please try again later.
+        </p>
       </div>
     );
   }
