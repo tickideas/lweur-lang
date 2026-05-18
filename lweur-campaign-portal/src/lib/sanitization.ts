@@ -237,7 +237,7 @@ export function sanitizeCheckoutSettings(input: CheckoutSettingsInput) {
         return num >= 100 ? num : null;
       },
       1
-    ),
+    ).slice(0, 20),
     adoptLanguageMinAmount: sanitizeNumber(input.adoptLanguageMinAmount),
     adoptLanguageMaxAmount: sanitizeNumber(input.adoptLanguageMaxAmount),
     sponsorTranslationDefaultAmount: sanitizeNumber(input.sponsorTranslationDefaultAmount),
@@ -248,7 +248,7 @@ export function sanitizeCheckoutSettings(input: CheckoutSettingsInput) {
         return num >= 100 ? num : null;
       },
       1
-    ),
+    ).slice(0, 20),
     sponsorTranslationMinAmount: sanitizeNumber(input.sponsorTranslationMinAmount),
     sponsorTranslationMaxAmount: sanitizeNumber(input.sponsorTranslationMaxAmount),
     generalDonationDefaultAmount: sanitizeNumber(input.generalDonationDefaultAmount),
@@ -259,7 +259,7 @@ export function sanitizeCheckoutSettings(input: CheckoutSettingsInput) {
         return num >= 100 ? num : null;
       },
       1
-    ),
+    ).slice(0, 20),
     generalDonationMinAmount: sanitizeNumber(input.generalDonationMinAmount),
     generalDonationMaxAmount: sanitizeNumber(input.generalDonationMaxAmount),
     showOneTimeOption: sanitizeBoolean(input.showOneTimeOption),

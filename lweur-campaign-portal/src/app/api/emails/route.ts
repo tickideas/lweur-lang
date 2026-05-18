@@ -52,6 +52,7 @@ export async function POST(request: NextRequest) {
       where: { id: partnerId },
       include: {
         campaigns: {
+          where: { status: 'ACTIVE' },
           take: 1,
           orderBy: { createdAt: 'desc' },
           include: { language: true },
@@ -79,7 +80,7 @@ export async function POST(request: NextRequest) {
         },
       });
 
-      return NextResponse.json(result);
+      return NextResponse.json(result, { status: 502 });
     }
 
     await prisma.communication.create({

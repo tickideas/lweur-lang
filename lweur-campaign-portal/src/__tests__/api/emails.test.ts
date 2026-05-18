@@ -271,7 +271,7 @@ describe('/api/emails', () => {
       const response = await POST(request({ type: 'welcome', partnerId: 'partner-123' }))
       const responseData = await response.json()
 
-      expect(response.status).toBe(200)
+      expect(response.status).toBe(502)
       expect(responseData.success).toBe(false)
       expect(responseData.message).toBe('Email service temporarily unavailable')
       expect(mockPrisma.communication.create).toHaveBeenCalledWith({

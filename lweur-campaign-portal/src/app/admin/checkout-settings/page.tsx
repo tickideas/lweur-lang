@@ -359,7 +359,7 @@ export default function CheckoutSettingsPage() {
                 <Label htmlFor="defaultCurrency">Default Currency</Label>
                 <select
                   id="defaultCurrency"
-                    {...register('defaultCurrency')}
+                  {...register('defaultCurrency')}
                   className="w-full p-3 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-[#1226AA] focus:border-transparent mt-1"
                 >
                   {selectedCurrencies.map((currency) => (
@@ -734,7 +734,7 @@ export default function CheckoutSettingsPage() {
                 <Label htmlFor="checkoutTitle">Checkout Page Title</Label>
                 <Input
                   id="checkoutTitle"
-                    {...register('checkoutTitle')}
+                  {...register('checkoutTitle')}
                   className="mt-1"
                 />
                 {errors.checkoutTitle && (
@@ -746,7 +746,7 @@ export default function CheckoutSettingsPage() {
                 <Label htmlFor="checkoutSubtitle">Checkout Page Subtitle</Label>
                 <Input
                   id="checkoutSubtitle"
-                    {...register('checkoutSubtitle')}
+                  {...register('checkoutSubtitle')}
                   className="mt-1"
                 />
                 {errors.checkoutSubtitle && (
@@ -829,7 +829,7 @@ export default function CheckoutSettingsPage() {
                     <Label htmlFor="heroTitle">Hero Title</Label>
                     <textarea
                       id="heroTitle"
-                    {...register('heroTitle')}
+                      {...register('heroTitle')}
                       className="w-full p-3 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-[#1226AA] focus:border-transparent mt-1"
                       rows={3}
                       placeholder="YOU'RE A\nWORLD\nCHANGER"
@@ -846,7 +846,7 @@ export default function CheckoutSettingsPage() {
                     <Label htmlFor="heroSubtitle">Hero Subtitle</Label>
                     <Input
                       id="heroSubtitle"
-                    {...register('heroSubtitle')}
+                      {...register('heroSubtitle')}
                       className="mt-1"
                       placeholder="Your generosity is transforming lives across Europe"
                     />
@@ -860,7 +860,7 @@ export default function CheckoutSettingsPage() {
                       <Label htmlFor="heroBackgroundColor">Background Color (Tailwind CSS)</Label>
                       <Input
                         id="heroBackgroundColor"
-                    {...register('heroBackgroundColor')}
+                        {...register('heroBackgroundColor')}
                         className="mt-1"
                         placeholder="from-[#1226AA] to-blue-800"
                       />
@@ -876,7 +876,7 @@ export default function CheckoutSettingsPage() {
                       <Label htmlFor="heroTextColor">Text Color (Tailwind CSS)</Label>
                       <Input
                         id="heroTextColor"
-                    {...register('heroTextColor')}
+                        {...register('heroTextColor')}
                         className="mt-1"
                         placeholder="text-white"
                       />

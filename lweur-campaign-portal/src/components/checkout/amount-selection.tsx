@@ -59,25 +59,6 @@ export function AmountSelection({
   const [loading, setLoading] = useState<boolean>(true);
   const [settingsUnavailable, setSettingsUnavailable] = useState<boolean>(false);
 
-  const defaultSettings: CheckoutSettings = {
-    id: 'default',
-    availableCurrencies: ['GBP', 'EUR', 'USD'],
-    defaultCurrency: 'GBP',
-    adoptLanguageDefaultAmount: 15000,
-    adoptLanguagePresetAmounts: [15000, 25000],
-    adoptLanguageMinAmount: 15000,
-    adoptLanguageMaxAmount: 100000,
-    sponsorTranslationDefaultAmount: 15000,
-    sponsorTranslationPresetAmounts: [15000, 25000],
-    sponsorTranslationMinAmount: 15000,
-    sponsorTranslationMaxAmount: 100000,
-    generalDonationDefaultAmount: 5000,
-    generalDonationPresetAmounts: [2500, 5000, 10000, 15000, 25000],
-    generalDonationMinAmount: 500,
-    generalDonationMaxAmount: 500000,
-    showOneTimeOption: false
-  };
-
   useEffect(() => {
     const fetchSettings = async () => {
       try {
