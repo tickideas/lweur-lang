@@ -6,6 +6,9 @@ import { stripe } from '@/lib/stripe'
 // Mock dependencies
 jest.mock('@/lib/prisma', () => ({
   prisma: {
+    checkoutSettings: {
+      findFirst: jest.fn(),
+    },
     language: {
       findUnique: jest.fn(),
       update: jest.fn(),
@@ -28,6 +31,7 @@ jest.mock('@/lib/stripe', () => ({
       create: jest.fn(),
     },
     prices: {
+      create: jest.fn(),
       list: jest.fn(),
     },
     products: {
@@ -59,6 +63,9 @@ const mockStripe = stripe as jest.Mocked<typeof stripe>
 describe('/api/payments/create-intent', () => {
   beforeEach(() => {
     jest.clearAllMocks()
+    mockPrisma.checkoutSettings.findFirst.mockResolvedValue(null)
+    mockStripe.products.create.mockResolvedValue({ id: 'prod_test123' } as any)
+    mockStripe.prices.create.mockResolvedValue({ id: 'price_test123' } as any)
   })
 
   describe('POST', () => {
@@ -237,6 +244,11 @@ describe('/api/payments/create-intent', () => {
         ...validPayload,
         campaignType: 'SPONSOR_TRANSLATION' as const,
       }
+
+      mockPrisma.language.findUnique.mockResolvedValue({
+        id: 'lang-123',
+        name: 'German',
+      } as any)
 
       // Mock no existing customer
       mockStripe.customers.list.mockResolvedValue({ data: [] } as any)

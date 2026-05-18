@@ -16,7 +16,11 @@ interface InvoiceWithSubscription extends Stripe.Invoice {
 
 function getSubscriptionId(invoice: InvoiceWithSubscription): string | null {
   const parentSub = invoice.parent?.subscription_details?.subscription;
-  return typeof parentSub === 'string' ? parentSub : parentSub?.id ?? null;
+  if (typeof parentSub === 'string') return parentSub;
+  if (parentSub?.id) return parentSub.id;
+
+  const legacySubscription = (invoice as unknown as { subscription?: string | { id: string } | null }).subscription;
+  return typeof legacySubscription === 'string' ? legacySubscription : legacySubscription?.id ?? null;
 }
 
 function getPaymentIntentId(invoice: InvoiceWithSubscription): string | null {

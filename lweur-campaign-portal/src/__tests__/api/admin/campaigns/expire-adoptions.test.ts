@@ -5,7 +5,7 @@
 
 import { POST, GET } from '@/app/api/admin/campaigns/expire-adoptions/route';
 import { prisma } from '@/lib/prisma';
-import { verifyAuth } from '@/lib/auth';
+import { verifyAdminAuth } from '@/lib/auth';
 import { NextRequest } from 'next/server';
 
 // Mock dependencies
@@ -22,10 +22,10 @@ jest.mock('@/lib/prisma', () => ({
 }));
 
 jest.mock('@/lib/auth', () => ({
-  verifyAuth: jest.fn(),
+  verifyAdminAuth: jest.fn(),
 }));
 
-const mockVerifyAuth = verifyAuth as jest.MockedFunction<typeof verifyAuth>;
+const mockVerifyAdminAuth = verifyAdminAuth as jest.MockedFunction<typeof verifyAdminAuth>;
 const mockPrisma = prisma as any;
 
 const mockRequest = (body?: any) => {
@@ -42,7 +42,7 @@ describe('POST /api/admin/campaigns/expire-adoptions', () => {
   });
 
   it('should require authentication', async () => {
-    mockVerifyAuth.mockResolvedValue({ success: false, admin: null });
+    mockVerifyAdminAuth.mockResolvedValue({ isValid: false, admin: null } as any);
 
     const response = await POST(mockRequest());
     const data = await response.json();
@@ -52,8 +52,8 @@ describe('POST /api/admin/campaigns/expire-adoptions', () => {
   });
 
   it('should require admin permissions', async () => {
-    mockVerifyAuth.mockResolvedValue({
-      success: true,
+    mockVerifyAdminAuth.mockResolvedValue({
+      isValid: true,
       admin: { id: 'admin-1', role: 'VIEWER' },
     });
 
@@ -68,8 +68,8 @@ describe('POST /api/admin/campaigns/expire-adoptions', () => {
     const now = new Date();
     const pastDate = new Date(now.getTime() - 24 * 60 * 60 * 1000); // 1 day ago
 
-    mockVerifyAuth.mockResolvedValue({
-      success: true,
+    mockVerifyAdminAuth.mockResolvedValue({
+      isValid: true,
       admin: { id: 'admin-1', role: 'SUPER_ADMIN' },
     });
 
@@ -132,8 +132,8 @@ describe('POST /api/admin/campaigns/expire-adoptions', () => {
     const now = new Date();
     const pastDate = new Date(now.getTime() - 24 * 60 * 60 * 1000);
 
-    mockVerifyAuth.mockResolvedValue({
-      success: true,
+    mockVerifyAdminAuth.mockResolvedValue({
+      isValid: true,
       admin: { id: 'admin-1', role: 'CAMPAIGN_MANAGER' },
     });
 
@@ -173,8 +173,8 @@ describe('POST /api/admin/campaigns/expire-adoptions', () => {
   });
 
   it('should handle no expired campaigns', async () => {
-    mockVerifyAuth.mockResolvedValue({
-      success: true,
+    mockVerifyAdminAuth.mockResolvedValue({
+      isValid: true,
       admin: { id: 'admin-1', role: 'SUPER_ADMIN' },
     });
 
@@ -189,8 +189,8 @@ describe('POST /api/admin/campaigns/expire-adoptions', () => {
   });
 
   it('should handle errors gracefully', async () => {
-    mockVerifyAuth.mockResolvedValue({
-      success: true,
+    mockVerifyAdminAuth.mockResolvedValue({
+      isValid: true,
       admin: { id: 'admin-1', role: 'SUPER_ADMIN' },
     });
 
@@ -214,8 +214,8 @@ describe('GET /api/admin/campaigns/expire-adoptions', () => {
     const in12Hours = new Date(now.getTime() + 12 * 60 * 60 * 1000);
     const in3Days = new Date(now.getTime() + 3 * 24 * 60 * 60 * 1000);
 
-    mockVerifyAuth.mockResolvedValue({
-      success: true,
+    mockVerifyAdminAuth.mockResolvedValue({
+      isValid: true,
       admin: { id: 'admin-1', role: 'VIEWER' },
     });
 
@@ -254,7 +254,7 @@ describe('GET /api/admin/campaigns/expire-adoptions', () => {
   });
 
   it('should require authentication for GET requests', async () => {
-    mockVerifyAuth.mockResolvedValue({ success: false, admin: null });
+    mockVerifyAdminAuth.mockResolvedValue({ isValid: false, admin: null } as any);
 
     const response = await GET(mockRequest());
     const data = await response.json();

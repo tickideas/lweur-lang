@@ -8,52 +8,26 @@ import { prisma } from '@/lib/prisma';
 
 export async function GET() {
   try {
-    // Get all active languages and their speaker counts
-    const languages = await prisma.language.findMany({
-      where: {
-        isActive: true
-      },
-      select: {
-        speakerCount: true,
-        adoptionStatus: true
-      }
-    });
-
-    // Calculate total languages supported
-    const totalLanguages = languages.length;
-
-    // Calculate total people reached (sum of all speaker counts)
-    const totalPeopleReached = languages.reduce(
-      (total, language) => total + Number(language.speakerCount), 
-      0
-    );
-
-    // Get active campaigns count
-    const activeCampaignsCount = await prisma.campaign.count({
-      where: {
-        status: 'ACTIVE'
-      }
-    });
-
-    // Get adopted languages count
-    const adoptedLanguagesCount = languages.filter(
-      lang => lang.adoptionStatus === 'ADOPTED'
-    ).length;
-
-    // Broadcasting is always 24/7 (constant)
-    const broadcasting = '24/7';
+    const [languageStats, activeCampaignsCount, adoptedLanguagesCount] = await Promise.all([
+      prisma.language.aggregate({
+        where: { isActive: true },
+        _count: { _all: true },
+        _sum: { speakerCount: true },
+      }),
+      prisma.campaign.count({ where: { status: 'ACTIVE' } }),
+      prisma.language.count({ where: { isActive: true, adoptionStatus: 'ADOPTED' } }),
+    ]);
 
     return NextResponse.json({
       success: true,
       data: {
-        languagesSupported: totalLanguages,
-        peopleReached: totalPeopleReached,
-        broadcasting: broadcasting,
+        languagesSupported: languageStats._count._all,
+        peopleReached: Number(languageStats._sum.speakerCount ?? 0),
+        broadcasting: '24/7',
         activeCampaigns: activeCampaignsCount,
         adoptedLanguages: adoptedLanguagesCount
       }
     });
-
   } catch (error) {
     console.error('Error fetching statistics:', error);
     return NextResponse.json(
@@ -66,3 +40,5 @@ export async function GET() {
     );
   }
 }
+
+export const revalidate = 300;

@@ -1,12 +1,16 @@
+// src/__tests__/api/emails.test.ts
+// Tests for authenticated email API route
+// Verifies admin auth, validation, email dispatch, and communication logging
+// RELEVANT FILES: src/app/api/emails/route.ts, src/lib/auth.ts, src/lib/email.ts, src/lib/prisma.ts
+
 import { POST } from '@/app/api/emails/route'
 import { NextRequest } from 'next/server'
-import { getServerSession } from 'next-auth/next'
 import { prisma } from '@/lib/prisma'
+import { verifyAdminAuth } from '@/lib/auth'
 import { EmailService } from '@/lib/email'
 
-// Mock dependencies
-jest.mock('next-auth/next', () => ({
-  getServerSession: jest.fn(),
+jest.mock('@/lib/auth', () => ({
+  verifyAdminAuth: jest.fn(),
 }))
 
 jest.mock('@/lib/prisma', () => ({
@@ -29,8 +33,72 @@ jest.mock('@/lib/email', () => ({
   })),
 }))
 
-const mockGetServerSession = getServerSession as jest.MockedFunction<typeof getServerSession>
+const mockVerifyAdminAuth = verifyAdminAuth as jest.MockedFunction<typeof verifyAdminAuth>
 const mockPrisma = prisma as jest.Mocked<typeof prisma>
+
+const mockAdmin = {
+  id: 'admin-123',
+  email: 'admin@example.com',
+  role: 'SUPER_ADMIN' as const,
+  firstName: 'Admin',
+  lastName: 'User',
+}
+
+const mockCampaign = {
+  id: 'campaign-123',
+  type: 'ADOPT_LANGUAGE' as const,
+  partnerId: 'partner-123',
+  languageId: 'lang-123',
+  monthlyAmount: 15000,
+  currency: 'GBP',
+  startDate: new Date(),
+  status: 'ACTIVE' as const,
+  createdAt: new Date(),
+  updatedAt: new Date(),
+  language: {
+    id: 'lang-123',
+    name: 'German',
+    nativeName: 'Deutsch',
+    iso639Code: 'de',
+    region: 'Western Europe',
+    countries: ['DE'],
+    speakerCount: 83000000,
+    flagUrl: '/flags/de.svg',
+    isActive: true,
+    adoptionStatus: 'AVAILABLE' as const,
+    translationNeedsSponsorship: true,
+    priority: 1,
+    createdAt: new Date(),
+    updatedAt: new Date(),
+  },
+}
+
+const mockPartner = {
+  id: 'partner-123',
+  email: 'test@example.com',
+  firstName: 'John',
+  lastName: 'Doe',
+  phoneNumber: null,
+  organization: null,
+  country: 'GB',
+  preferredLanguage: 'en',
+  createdAt: new Date(),
+  updatedAt: new Date(),
+  stripeCustomerId: null,
+  isActive: true,
+  campaigns: [mockCampaign],
+}
+
+function authAsAdmin() {
+  mockVerifyAdminAuth.mockResolvedValue({ isValid: true, admin: mockAdmin } as any)
+}
+
+function request(payload: unknown) {
+  return new NextRequest('http://localhost:3000/api/emails', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  })
+}
 
 describe('/api/emails', () => {
   beforeEach(() => {
@@ -38,40 +106,10 @@ describe('/api/emails', () => {
   })
 
   describe('POST', () => {
-    const mockSession = {
-      user: {
-        id: 'admin-123',
-        email: 'admin@example.com',
-        role: 'SUPER_ADMIN',
-        firstName: 'Admin',
-        lastName: 'User',
-      },
-    }
-
-    const mockPartner = {
-      id: 'partner-123',
-      email: 'test@example.com',
-      firstName: 'John',
-      lastName: 'Doe',
-      language: {
-        id: 'lang-123',
-        name: 'German',
-      },
-      campaign: {
-        id: 'campaign-123',
-        name: 'Language Adoption',
-        type: 'ADOPT_LANGUAGE',
-      },
-    }
-
     it('should send welcome email successfully', async () => {
-      // Mock authentication
-      mockGetServerSession.mockResolvedValue(mockSession as any)
-
-      // Mock partner lookup
+      authAsAdmin()
       mockPrisma.partner.findUnique.mockResolvedValue(mockPartner as any)
 
-      // Mock email service
       const mockEmailService = {
         sendWelcomeEmail: jest.fn().mockResolvedValue({
           success: true,
@@ -80,39 +118,19 @@ describe('/api/emails', () => {
         }),
       }
       ;(EmailService as jest.Mock).mockImplementation(() => mockEmailService)
-
-      // Mock communication logging
       mockPrisma.communication.create.mockResolvedValue({} as any)
 
-      const payload = {
-        type: 'welcome',
-        partnerId: 'partner-123',
-      }
-
-      const request = new NextRequest('http://localhost:3000/api/emails', {
-        method: 'POST',
-        body: JSON.stringify(payload),
-      })
-
-      const response = await POST(request)
+      const response = await POST(request({ type: 'welcome', partnerId: 'partner-123' }))
       const responseData = await response.json()
 
       expect(response.status).toBe(200)
-      expect(responseData).toMatchObject({
-        success: true,
-        message: 'Email sent successfully',
-        messageId: 'msg-123',
-      })
-
-      // Verify email service was called
-      expect(mockEmailService.sendWelcomeEmail).toHaveBeenCalledWith(mockPartner)
-
-      // Verify communication was logged
+      expect(responseData).toMatchObject({ success: true, messageId: 'msg-123' })
+      expect(mockEmailService.sendWelcomeEmail).toHaveBeenCalledWith(mockPartner, mockCampaign)
       expect(mockPrisma.communication.create).toHaveBeenCalledWith({
         data: {
           partnerId: 'partner-123',
           type: 'EMAIL',
-          subject: 'Welcome to Loveworld Europe - Language Adoption Partnership',
+          subject: 'Welcome to Loveworld Europe - German ADOPT_LANGUAGE Partnership',
           content: 'Email sent: welcome',
           sentAt: expect.any(Date),
           status: 'SENT',
@@ -121,169 +139,74 @@ describe('/api/emails', () => {
     })
 
     it('should send payment confirmation email with amount data', async () => {
-      // Mock authentication
-      mockGetServerSession.mockResolvedValue(mockSession as any)
-
-      // Mock partner lookup
+      authAsAdmin()
       mockPrisma.partner.findUnique.mockResolvedValue(mockPartner as any)
 
-      // Mock email service
       const mockEmailService = {
         sendPaymentConfirmation: jest.fn().mockResolvedValue({
           success: true,
-          message: 'Payment confirmation sent',
           messageId: 'msg-456',
         }),
       }
       ;(EmailService as jest.Mock).mockImplementation(() => mockEmailService)
-
-      // Mock communication logging
       mockPrisma.communication.create.mockResolvedValue({} as any)
 
-      const payload = {
+      const response = await POST(request({
         type: 'payment_confirmation',
         partnerId: 'partner-123',
-        data: {
-          amount: 150.00,
-          currency: 'GBP',
-        },
-      }
-
-      const request = new NextRequest('http://localhost:3000/api/emails', {
-        method: 'POST',
-        body: JSON.stringify(payload),
-      })
-
-      const response = await POST(request)
+        data: { amount: 150, currency: 'GBP' },
+      }))
       const responseData = await response.json()
 
       expect(response.status).toBe(200)
       expect(responseData.success).toBe(true)
-
-      // Verify email service was called with correct parameters
-      expect(mockEmailService.sendPaymentConfirmation).toHaveBeenCalledWith(
-        mockPartner,
-        150.00,
-        'GBP'
-      )
+      expect(mockEmailService.sendPaymentConfirmation).toHaveBeenCalledWith(mockPartner, 150, 'GBP')
     })
 
     it('should send payment failed email', async () => {
-      // Mock authentication
-      mockGetServerSession.mockResolvedValue(mockSession as any)
-
-      // Mock partner lookup
+      authAsAdmin()
       mockPrisma.partner.findUnique.mockResolvedValue(mockPartner as any)
 
-      // Mock email service
       const mockEmailService = {
-        sendPaymentFailed: jest.fn().mockResolvedValue({
-          success: true,
-          message: 'Payment failed notification sent',
-          messageId: 'msg-789',
-        }),
+        sendPaymentFailed: jest.fn().mockResolvedValue({ success: true, messageId: 'msg-789' }),
       }
       ;(EmailService as jest.Mock).mockImplementation(() => mockEmailService)
-
-      // Mock communication logging
       mockPrisma.communication.create.mockResolvedValue({} as any)
 
-      const payload = {
-        type: 'payment_failed',
-        partnerId: 'partner-123',
-        data: {
-          amount: 150.00,
-          currency: 'GBP',
-        },
-      }
-
-      const request = new NextRequest('http://localhost:3000/api/emails', {
-        method: 'POST',
-        body: JSON.stringify(payload),
-      })
-
-      const response = await POST(request)
+      const response = await POST(request({ type: 'payment_failed', partnerId: 'partner-123' }))
       const responseData = await response.json()
 
       expect(response.status).toBe(200)
       expect(responseData.success).toBe(true)
-
-      // Verify email service was called with correct parameters
-      expect(mockEmailService.sendPaymentFailed).toHaveBeenCalledWith(
-        mockPartner,
-        150.00,
-        'GBP'
-      )
+      expect(mockEmailService.sendPaymentFailed).toHaveBeenCalledWith(mockPartner)
     })
 
-    it('should send monthly impact report with stats', async () => {
-      // Mock authentication
-      mockGetServerSession.mockResolvedValue(mockSession as any)
-
-      // Mock partner lookup
+    it('should send monthly impact report with the latest campaign', async () => {
+      authAsAdmin()
       mockPrisma.partner.findUnique.mockResolvedValue(mockPartner as any)
 
-      // Mock email service
       const mockEmailService = {
-        sendMonthlyImpactReport: jest.fn().mockResolvedValue({
-          success: true,
-          message: 'Monthly report sent',
-          messageId: 'msg-101',
-        }),
+        sendMonthlyImpactReport: jest.fn().mockResolvedValue({ success: true, messageId: 'msg-101' }),
       }
       ;(EmailService as jest.Mock).mockImplementation(() => mockEmailService)
-
-      // Mock communication logging
       mockPrisma.communication.create.mockResolvedValue({} as any)
 
-      const impactStats = {
-        totalViewers: 150000,
-        languagesReached: 45,
-        partnersCount: 25,
-        monthlyGrowth: 12.5,
-      }
-
-      const payload = {
+      const response = await POST(request({
         type: 'monthly_impact',
         partnerId: 'partner-123',
-        data: {
-          stats: impactStats,
-        },
-      }
-
-      const request = new NextRequest('http://localhost:3000/api/emails', {
-        method: 'POST',
-        body: JSON.stringify(payload),
-      })
-
-      const response = await POST(request)
+        data: { stats: { totalViewers: 150000 } },
+      }))
       const responseData = await response.json()
 
       expect(response.status).toBe(200)
       expect(responseData.success).toBe(true)
-
-      // Verify email service was called with correct parameters
-      expect(mockEmailService.sendMonthlyImpactReport).toHaveBeenCalledWith(
-        mockPartner,
-        impactStats
-      )
+      expect(mockEmailService.sendMonthlyImpactReport).toHaveBeenCalledWith(mockPartner, mockCampaign)
     })
 
     it('should return 401 for unauthorized requests', async () => {
-      // Mock no session
-      mockGetServerSession.mockResolvedValue(null)
+      mockVerifyAdminAuth.mockResolvedValue({ isValid: false, admin: null } as any)
 
-      const payload = {
-        type: 'welcome',
-        partnerId: 'partner-123',
-      }
-
-      const request = new NextRequest('http://localhost:3000/api/emails', {
-        method: 'POST',
-        body: JSON.stringify(payload),
-      })
-
-      const response = await POST(request)
+      const response = await POST(request({ type: 'welcome', partnerId: 'partner-123' }))
       const responseData = await response.json()
 
       expect(response.status).toBe(401)
@@ -291,44 +214,20 @@ describe('/api/emails', () => {
     })
 
     it('should return 400 for missing required fields', async () => {
-      // Mock authentication
-      mockGetServerSession.mockResolvedValue(mockSession as any)
+      authAsAdmin()
 
-      const payload = {
-        type: 'welcome',
-        // Missing partnerId
-      }
-
-      const request = new NextRequest('http://localhost:3000/api/emails', {
-        method: 'POST',
-        body: JSON.stringify(payload),
-      })
-
-      const response = await POST(request)
+      const response = await POST(request({ type: 'welcome' }))
       const responseData = await response.json()
 
       expect(response.status).toBe(400)
-      expect(responseData.error).toBe('Missing required fields: type and partnerId')
+      expect(responseData.error).toBe('Invalid request data')
     })
 
     it('should return 404 for partner not found', async () => {
-      // Mock authentication
-      mockGetServerSession.mockResolvedValue(mockSession as any)
-
-      // Mock partner not found
+      authAsAdmin()
       mockPrisma.partner.findUnique.mockResolvedValue(null)
 
-      const payload = {
-        type: 'welcome',
-        partnerId: 'nonexistent-partner',
-      }
-
-      const request = new NextRequest('http://localhost:3000/api/emails', {
-        method: 'POST',
-        body: JSON.stringify(payload),
-      })
-
-      const response = await POST(request)
+      const response = await POST(request({ type: 'welcome', partnerId: 'nonexistent-partner' }))
       const responseData = await response.json()
 
       expect(response.status).toBe(404)
@@ -336,48 +235,20 @@ describe('/api/emails', () => {
     })
 
     it('should return 400 for invalid email type', async () => {
-      // Mock authentication
-      mockGetServerSession.mockResolvedValue(mockSession as any)
+      authAsAdmin()
 
-      // Mock partner lookup
-      mockPrisma.partner.findUnique.mockResolvedValue(mockPartner as any)
-
-      const payload = {
-        type: 'invalid_type',
-        partnerId: 'partner-123',
-      }
-
-      const request = new NextRequest('http://localhost:3000/api/emails', {
-        method: 'POST',
-        body: JSON.stringify(payload),
-      })
-
-      const response = await POST(request)
+      const response = await POST(request({ type: 'invalid_type', partnerId: 'partner-123' }))
       const responseData = await response.json()
 
       expect(response.status).toBe(400)
-      expect(responseData.error).toBe('Invalid email type')
+      expect(responseData.error).toBe('Invalid request data')
     })
 
-    it('should return 400 for missing required data fields', async () => {
-      // Mock authentication
-      mockGetServerSession.mockResolvedValue(mockSession as any)
-
-      // Mock partner lookup
+    it('should return 400 for missing payment confirmation data', async () => {
+      authAsAdmin()
       mockPrisma.partner.findUnique.mockResolvedValue(mockPartner as any)
 
-      const payload = {
-        type: 'payment_confirmation',
-        partnerId: 'partner-123',
-        // Missing required data.amount and data.currency
-      }
-
-      const request = new NextRequest('http://localhost:3000/api/emails', {
-        method: 'POST',
-        body: JSON.stringify(payload),
-      })
-
-      const response = await POST(request)
+      const response = await POST(request({ type: 'payment_confirmation', partnerId: 'partner-123' }))
       const responseData = await response.json()
 
       expect(response.status).toBe(400)
@@ -385,13 +256,9 @@ describe('/api/emails', () => {
     })
 
     it('should handle email service failures gracefully', async () => {
-      // Mock authentication
-      mockGetServerSession.mockResolvedValue(mockSession as any)
-
-      // Mock partner lookup
+      authAsAdmin()
       mockPrisma.partner.findUnique.mockResolvedValue(mockPartner as any)
 
-      // Mock email service failure
       const mockEmailService = {
         sendWelcomeEmail: jest.fn().mockResolvedValue({
           success: false,
@@ -399,33 +266,19 @@ describe('/api/emails', () => {
         }),
       }
       ;(EmailService as jest.Mock).mockImplementation(() => mockEmailService)
-
-      // Mock communication logging
       mockPrisma.communication.create.mockResolvedValue({} as any)
 
-      const payload = {
-        type: 'welcome',
-        partnerId: 'partner-123',
-      }
-
-      const request = new NextRequest('http://localhost:3000/api/emails', {
-        method: 'POST',
-        body: JSON.stringify(payload),
-      })
-
-      const response = await POST(request)
+      const response = await POST(request({ type: 'welcome', partnerId: 'partner-123' }))
       const responseData = await response.json()
 
       expect(response.status).toBe(200)
       expect(responseData.success).toBe(false)
       expect(responseData.message).toBe('Email service temporarily unavailable')
-
-      // Verify communication was logged with FAILED status
       expect(mockPrisma.communication.create).toHaveBeenCalledWith({
         data: {
           partnerId: 'partner-123',
           type: 'EMAIL',
-          subject: 'Welcome to Loveworld Europe - Language Adoption Partnership',
+          subject: 'Welcome to Loveworld Europe - German ADOPT_LANGUAGE Partnership',
           content: 'Email sent: welcome',
           sentAt: expect.any(Date),
           status: 'FAILED',

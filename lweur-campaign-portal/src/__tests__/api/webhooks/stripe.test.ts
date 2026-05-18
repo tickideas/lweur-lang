@@ -53,6 +53,7 @@ describe('/api/webhooks/stripe', () => {
   beforeEach(() => {
     jest.clearAllMocks()
     process.env.STRIPE_WEBHOOK_SECRET = 'whsec_test123'
+    mockPrisma.processedWebhookEvent.create.mockResolvedValue({} as any)
   })
 
   describe('POST', () => {
@@ -109,6 +110,7 @@ describe('/api/webhooks/stripe', () => {
       const request = new NextRequest('http://localhost:3000/api/webhooks/stripe', {
         method: 'POST',
         body: JSON.stringify(mockEvent),
+        headers: { 'stripe-signature': 'test_webhook_signature' },
       })
 
       const response = await POST(request);
@@ -201,6 +203,7 @@ describe('/api/webhooks/stripe', () => {
       const request = new NextRequest('http://localhost:3000/api/webhooks/stripe', {
         method: 'POST',
         body: JSON.stringify(mockEvent),
+        headers: { 'stripe-signature': 'test_webhook_signature' },
       })
 
       const response = await POST(request);
@@ -266,6 +269,7 @@ describe('/api/webhooks/stripe', () => {
       const request = new NextRequest('http://localhost:3000/api/webhooks/stripe', {
         method: 'POST',
         body: JSON.stringify(mockEvent),
+        headers: { 'stripe-signature': 'test_webhook_signature' },
       })
 
       const response = await POST(request);
@@ -312,6 +316,7 @@ describe('/api/webhooks/stripe', () => {
       const request = new NextRequest('http://localhost:3000/api/webhooks/stripe', {
         method: 'POST',
         body: JSON.stringify(mockEvent),
+        headers: { 'stripe-signature': 'test_webhook_signature' },
       })
 
       const response = await POST(request);
@@ -339,6 +344,7 @@ describe('/api/webhooks/stripe', () => {
       const request = new NextRequest('http://localhost:3000/api/webhooks/stripe', {
         method: 'POST',
         body: JSON.stringify({ type: 'test.event' }),
+        headers: { 'stripe-signature': 'test_webhook_signature' },
       })
 
       const response = await POST(request);
@@ -383,6 +389,7 @@ describe('/api/webhooks/stripe', () => {
       const request = new NextRequest('http://localhost:3000/api/webhooks/stripe', {
         method: 'POST',
         body: JSON.stringify(mockEvent),
+        headers: { 'stripe-signature': 'test_webhook_signature' },
       })
 
       const response = await POST(request);
@@ -420,6 +427,7 @@ describe('/api/webhooks/stripe', () => {
       const request = new NextRequest('http://localhost:3000/api/webhooks/stripe', {
         method: 'POST',
         body: JSON.stringify(mockEvent),
+        headers: { 'stripe-signature': 'test_webhook_signature' },
       })
 
       const response = await POST(request);
@@ -464,6 +472,7 @@ describe('/api/webhooks/stripe', () => {
       const request = new NextRequest('http://localhost:3000/api/webhooks/stripe', {
         method: 'POST',
         body: JSON.stringify(mockEvent),
+        headers: { 'stripe-signature': 'test_webhook_signature' },
       })
 
       const response = await POST(request);

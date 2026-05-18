@@ -1,3 +1,8 @@
+// src/app/api/languages/route.ts
+// Public API route for listing active languages and available regions
+// Supports campaign selection pages with pagination, filtering, and campaign stats
+// RELEVANT FILES: src/app/adopt-language/page.tsx, src/app/sponsor-translation/page.tsx, prisma/schema.prisma, src/lib/prisma.ts
+
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { z } from 'zod';
@@ -7,8 +12,8 @@ const querySchema = z.object({
   status: z.enum(['AVAILABLE', 'ADOPTED', 'PENDING', 'WAITLIST']).optional(),
   search: z.string().optional(),
   priority: z.coerce.number().optional(),
-  page: z.coerce.number().default(1),
-  limit: z.coerce.number().default(50),
+  page: z.coerce.number().int().min(1).default(1),
+  limit: z.coerce.number().int().min(1).max(100).default(50),
   excludeGeneral: z.coerce.boolean().default(false),
 });
 
@@ -78,7 +83,19 @@ export async function GET(req: NextRequest) {
           { priority: 'asc' },
           { name: 'asc' },
         ],
-        include: {
+        select: {
+          id: true,
+          name: true,
+          nativeName: true,
+          iso639Code: true,
+          region: true,
+          countries: true,
+          speakerCount: true,
+          flagUrl: true,
+          adoptionStatus: true,
+          translationNeedsSponsorship: true,
+          priority: true,
+          description: true,
           campaigns: {
             where: {
               status: 'ACTIVE',
@@ -148,6 +165,8 @@ export async function GET(req: NextRequest) {
     );
   }
 }
+
+export const revalidate = 300;
 
 // Get unique regions
 export async function OPTIONS() {
